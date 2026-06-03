@@ -25,7 +25,7 @@ export interface ProductItem {
   id: string;
   name: string;
   sku: string;
-  category: 'Limpieza' | 'Ferretería' | 'Seguridad' | 'Hogar' | 'Herramientas';
+  category: 'Limpieza' | 'Ferretería' | 'Seguridad' | 'Hogar' | 'Herramientas' | 'Zapatos' | string;
   price: number;
   stock: number;
   salesCount: number;

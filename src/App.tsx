@@ -354,9 +354,14 @@ export default function App() {
                 )}
 
                 {activeSection === 'ventas' && (
-                  <div className="min-h-[50vh] bg-white rounded-2xl border border-natural-border/30 shadow-sm flex items-center justify-center p-8" id="ventas_blank_placeholder">
-                    <span className="text-sm font-bold text-natural-muted uppercase tracking-wider">Módulo Ventas en Blanco</span>
-                  </div>
+                  <VentasSection 
+                    products={products}
+                    orders={orders}
+                    onAddProduct={handleAddProduct}
+                    onUpdateOrderStatus={handleUpdateOrderStatus}
+                    onAddLog={onAddLog}
+                    onAddOrder={(order) => setOrders(prev => [order, ...prev])}
+                  />
                 )}
               </motion.div>
             )}
