@@ -90,9 +90,21 @@ export default function App() {
     }
   });
 
-  // Navigational & brand States with localStorage persistence
+  // Navigational & brand States with localStorage persistence and URL tracking
   const [activeSection, setActiveSection] = useState<'home' | 'admin' | 'servicios' | 'ventas'>(() => {
     try {
+      // Prioritize URL search parameters or Hash to enable direct deep-linking
+      const urlParams = new URL(window.location.href);
+      const sectionParam = urlParams.searchParams.get('section') || urlParams.searchParams.get('rol');
+      if (sectionParam && ['home', 'admin', 'servicios', 'ventas'].includes(sectionParam)) {
+        return sectionParam as 'home' | 'admin' | 'servicios' | 'ventas';
+      }
+
+      const hashParam = urlParams.hash.replace('#', '').toLowerCase();
+      if (hashParam && ['home', 'admin', 'servicios', 'ventas'].includes(hashParam)) {
+        return hashParam as 'home' | 'admin' | 'servicios' | 'ventas';
+      }
+
       const persisted = localStorage.getItem('homeli_active_section');
       return (persisted as 'home' | 'admin' | 'servicios' | 'ventas') || 'home';
     } catch {
@@ -101,6 +113,20 @@ export default function App() {
   });
 
   const [showSplash, setShowSplash] = useState(false);
+
+  // Custom Banner States for Atelier Boutique Hero with localStorage Persistence
+  const [bannerBg, setBannerBg] = useState<string>(() => {
+    return localStorage.getItem('homeli_banner_bg') || '';
+  });
+  const [bannerTitle, setBannerTitle] = useState<string>(() => {
+    return localStorage.getItem('homeli_banner_title') || 'Catálogo Exclusivo Atelier';
+  });
+  const [bannerTag, setBannerTag] = useState<string>(() => {
+    return localStorage.getItem('homeli_banner_tag') || 'ATELIER BOUTIQUE';
+  });
+  const [bannerDesc, setBannerDesc] = useState<string>(() => {
+    return localStorage.getItem('homeli_banner_desc') || 'Descubre nuestras dos exclusivas divisiones diseñadas meticulosamente para brindar confort personal y sanidad impecable en tu hogar.';
+  });
 
   // Sync state changes to localStorage
   useEffect(() => {
@@ -126,6 +152,22 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('homeli_active_section', activeSection);
   }, [activeSection]);
+
+  useEffect(() => {
+    localStorage.setItem('homeli_banner_bg', bannerBg);
+  }, [bannerBg]);
+
+  useEffect(() => {
+    localStorage.setItem('homeli_banner_title', bannerTitle);
+  }, [bannerTitle]);
+
+  useEffect(() => {
+    localStorage.setItem('homeli_banner_tag', bannerTag);
+  }, [bannerTag]);
+
+  useEffect(() => {
+    localStorage.setItem('homeli_banner_desc', bannerDesc);
+  }, [bannerDesc]);
 
   // Progressive Web App Installation states
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -236,6 +278,10 @@ export default function App() {
     localStorage.removeItem('homeli_logs');
     localStorage.removeItem('homeli_profiles');
     localStorage.removeItem('homeli_active_section');
+    localStorage.removeItem('homeli_banner_bg');
+    localStorage.removeItem('homeli_banner_title');
+    localStorage.removeItem('homeli_banner_tag');
+    localStorage.removeItem('homeli_banner_desc');
     
     // Perform hard reload to ensure all static files and memory is completely cleansed
     window.location.reload();
@@ -465,6 +511,16 @@ export default function App() {
                     onAddProduct={handleAddProduct}
                     onUpdateProduct={handleUpdateProduct}
                     onDeleteProduct={handleDeleteProduct}
+                    bannerBg={bannerBg}
+                    bannerTitle={bannerTitle}
+                    bannerTag={bannerTag}
+                    bannerDesc={bannerDesc}
+                    onUpdateBannerSettings={(bg: string, title: string, tag: string, desc: string) => {
+                      setBannerBg(bg);
+                      setBannerTitle(title);
+                      setBannerTag(tag);
+                      setBannerDesc(desc);
+                    }}
                   />
                 )}
 
@@ -483,6 +539,10 @@ export default function App() {
                     onAddLog={onAddLog}
                     onAddOrder={(order) => setOrders(prev => [order, ...prev])}
                     onNavigateToHome={() => setActiveSection('home')}
+                    bannerBg={bannerBg}
+                    bannerTitle={bannerTitle}
+                    bannerTag={bannerTag}
+                    bannerDesc={bannerDesc}
                   />
                 )}
               </motion.div>

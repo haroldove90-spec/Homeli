@@ -43,6 +43,10 @@ interface VentasSectionProps {
   onAddLog: (action: string, severity: 'info' | 'warning' | 'critical') => void;
   onAddOrder?: (order: SalesOrder) => void;
   onNavigateToHome?: () => void;
+  bannerBg?: string;
+  bannerTitle?: string;
+  bannerTag?: string;
+  bannerDesc?: string;
 }
 
 // Exact 12 products with corresponding category classification
@@ -191,7 +195,11 @@ export default function VentasSection({
   onUpdateOrderStatus,
   onAddLog,
   onAddOrder,
-  onNavigateToHome
+  onNavigateToHome,
+  bannerBg = '',
+  bannerTitle = 'Catálogo Exclusivo Atelier',
+  bannerTag = 'ATELIER BOUTIQUE',
+  bannerDesc = 'Descubre nuestras dos exclusivas divisiones diseñadas meticulosamente para brindar confort personal y sanidad impecable en tu hogar.'
 }: VentasSectionProps) {
   // Views inside e-commerce: 'shop', 'cart_orders', 'manager'
   const [activeViewMode, setActiveViewMode] = useState<'shop' | 'cart_orders' | 'manager'>('shop');
@@ -604,22 +612,32 @@ export default function VentasSection({
 
       {/* Hero Banner for Category awareness when browsing */}
       {activeViewMode === 'shop' && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 mt-6">
-          <div className="bg-gradient-to-br from-slate-900 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 mt-6" id="ecommerce_hero_banner_container">
+          <div 
+            className="rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden shadow-md bg-cover bg-center transition-all duration-300"
+            style={{
+              backgroundImage: bannerBg ? `linear-gradient(to right, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.45)), url(${bannerBg})` : 'none',
+              backgroundColor: bannerBg ? 'transparent' : '#0f172a'
+            }}
+          >
+            {/* If no custom background URL is defined, use the elegant space gradient */}
+            {!bannerBg && (
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-indigo-950 pointer-events-none" />
+            )}
             <div className="absolute right-0 bottom-0 top-0 w-1/3 bg-radial from-[#c5a85c]/15 to-transparent pointer-events-none" />
             <div className="relative z-10 max-w-xl space-y-2 text-left">
               <span className="px-2.5 py-0.5 bg-[#c5a85c]/25 border border-[#c19a45]/30 rounded-full text-[9px] font-black tracking-widest uppercase inline-block text-[#ebd7a7]">
-                ATELIER BOUTIQUE
+                {bannerTag || 'ATELIER BOUTIQUE'}
               </span>
               <h2 className="text-xl sm:text-2xl font-serif font-black tracking-tight text-white leading-tight">
                 {selectedCategory === 'Zapatos' ? '👠 Colección Calzado de Alta Costura' : 
                  selectedCategory === 'Productos de limpieza' ? '🧴 Línea de Limpieza de Estándar Profesional' :
-                 'Catálogo Exclusivo Atelier'}
+                 (bannerTitle || 'Catálogo Exclusivo Atelier')}
               </h2>
               <p className="text-xs text-slate-300 leading-relaxed font-medium">
                 {selectedCategory === 'Zapatos' ? 'Selección ergonómica transpirable confeccionada con pieles selectas e ingeniería de soporte de alto impacto.' : 
                  selectedCategory === 'Productos de limpieza' ? 'Agentes concentrados biodegradables libres de químicos nocivos que protegen tu salud familiar.' :
-                 'Descubre nuestras dos exclusivas divisiones diseñadas meticulosamente para brindar confort personal y sanidad impecable en tu hogar.'}
+                 (bannerDesc || 'Descubre nuestras dos exclusivas divisiones diseñadas meticulosamente para brindar confort personal y sanidad impecable en tu hogar.')}
               </p>
 
               {/* Improved dynamic shortcut pills to switch categories */}

@@ -46,6 +46,11 @@ interface AdminSectionProps {
   onAddProduct: (product: ProductItem) => void;
   onUpdateProduct: (product: ProductItem) => void;
   onDeleteProduct: (id: string) => void;
+  bannerBg?: string;
+  bannerTitle?: string;
+  bannerTag?: string;
+  bannerDesc?: string;
+  onUpdateBannerSettings?: (bg: string, title: string, tag: string, desc: string) => void;
 }
 
 export default function AdminSection({
@@ -59,7 +64,12 @@ export default function AdminSection({
   onClearLogs,
   onAddProduct,
   onUpdateProduct,
-  onDeleteProduct
+  onDeleteProduct,
+  bannerBg = '',
+  bannerTitle = 'Catálogo Exclusivo Atelier',
+  bannerTag = 'ATELIER BOUTIQUE',
+  bannerDesc = 'Descubre nuestras dos exclusivas divisiones diseñadas meticulosamente para brindar confort personal y sanidad impecable en tu hogar.',
+  onUpdateBannerSettings
 }: AdminSectionProps) {
   // Navigation tabs: 'metrics' | 'ecommerce' | 'operational'
   const [activeTab, setActiveTab] = useState<'metrics' | 'ecommerce' | 'operational'>('metrics');
@@ -99,6 +109,21 @@ export default function AdminSection({
   const [pDesc, setPDesc] = useState('');
   const [pImgUrl, setPImgUrl] = useState('');
   const [pSalesCount, setPSalesCount] = useState(0);
+
+  // Local state for Banner Settings Form
+  const [localBannerBg, setLocalBannerBg] = useState(bannerBg);
+  const [localBannerTitle, setLocalBannerTitle] = useState(bannerTitle);
+  const [localBannerTag, setLocalBannerTag] = useState(bannerTag);
+  const [localBannerDesc, setLocalBannerDesc] = useState(bannerDesc);
+
+  const handleSaveBannerSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onUpdateBannerSettings) {
+      onUpdateBannerSettings(localBannerBg.trim(), localBannerTitle.trim(), localBannerTag.trim(), localBannerDesc.trim());
+      onAddLog('Se actualizaron las configuraciones del banner oficial Atelier Boutique', 'info');
+      showToast('¡Configuración del Banner Atelier guardada con éxito!', 'success');
+    }
+  };
 
   // Visual Notification Toast States
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'info' | 'danger' } | null>(null);
@@ -576,18 +601,142 @@ export default function AdminSection({
 
       {/* ================================== TAB 2: ACTIVE PRODUCT DATABASE (VIEW, ADD, EDIT, DELETE) ================================== */}
       {activeTab === 'ecommerce' && (
-        <motion.div
-          key="ecommerce_tab"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6"
-        >
-          {/* List Toolbar controllers */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-5">
-            <div>
-              <h3 className="font-serif font-black text-slate-800 text-[15px] sm:text-lg">Catálogo Maestro de Artículos</h3>
-              <p className="text-xs text-slate-400">Cualquier cambio guardado se reflejará en tiempo real y modificará el stock, fotos y precios de la tienda en línea.</p>
+        <div className="space-y-6 animate-fade-in" id="admin_ecommerce_tab_wrapper">
+          
+          {/* ================================== ATELIER BANNER CUSTOMIZER ================================== */}
+          <motion.div
+            key="banner_customizer_card"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4"
+            id="admin_banner_customizer_container"
+          >
+            <div className="border-b border-slate-100 pb-4">
+              <h3 className="font-serif font-black text-slate-800 text-[15px] sm:text-lg">Personalización de Cabecera E-commerce</h3>
+              <p className="text-xs text-slate-400">Modifica en tiempo real los textos y la imagen de fondo de la tarjeta Atelier Boutique de la tienda.</p>
             </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Form Input fields */}
+              <form onSubmit={handleSaveBannerSettings} className="space-y-4 text-left">
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-slate-450 mb-1">Imagen de Fondo del Banner (URL)</label>
+                  <input
+                    type="text"
+                    value={localBannerBg}
+                    onChange={(e) => setLocalBannerBg(e.target.value)}
+                    placeholder="https://ejemplo.com/diseno-atelier.webp"
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800 font-mono"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">Escribe la URL directa de la imagen de fondo. Deja vacío para mantener el degradado nocturno básico.</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-450 mb-1">Sutbítulo / Etiqueta (Overline)</label>
+                    <input
+                      type="text"
+                      value={localBannerTag}
+                      onChange={(e) => setLocalBannerTag(e.target.value)}
+                      placeholder="ATELIER BOUTIQUE"
+                      maxLength={40}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-450 mb-1">Título de la Tarjeta</label>
+                    <input
+                      type="text"
+                      value={localBannerTitle}
+                      onChange={(e) => setLocalBannerTitle(e.target.value)}
+                      placeholder="Catálogo Exclusivo Atelier"
+                      maxLength={60}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-slate-450 mb-1">Descripción de la Tarjeta</label>
+                  <textarea
+                    value={localBannerDesc}
+                    onChange={(e) => setLocalBannerDesc(e.target.value)}
+                    placeholder="Escribe los detalles o promociones..."
+                    rows={3}
+                    maxLength={300}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800 leading-relaxed"
+                  />
+                </div>
+
+                <div className="pt-2 flex gap-3">
+                  <button
+                    type="submit"
+                    className="px-4 py-2.5 bg-gradient-to-r from-slate-900 to-[#c5a85c] text-white font-black text-xs rounded-xl hover:opacity-95 cursor-pointer shadow-sm transition"
+                  >
+                    Guardar Configuración de Banner
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLocalBannerBg('');
+                      setLocalBannerTitle('Catálogo Exclusivo Atelier');
+                      setLocalBannerTag('ATELIER BOUTIQUE');
+                      setLocalBannerDesc('Descubre nuestras dos exclusivas divisiones diseñadas meticulosamente para brindar confort personal y sanidad impecable en tu hogar.');
+                    }}
+                    className="px-3 py-2 text-xs font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer"
+                  >
+                    Restaurar Original
+                  </button>
+                </div>
+              </form>
+
+              {/* Right: Mockup Live client preview */}
+              <div className="flex flex-col justify-center space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block text-left">Vista Previa Previsualizada</span>
+                
+                {/* Simulated e-commerce banner */}
+                <div 
+                  className="rounded-2xl p-6 text-white relative overflow-hidden min-h-[160px] flex flex-col justify-center text-left bg-cover bg-center transition-all duration-300"
+                  style={{
+                    backgroundImage: localBannerBg ? `linear-gradient(to right, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.45)), url(${localBannerBg})` : 'none',
+                    backgroundColor: localBannerBg ? 'transparent' : '#0f172a'
+                  }}
+                >
+                  {!localBannerBg && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-indigo-950 pointer-events-none" />
+                  )}
+                  <div className="absolute right-0 bottom-0 top-0 w-1/3 bg-radial from-[#c5a85c]/15 to-transparent pointer-events-none" />
+                  
+                  <div className="relative z-10 space-y-1.5 max-w-sm">
+                    {localBannerTag && (
+                      <span className="px-2 py-0.5 bg-[#c5a85c]/25 border border-[#c19a45]/30 rounded-full text-[8px] font-black tracking-widest uppercase inline-block text-[#ebd7a7]">
+                        {localBannerTag}
+                      </span>
+                    )}
+                    <h2 className="text-sm sm:text-base font-serif font-black tracking-tight text-white leading-tight">
+                      {localBannerTitle || 'Catálogo Exclusivo Atelier'}
+                    </h2>
+                    <p className="text-[9px] text-slate-300 leading-relaxed font-medium">
+                      {localBannerDesc || 'Descubre nuestras dos exclusivas divisiones...'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            key="ecommerce_tab"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6"
+          >
+            {/* List Toolbar controllers */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-5">
+              <div>
+                <h3 className="font-serif font-black text-slate-800 text-[15px] sm:text-lg">Catálogo Maestro de Artículos</h3>
+                <p className="text-xs text-slate-400">Cualquier cambio guardado se reflejará en tiempo real y modificará el stock, fotos y precios de la tienda en línea.</p>
+              </div>
 
             <button
               onClick={handleOpenAddProduct}
@@ -721,6 +870,7 @@ export default function AdminSection({
             </table>
           </div>
         </motion.div>
+        </div>
       )}
 
       {/* ================================== TAB 3: CONTROL OPERATIVO & BITACORA LOGS ================================== */}
