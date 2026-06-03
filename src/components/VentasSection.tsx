@@ -259,9 +259,13 @@ export default function VentasSection({
   const [pDesc, setPDesc] = useState('');
   const [pImgUrl, setPImgUrl] = useState('');
 
-  // Sync catalog updates
+  // Sync catalog updates (Filter out inactive or zero-stock products for the storefront)
   useEffect(() => {
-    const relevant = products.filter(p => p.category === 'Productos de limpieza' || p.category === 'Zapatos');
+    const relevant = products.filter(p => {
+      const matchCategory = p.category === 'Productos de limpieza' || p.category === 'Zapatos';
+      const isAvailable = p.active !== false && p.stock > 0;
+      return matchCategory && isAvailable;
+    });
     setStoreCatalog(relevant);
   }, [products]);
 

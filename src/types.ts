@@ -31,6 +31,7 @@ export interface ProductItem {
   salesCount: number;
   description: string;
   imageUrl?: string;
+  active?: boolean;
 }
 
 export interface SalesOrder {

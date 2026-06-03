@@ -89,6 +89,11 @@ export default function AdminSection({
 
   useEffect(() => {
     setLocalBannerBg(bannerBg);
+    if ((bannerBg || '').startsWith('data:')) {
+      setBannerImageUploadType('upload');
+    } else if (bannerBg) {
+      setBannerImageUploadType('url');
+    }
   }, [bannerBg]);
 
   useEffect(() => {
@@ -151,6 +156,11 @@ export default function AdminSection({
   const [pDesc, setPDesc] = useState('');
   const [pImgUrl, setPImgUrl] = useState('');
   const [pSalesCount, setPSalesCount] = useState(0);
+  const [pActive, setPActive] = useState(true);
+
+  // Selector for uploading files vs writing link
+  const [prodImageUploadType, setProdImageUploadType] = useState<'url' | 'upload'>('url');
+  const [bannerImageUploadType, setBannerImageUploadType] = useState<'url' | 'upload'>('url');
 
   const handleSaveBannerSettings = (e: React.FormEvent) => {
     e.preventDefault();
@@ -259,6 +269,8 @@ export default function AdminSection({
     setPDesc('');
     setPImgUrl('');
     setPSalesCount(0);
+    setPActive(true);
+    setProdImageUploadType('url');
     setShowProductModal(true);
   };
 
@@ -273,6 +285,8 @@ export default function AdminSection({
     setPDesc(prod.description);
     setPImgUrl(prod.imageUrl || '');
     setPSalesCount(prod.salesCount || 0);
+    setPActive(prod.active !== false);
+    setProdImageUploadType((prod.imageUrl || '').startsWith('data:') ? 'upload' : 'url');
     setShowProductModal(true);
   };
 
@@ -296,7 +310,8 @@ export default function AdminSection({
       stock: Number(pStock) || 0,
       salesCount: pSalesCount,
       description: pDesc,
-      imageUrl: imgFallback
+      imageUrl: imgFallback,
+      active: pActive
     };
 
     if (editingProduct) {
@@ -656,16 +671,64 @@ export default function AdminSection({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Form Input fields */}
               <form onSubmit={handleSaveBannerSettings} className="space-y-4 text-left">
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-450 mb-1">Imagen de Fondo del Banner (URL)</label>
-                  <input
-                    type="text"
-                    value={localBannerBg}
-                    onChange={(e) => setLocalBannerBg(e.target.value)}
-                    placeholder="https://ejemplo.com/diseno-atelier.webp"
-                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800 font-mono"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1">Escribe la URL directa de la imagen de fondo. Deja vacío para usar el color de overlay sólido.</p>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center pb-0.5">
+                    <label className="block text-[10px] font-black uppercase text-slate-450">Imagen de Fondo del Banner</label>
+                    <div className="flex gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => setBannerImageUploadType('url')}
+                        className={`px-2 py-0.5 rounded text-[8px] font-black tracking-wider transition cursor-pointer ${bannerImageUploadType === 'url' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-400 hover:text-slate-600'}`}
+                      >
+                        Enlace (URL)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBannerImageUploadType('upload')}
+                        className={`px-2 py-0.5 rounded text-[8px] font-black tracking-wider transition cursor-pointer ${bannerImageUploadType === 'upload' ? 'bg-white text-[#c5a85c] shadow-xs' : 'text-slate-400 hover:text-slate-600'}`}
+                      >
+                        Subir Archivo 📤
+                      </button>
+                    </div>
+                  </div>
+
+                  {bannerImageUploadType === 'url' ? (
+                    <input
+                      type="text"
+                      value={localBannerBg.startsWith('data:') ? '' : localBannerBg}
+                      onChange={(e) => setLocalBannerBg(e.target.value)}
+                      placeholder="https://ejemplo.com/diseno-atelier.webp"
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800 font-mono"
+                    />
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                if (typeof reader.result === 'string') {
+                                  setLocalBannerBg(reader.result);
+                                  showToast('¡Imagen de cabecera cargada con éxito!', 'success');
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          className="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-xl file:border-0 file:text-[9px] file:font-black file:bg-[#c5a85c]/10 file:text-[#a38439] hover:file:bg-[#c5a85c]/20 file:cursor-pointer cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  <p className="text-[9px] text-slate-400 mt-0.5">
+                    {bannerImageUploadType === 'url' 
+                      ? 'Escribe la URL directa de la imagen de fondo. Deja vacío para usar el color de overlay sólido.' 
+                      : 'Carga un archivo PNG, JPG o WEBP directo desde tu dispositivo para almacenarlo localmente.'}
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -933,11 +996,20 @@ export default function AdminSection({
 
                       {/* Category Badge columns */}
                       <td className="p-4 text-center">
-                        <span className={`inline-block px-2 py-0.5 rounded-md text-[9px] font-black uppercase ${
-                          p.category === 'Zapatos' ? 'bg-[#c5a85c]/10 text-[#c5a85c]' : 'bg-emerald-50 text-emerald-700'
-                        }`}>
-                          {p.category}
-                        </span>
+                        <div className="flex flex-col items-center gap-1">
+                          <span className={`inline-block px-2 py-0.5 rounded-md text-[9px] font-black uppercase ${
+                            p.category === 'Zapatos' ? 'bg-[#c5a85c]/10 text-[#c5a85c]' : 'bg-emerald-50 text-emerald-700'
+                          }`}>
+                            {p.category}
+                          </span>
+                          <span className={`inline-block px-1.5 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider ${
+                            p.active !== false 
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                              : 'bg-rose-55 text-rose-600 border border-rose-200 bg-rose-50'
+                          }`}>
+                            {p.active !== false ? '● Activo' : '● Pausado'}
+                          </span>
+                        </div>
                       </td>
 
                       {/* Price columns */}
@@ -958,17 +1030,31 @@ export default function AdminSection({
 
                       {/* Interactive Edit / Delete actions */}
                       <td className="p-4 text-right">
-                        <div className="flex justify-end gap-2 shrink-0">
+                        <div className="flex justify-end gap-1.5 shrink-0 flex-wrap">
+                          <button
+                            onClick={() => {
+                              onUpdateProduct({ ...p, active: p.active === false });
+                              showToast(`Producto "${p.name}" ${p.active === false ? 'activado' : 'desactivado'} con éxito`, 'success');
+                            }}
+                            className={`px-2.5 py-1.5 rounded-xl text-[10px] font-bold transition cursor-pointer flex items-center gap-1 border ${
+                              p.active !== false
+                                ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
+                                : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
+                            }`}
+                            title={p.active !== false ? 'Desactivar de la tienda' : 'Activar en la tienda'}
+                          >
+                            {p.active !== false ? '⏸️ Desactivar' : '▶️ Activar'}
+                          </button>
                           <button
                             onClick={() => handleOpenEditProduct(p)}
-                            className="p-2 bg-slate-50 border border-slate-205 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition cursor-pointer"
+                            className="p-1.5 px-2.5 bg-slate-50 border border-slate-205 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 text-[10px] font-bold transition cursor-pointer"
                             title="Editar propiedades de producto"
                           >
                             ✏️ Editar
                           </button>
                           <button
                             onClick={() => handleDeleteProductClick(p.id, p.name)}
-                            className="p-2 bg-rose-50 border border-rose-105 rounded-xl text-rose-600 hover:text-rose-700 hover:bg-rose-100 transition cursor-pointer"
+                            className="p-1.5 px-2 bg-rose-50 border border-rose-105 rounded-xl text-rose-600 hover:text-rose-700 hover:bg-rose-100 text-[10px] font-bold transition cursor-pointer"
                             title="Dar de baja de la tienda"
                           >
                             🗑️ Baja
@@ -1317,16 +1403,87 @@ export default function AdminSection({
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-[11px] font-black uppercase text-slate-450 mb-1">Dirección URL de Imagen (Foto Referencia)</label>
-                  <input
-                    type="text"
-                    value={pImgUrl}
-                    onChange={(e) => setPImgUrl(e.target.value)}
-                    placeholder="https://ejemplo.com/foto-producto.jpg (Dejar vacío para predeterminada)"
-                    className="w-full px-3 py-2 border border-slate-205 rounded-xl text-[11px] font-mono text-slate-650 bg-slate-50 focus:border-[#c5a85c] focus:outline-none"
-                  />
-                  <span className="text-[10px] text-slate-400 block mt-1">Inserta una URL de imagen válida. Si se deja en blanco, cargaremos automáticamente una foto genérica alusiva de alta calidad.</span>
+                {/* Product Image Option Selection with URL and Upload methods */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center pb-1">
+                    <label className="block text-[11px] font-black uppercase text-slate-450">Foto Ilustrativa del Producto</label>
+                    <div className="flex gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => setProdImageUploadType('url')}
+                        className={`px-2 py-0.5 rounded text-[9px] font-black tracking-wider transition cursor-pointer ${prodImageUploadType === 'url' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-400 hover:text-slate-600'}`}
+                      >
+                        Enlace (URL)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setProdImageUploadType('upload')}
+                        className={`px-2 py-0.5 rounded text-[9px] font-black tracking-wider transition cursor-pointer ${prodImageUploadType === 'upload' ? 'bg-white text-[#c5a85c] shadow-xs' : 'text-slate-400 hover:text-slate-600'}`}
+                      >
+                        Subir Archivo 📤
+                      </button>
+                    </div>
+                  </div>
+
+                  {prodImageUploadType === 'url' ? (
+                    <input
+                      type="text"
+                      value={pImgUrl.startsWith('data:') ? '' : pImgUrl}
+                      onChange={(e) => setPImgUrl(e.target.value)}
+                      placeholder="https://ejemplo.com/foto-producto.jpg (Dejar vacío para predeterminada)"
+                      className="w-full px-3 py-2 border border-slate-205 rounded-xl text-[11px] font-mono text-slate-650 bg-slate-50 focus:border-[#c5a85c] focus:outline-none"
+                    />
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                if (typeof reader.result === 'string') {
+                                  setPImgUrl(reader.result);
+                                  showToast('¡Imagen local cargada con éxito!', 'success');
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          className="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:bg-[#c5a85c]/10 file:text-[#a38439] hover:file:bg-[#c5a85c]/20 file:cursor-pointer cursor-pointer"
+                        />
+                      </div>
+                      {pImgUrl.startsWith('data:') && (
+                        <div className="w-10 h-10 rounded-lg border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center bg-slate-50">
+                          <img src={pImgUrl} alt="Vista previa del artículo" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <span className="text-[10px] text-slate-400 block mt-1">
+                    {prodImageUploadType === 'url' 
+                      ? 'Inserta un enlace web directo. Si lo dejas vacío, usaremos una imagen genérica alusiva.' 
+                      : 'Carga un archivo PNG, JPG o WEBP directo desde tu dispositivo para almacenarlo localmente.'}
+                  </span>
+                </div>
+
+                {/* Active/Inactive Status Switch */}
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="space-y-px">
+                    <span className="text-xs font-black text-slate-800 block">Estatus de Disponibilidad</span>
+                    <span className="text-[10px] text-slate-400 block leading-normal">Determina si este producto estará visible/activo para la venta en el e-commerce.</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPActive(!pActive)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${pActive ? 'bg-[#c5a85c]' : 'bg-slate-300'}`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${pActive ? 'translate-x-5' : 'translate-x-0'}`}
+                    />
+                  </button>
                 </div>
 
                 <div>
