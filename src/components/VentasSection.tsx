@@ -434,12 +434,12 @@ export default function VentasSection({
           <img 
             src="https://cossma.com.mx/homeli.jpg" 
             alt="Homeli Logo" 
-            className="h-10 sm:h-12 w-auto object-contain block"
+            className="h-16 sm:h-20 w-auto object-contain block transition-all"
             referrerPolicy="no-referrer"
           />
           <div>
-            <h1 className="text-sm sm:text-base font-serif font-black tracking-tight text-slate-900 flex items-center gap-1.5 leading-none">
-              Homeli <span className="text-[10px] font-sans font-bold bg-[#c5a85c]/10 text-[#c5a85c] px-1.5 py-0.5 rounded-sm tracking-normal uppercase">Atelier</span>
+            <h1 className="text-base sm:text-xl font-serif font-black tracking-tight text-slate-900 leading-none">
+              Homeli
             </h1>
             <p className="text-[10px] text-slate-400 font-bold font-sans tracking-wide uppercase mt-1">Cuidado & Estilo Sostenible</p>
           </div>

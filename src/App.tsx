@@ -147,17 +147,17 @@ export default function App() {
 
         {/* Master Top Header Navigation Bar - Shown only inside internal roles views except Ventas */}
         {activeSection !== 'home' && activeSection !== 'ventas' && (
-          <header className="bg-white border-b border-natural-border py-2.5 px-5 flex justify-between items-center shadow-sm sticky top-0 z-40" id="header_navbar">
+          <header className="bg-white border-b border-natural-border py-2 px-5 flex justify-between items-center shadow-sm sticky top-0 z-40" id="header_navbar">
             <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setActiveSection('home')}>
               {/* Unencapsulated Real Logo */}
               <img 
                 src="https://cossma.com.mx/homeli.jpg" 
                 alt="Homeli Logo Banner" 
-                className="h-10 w-auto object-contain block"
+                className="h-14 w-auto object-contain block transition-all"
                 referrerPolicy="no-referrer"
               />
               <div>
-                <h2 className="text-sm font-bold font-serif tracking-tight text-natural-dark leading-none">Homeli</h2>
+                <h2 className="text-base font-bold font-serif tracking-tight text-natural-dark leading-none">Homeli</h2>
               </div>
             </div>
 
