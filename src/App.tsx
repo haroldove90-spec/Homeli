@@ -145,8 +145,8 @@ export default function App() {
       {/* Main Core Layout */}
       <div className="flex flex-col flex-1" id="core_layout">
 
-        {/* Master Top Header Navigation Bar - Shown only inside internal roles views */}
-        {activeSection !== 'home' && (
+        {/* Master Top Header Navigation Bar - Shown only inside internal roles views except Ventas */}
+        {activeSection !== 'home' && activeSection !== 'ventas' && (
           <header className="bg-white border-b border-natural-border py-2.5 px-5 flex justify-between items-center shadow-sm sticky top-0 z-40" id="header_navbar">
             <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setActiveSection('home')}>
               {/* Standard Rectangular Logo Brand Area without restrictive circular frame encapsulation */}
@@ -313,32 +313,34 @@ export default function App() {
                 id="interactive_section_body"
               >
                 {/* Back Link Breadcrumb under Active Section */}
-                <div className="flex justify-between items-center mb-6" id="dashboard_breadcrumb">
-                  <div className="flex gap-2 items-center text-xs text-slate-500 font-semibold">
-                    <button 
-                      onClick={() => setActiveSection('home')} 
-                      className="hover:text-indigo-600 flex items-center gap-1 transition"
-                      id="breadcrumb_home_btn"
-                    >
-                      <span>Homeli</span>
-                    </button>
-                    <span>/</span>
-                    <span className="text-slate-800 capitalize font-bold font-mono">
-                      {activeSection === 'admin' ? 'Administrador' : activeSection === 'servicios' ? 'Servicios' : 'Ventas Ecommerce'}
-                    </span>
-                  </div>
+                {activeSection !== 'ventas' && (
+                  <div className="flex justify-between items-center mb-6" id="dashboard_breadcrumb">
+                    <div className="flex gap-2 items-center text-xs text-slate-500 font-semibold">
+                      <button 
+                        onClick={() => setActiveSection('home')} 
+                        className="hover:text-indigo-600 flex items-center gap-1 transition"
+                        id="breadcrumb_home_btn"
+                      >
+                        <span>Homeli</span>
+                      </button>
+                      <span>/</span>
+                      <span className="text-slate-800 capitalize font-bold font-mono">
+                        {activeSection === 'admin' ? 'Administrador' : activeSection === 'servicios' ? 'Servicios' : 'Ventas Ecommerce'}
+                      </span>
+                    </div>
 
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setActiveSection('home')}
-                      className="px-3 py-1.5 text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl transition flex items-center gap-1"
-                      id="btn_quick_return"
-                    >
-                      <ArrowLeft size={13} />
-                      Regresar al Inicio
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setActiveSection('home')}
+                        className="px-3 py-1.5 text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl transition flex items-center gap-1"
+                        id="btn_quick_return"
+                      >
+                        <ArrowLeft size={13} />
+                        Regresar al Inicio
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Sub Panel Router - Temporarily rendered as clean empty white containers by user request */}
                 {activeSection === 'admin' && (
@@ -361,6 +363,7 @@ export default function App() {
                     onUpdateOrderStatus={handleUpdateOrderStatus}
                     onAddLog={onAddLog}
                     onAddOrder={(order) => setOrders(prev => [order, ...prev])}
+                    onNavigateToHome={() => setActiveSection('home')}
                   />
                 )}
               </motion.div>

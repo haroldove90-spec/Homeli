@@ -25,7 +25,13 @@ import {
   CreditCard,
   User,
   Heart,
-  Filter
+  Filter,
+  ChevronDown,
+  LogOut,
+  Sliders,
+  Sparkles,
+  RefreshCw,
+  Home
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -36,9 +42,10 @@ interface VentasSectionProps {
   onUpdateOrderStatus: (id: string, status: OrderStatus) => void;
   onAddLog: (action: string, severity: 'info' | 'warning' | 'critical') => void;
   onAddOrder?: (order: SalesOrder) => void;
+  onNavigateToHome?: () => void;
 }
 
-// Exact 12 requested products with provided image URLs
+// Exact 12 products with corresponding category classification
 const STATIC_STORE_PRODUCTS: ProductItem[] = [
   // Zapatos Category (6 items)
   {
@@ -133,7 +140,7 @@ const STATIC_STORE_PRODUCTS: ProductItem[] = [
   },
   {
     id: 'CLN-003',
-    name: 'Windex Limpiador de Vidrios y Cristales original',
+    name: 'Windex Limpiador de Vidrios original',
     sku: 'HML-LIM-03',
     category: 'Productos de limpieza',
     price: 89,
@@ -183,37 +190,51 @@ export default function VentasSection({
   onAddProduct,
   onUpdateOrderStatus,
   onAddLog,
-  onAddOrder
+  onAddOrder,
+  onNavigateToHome
 }: VentasSectionProps) {
-  // Roles console navigation view modes: 'shop', 'cart_orders', 'manager'
+  // Views inside e-commerce: 'shop', 'cart_orders', 'manager'
   const [activeViewMode, setActiveViewMode] = useState<'shop' | 'cart_orders' | 'manager'>('shop');
   
-  // Dynamic Catalog list containing products
+  // Catalog containing products
   const [storeCatalog, setStoreCatalog] = useState<ProductItem[]>([]);
   
-  // Shopping Cart client State
+  // Shopping Cart state
   const [cart, setCart] = useState<{ product: ProductItem; quantity: number }[]>([]);
   
-  // Personal User Orders History State (Fallback inside session)
-  const [sessionOrders, setSessionOrders] = useState<SalesOrder[]>([]);
-
-  // Category Filtering inside Storefront
+  // Category selected filtering: 'todos' | 'Zapatos' | 'Productos de limpieza'
   const [selectedCategory, setSelectedCategory] = useState<'todos' | 'Zapatos' | 'Productos de limpieza'>('todos');
   
-  // Form checkout fields (Cash on delivery)
-  const [checkoutName, setCheckoutName] = useState('');
-  const [checkoutPhone, setCheckoutPhone] = useState('');
-  const [checkoutAddress, setCheckoutAddress] = useState('');
+  // Custom user profile data (modifiable)
+  const [userProfile, setUserProfile] = useState({
+    name: 'Valeria Fuentes',
+    phone: '55-3211-9080',
+    address: 'Av. Paseo de la Reforma 450, Piso 12, Juárez, 06600 Ciudad de México, CDMX',
+    roleLabel: 'Cliente Premium',
+    city: 'CDMX',
+    email: 'valeria@homeli.mx'
+  });
+
+  // State controls
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  
+  // Temporary forms for checkout
+  const [checkoutName, setCheckoutName] = useState(userProfile.name);
+  const [checkoutPhone, setCheckoutPhone] = useState(userProfile.phone);
+  const [checkoutAddress, setCheckoutAddress] = useState(userProfile.address);
   const [checkoutNotes, setCheckoutNotes] = useState('');
+  
   const [isOrderOrdered, setIsOrderOrdered] = useState(false);
   const [latestOrderId, setLatestOrderId] = useState('');
 
-  // Manager Search states
+  // Manager state variables
   const [productQuery, setProductQuery] = useState('');
   const [orderQuery, setOrderQuery] = useState('');
-  
-  // Manager Modal states
   const [showAddProductModal, setShowAddProductModal] = useState(false);
+  
+  // New product inputs
   const [pName, setPName] = useState('');
   const [pPrice, setPPrice] = useState('');
   const [pStock, setPStock] = useState('');
@@ -221,13 +242,11 @@ export default function VentasSection({
   const [pDesc, setPDesc] = useState('');
   const [pImgUrl, setPImgUrl] = useState('');
 
-  // Sincronizar catálogo: productos globales + productos estáticos estipulados
+  // Sync catalog updates
   useEffect(() => {
     const mergedList = [...STATIC_STORE_PRODUCTS];
     products.forEach(p => {
-      // Evitar duplicados por nombre o ID
       if (!mergedList.some(item => item.id === p.id || item.name.toLowerCase() === p.name.toLowerCase())) {
-        // Normalizar categorías entrantes útiles
         let cat = p.category;
         if (cat === 'Limpieza' || cat === 'Limpieza Integral') {
           cat = 'Productos de limpieza';
@@ -238,11 +257,17 @@ export default function VentasSection({
     setStoreCatalog(mergedList);
   }, [products]);
 
-  // Carrito handlers
+  // Sync profile fields initially
+  useEffect(() => {
+    setCheckoutName(userProfile.name);
+    setCheckoutPhone(userProfile.phone);
+    setCheckoutAddress(userProfile.address);
+  }, [userProfile]);
+
+  // Cart operations
   const addToCart = (product: ProductItem) => {
-    // Validar si cuenta con stock
     if (product.stock <= 0) {
-      alert('Este artículo se encuentra agotado temporalmente.');
+      alert('Este artículo se encuentra temporalmente agotado.');
       return;
     }
 
@@ -250,7 +275,7 @@ export default function VentasSection({
       const existing = prev.find(item => item.product.id === product.id);
       if (existing) {
         if (existing.quantity >= product.stock) {
-          alert(`Límite de stock alcanzado (${product.stock} pz disponibles)`);
+          alert(`Lo sentimos, el límite de stock disponible es de ${product.stock} unidades.`);
           return prev;
         }
         return prev.map(item => 
@@ -262,7 +287,8 @@ export default function VentasSection({
       return [...prev, { product, quantity: 1 }];
     });
 
-    onAddLog(`Cliente añadió al carrito de compras: ${product.name}`, 'info');
+    onAddLog(`Cliente añadió al carrito: ${product.name}`, 'info');
+    setIsCartDrawerOpen(true); // Auto-open floating cart drawer on add
   };
 
   const updateQuantity = (productId: string, delta: number) => {
@@ -275,9 +301,8 @@ export default function VentasSection({
         return prev.filter(i => i.product.id !== productId);
       }
       
-      // Proteger stock límite
       if (newQty > item.product.stock) {
-        alert(`Lo sentimos, solo disponemos de ${item.product.stock} unidades de este producto.`);
+        alert(`Disponibilidad limitada a ${item.product.stock} pz.`);
         return prev;
       }
       
@@ -289,12 +314,12 @@ export default function VentasSection({
     setCart(prev => prev.filter(item => item.product.id !== productId));
   };
 
-  // Checkout Pago contra entrega handle
+  // Submit order handler
   const handleCheckoutSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (cart.length === 0) return;
     if (!checkoutName.trim() || !checkoutPhone.trim() || !checkoutAddress.trim()) {
-      alert('Por favor complete todos los datos de contacto y entrega obligatorios.');
+      alert('Por favor, ingresa los datos esenciales para la entrega.');
       return;
     }
 
@@ -304,7 +329,7 @@ export default function VentasSection({
     const newSalesOrder: SalesOrder = {
       id: randomID,
       customerName: checkoutName,
-      customerEmail: `${checkoutName.toLowerCase().replace(/\s+/g, '')}@homelipedido.mx`,
+      customerEmail: userProfile.email,
       date: new Date().toISOString(),
       total: totalAmount,
       status: 'procesando',
@@ -312,15 +337,11 @@ export default function VentasSection({
       productNames: cart.map(i => `${i.product.name} (x${i.quantity})`)
     };
 
-    // Agregar orden globalmente si la función de App.tsx existe
     if (onAddOrder) {
       onAddOrder(newSalesOrder);
     }
-    
-    // Almacenar en compras de la sesión
-    setSessionOrders(prev => [newSalesOrder, ...prev]);
 
-    // Reducir stock simulado en catálogo
+    // Deduct simulated stock
     setStoreCatalog(prev => prev.map(p => {
       const cartItem = cart.find(ci => ci.product.id === p.id);
       if (cartItem) {
@@ -333,19 +354,15 @@ export default function VentasSection({
       return p;
     }));
 
-    onAddLog(`¡Nueva compra e-commerce registrada! ID: ${newSalesOrder.id} - Pago Contra Entrega por ${checkoutName} por un total de $${totalAmount}`, 'info');
+    onAddLog(`E-Commerce: ¡Nuevo pedido liquidable registrado! ID: ${newSalesOrder.id} - Monto: $${totalAmount} MXN`, 'info');
 
-    // Desplegar confirmación exitosa
     setLatestOrderId(randomID);
     setIsOrderOrdered(true);
     setCart([]);
-    setCheckoutName('');
-    setCheckoutPhone('');
-    setCheckoutAddress('');
     setCheckoutNotes('');
   };
 
-  // Crear producto manager
+  // Create products in Admin View
   const handleManagerCreateProduct = (e: React.FormEvent) => {
     e.preventDefault();
     if (!pName.trim() || !pPrice.trim() || !pStock.trim()) {
@@ -353,7 +370,7 @@ export default function VentasSection({
       return;
     }
 
-    const resolvedImg = pImgUrl.trim() || 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400&auto=format&fit=crop&q=60';
+    const resolvedImg = pImgUrl.trim() || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400';
     const newPrd: ProductItem = {
       id: `PROD-${Math.floor(300 + Math.random() * 699)}`,
       name: pName,
@@ -362,14 +379,13 @@ export default function VentasSection({
       price: parseFloat(pPrice) || 199,
       stock: parseInt(pStock) || 12,
       salesCount: 0,
-      description: pDesc.trim() || 'No se ingresó descripción.',
+      description: pDesc.trim() || 'Impecable artículo seleccionado y garantizado por estándares de Homeli.',
       imageUrl: resolvedImg
     };
 
     onAddProduct(newPrd);
-    onAddLog(`Línea almacén: Registró exitosamente ${newPrd.name} en categoría ${newPrd.category}`, 'info');
+    onAddLog(`Almacén: Añadido producto de catálogo ${newPrd.name} (${newPrd.category})`, 'info');
 
-    // Resetear
     setPName('');
     setPPrice('');
     setPStock('');
@@ -378,17 +394,16 @@ export default function VentasSection({
     setShowAddProductModal(false);
   };
 
-  // Totales
-  const cartItemsCount = cart.reduce((acc, curr) => acc + curr.quantity, 0);
-  const cartTotalAmount = cart.reduce((acc, curr) => acc + (curr.product.price * curr.quantity), 0);
+  // Reset shopping notification banner
+  const closeConfirmationState = () => {
+    setIsOrderOrdered(false);
+    setLatestOrderId('');
+  };
 
-  // Filtrado de productos de tienda
-  const storeFilteredProducts = storeCatalog.filter(p => {
-    if (selectedCategory === 'todos') return true;
-    return p.category.toLowerCase() === selectedCategory.toLowerCase();
-  });
+  // Filter Catalog lists
+  const shoeCatalogItems = storeCatalog.filter(p => p.category === 'Zapatos');
+  const cleaningCatalogItems = storeCatalog.filter(p => p.category === 'Productos de limpieza');
 
-  // Filtrado manager
   const managerFilteredProducts = storeCatalog.filter(p => 
     p.name.toLowerCase().includes(productQuery.toLowerCase()) ||
     p.sku.toLowerCase().includes(productQuery.toLowerCase()) ||
@@ -401,51 +416,66 @@ export default function VentasSection({
     o.productNames.some(p => p.toLowerCase().includes(orderQuery.toLowerCase()))
   );
 
-  const totalManagerSalesRevenue = orders
-    .filter(o => o.status === 'entregado')
-    .reduce((acc, curr) => acc + curr.total, 0);
-
-  const lowStockProductsCount = storeCatalog.filter(p => p.stock < 10).length;
+  const cartItemsCount = cart.reduce((acc, curr) => acc + curr.quantity, 0);
+  const cartTotalAmount = cart.reduce((acc, curr) => acc + (curr.product.price * curr.quantity), 0);
 
   return (
-    <div className="space-y-6" id="online_retail_root">
+    <div className="bg-slate-50 min-h-screen text-slate-800 font-sans" id="premium_shop_dashboard">
       
-      {/* Dynamic Store Header Nav Tabs */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-natural-border pb-4 w-full" id="retail_view_tabs">
-        <div className="flex items-center gap-2">
-          <div className="p-2 bg-[#c5a85c] text-white rounded-lg shadow-sm">
-            <ShoppingBag size={20} />
+      {/* ================= HEADER GENERAL DE LA TIENDA ================= */}
+      <header className="bg-white border-b border-slate-200/85 sticky top-0 z-40 shadow-xs px-4 sm:px-8 py-3.5 flex items-center justify-between" id="boutique_header">
+        {/* Left column: Brand Identifier (Quita Homeli E-Commerce y TIENDA PREMIUM MULTI-CATEGORÍA) */}
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setActiveViewMode('shop'); setSelectedCategory('todos'); }} id="brand_home_box">
+          <div className="w-10 h-10 bg-gradient-to-br from-[#c19a45] to-[#ebd7a7] rounded-xl flex items-center justify-center p-0.5 shadow-sm">
+            <div className="w-full h-full bg-white rounded-lg flex items-center justify-center overflow-hidden">
+              <img 
+                src="https://cossma.com.mx/homeli.jpg" 
+                alt="Homeli Logo" 
+                className="w-8 h-8 object-contain"
+                referrerPolicy="no-referrer"
+              />
+            </div>
           </div>
           <div>
-            <h3 className="text-base font-extrabold text-natural-dark tracking-tight font-serif leading-none">Homeli E-Commerce</h3>
-            <span className="text-[10px] text-natural-muted font-bold font-mono">TIENDA PREMIUM MULTI-CATEGORÍAS</span>
+            <h1 className="text-lg font-serif font-black tracking-tight text-slate-900 flex items-center gap-1.5 leading-none">
+              Homeli <span className="text-[10px] font-sans font-bold bg-[#c5a85c]/10 text-[#c5a85c] px-1.5 py-0.5 rounded-sm tracking-normal uppercase">Atelier</span>
+            </h1>
+            <p className="text-[9px] text-slate-400 font-bold font-sans tracking-wide uppercase mt-0.5">Cuidado & Estilo Sostenible</p>
           </div>
         </div>
 
-        <div className="flex rounded-xl bg-natural-bg p-1 border border-natural-border shadow-sm flex-wrap" id="nav_commerce_modes">
+        {/* Middle column: Menu Bar showing User Modules & Categories (Barra de Menú Sus Módulos) */}
+        <nav className="hidden md:flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200/60" id="header_navbar_menu_bar">
           <button
             onClick={() => {
               setActiveViewMode('shop');
+              setSelectedCategory('Zapatos');
               setIsOrderOrdered(false);
             }}
-            className={`px-4 py-2 text-xs font-extrabold rounded-lg transition cursor-pointer flex items-center gap-2 ${activeViewMode === 'shop' ? 'bg-white text-[#c5a85c] shadow-sm font-black' : 'text-natural-silt hover:text-natural-dark'}`}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${activeViewMode === 'shop' && selectedCategory === 'Zapatos' ? 'bg-white text-[#c19a45] shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
           >
-            <span>🏪 Tienda de Compras</span>
+            <span>👠 Calzado Premium</span>
           </button>
           
+          <button
+            onClick={() => {
+              setActiveViewMode('shop');
+              setSelectedCategory('Productos de limpieza');
+              setIsOrderOrdered(false);
+            }}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${activeViewMode === 'shop' && selectedCategory === 'Productos de limpieza' ? 'bg-white text-[#c19a45] shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+          >
+            <span>🧴 Limpieza Avanzada</span>
+          </button>
+
           <button
             onClick={() => {
               setActiveViewMode('cart_orders');
               setIsOrderOrdered(false);
             }}
-            className={`px-4 py-2 text-xs font-extrabold rounded-lg transition cursor-pointer flex items-center gap-2 relative ${activeViewMode === 'cart_orders' ? 'bg-white text-[#c5a85c] shadow-sm font-black' : 'text-natural-silt hover:text-natural-dark'}`}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${activeViewMode === 'cart_orders' ? 'bg-white text-[#c19a45] shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
           >
-            <span>🛒 Mi Carrito y Compras</span>
-            {cartItemsCount > 0 && (
-              <span className="bg-[#c5a85c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center absolute -top-1.5 -right-1 animate-bounce">
-                {cartItemsCount}
-              </span>
-            )}
+            <span>📦 Mis Compras</span>
           </button>
 
           <button
@@ -453,725 +483,1091 @@ export default function VentasSection({
               setActiveViewMode('manager');
               setIsOrderOrdered(false);
             }}
-            className={`px-4 py-2 text-xs font-extrabold rounded-lg transition cursor-pointer flex items-center gap-2 ${activeViewMode === 'manager' ? 'bg-white text-[#c5a85c] shadow-sm font-black' : 'text-natural-silt hover:text-natural-dark'}`}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${activeViewMode === 'manager' ? 'bg-white text-[#c19a45] shadow-xs animate-pulse' : 'text-slate-500 hover:text-slate-800'}`}
+            title="Alinear catálogo y administrar pedidos logísticos"
           >
-            <span>⚙️ Panel Logístico / Despacho</span>
+            <span>⚙️ Almacén Logística</span>
           </button>
-        </div>
-      </div>
+        </nav>
 
-      <AnimatePresence mode="wait">
-        
-        {/* VIEW 1: SHOPPING STOREFRONT */}
-        {activeViewMode === 'shop' && (
-          <motion.div
-            key="shop_mode_view"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            className="space-y-6 text-left"
-            id="storefront_container"
+        {/* Right column: User profile Avatar Dropdown (QUITA SELECTOR DE ROLES, AHI QUIERO EL ICONO DEL USUARIO) */}
+        <div className="relative" id="user_dropdown_container">
+          <button
+            onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+            className="flex items-center gap-2 px-3 py-1.5 border border-slate-200 hover:border-slate-300 rounded-xl bg-white shadow-2xs hover:shadow-xs transition duration-150 text-left cursor-pointer"
+            id="user_header_trigger_btn"
           >
-            {/* Elegant Welcome Hero Banner */}
-            <div className="bg-gradient-to-r from-[#c5a85c] via-[#b59549] to-[#ebd7a7] rounded-2xl p-6 text-white shadow-sm relative overflow-hidden" id="store_hero_banner">
-              <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full translate-x-12 -translate-y-12 shrink-0 pointer-events-none" />
-              <div className="relative z-10 max-w-xl space-y-2">
-                <span className="px-2.5 py-0.5 bg-white/15 border border-white/25 rounded-full text-[9px] font-black tracking-widest uppercase inline-block">
-                  Calidad Garantizada Homeli
-                </span>
-                <h4 className="text-2xl sm:text-3xl font-extrabold font-serif tracking-tight leading-tight">Adquiere lo mejor para tu hogar</h4>
-                <p className="text-xs text-white/90 leading-relaxed font-medium">
-                  Explora calzado premium importado y los mejores insumos químicos profesionales para el mantenimiento impecable de tus espacios domésticos. Todo desde una sola cuenta.
-                </p>
-              </div>
+            {/* User Avatar Circle */}
+            <div className="w-7 h-7 rounded-lg bg-[#c19a45] text-white flex items-center justify-center font-bold text-xs shadow-inner">
+              {userProfile.name.split(' ').map(n=>n[0]).join('')}
             </div>
+            <div className="hidden sm:block">
+              <p className="text-[11px] font-black leading-none text-slate-800">{userProfile.name}</p>
+              <span className="text-[9px] text-slate-400 font-semibold">{userProfile.roleLabel}</span>
+            </div>
+            <ChevronDown size={12} className={`text-slate-400 transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
 
-            {/* Category Filter bar */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-xl border border-natural-border shadow-sm" id="store_filter_bar">
-              <div className="flex items-center gap-2 max-w-full overflow-x-auto" id="store_subtabs">
-                <span className="text-xs font-black text-natural-muted uppercase flex items-center gap-1 shrink-0 px-1 font-mono">
-                  <Filter size={13} /> Filtrar:
-                </span>
+          {/* User Menu Dropdown Panel */}
+          <AnimatePresence>
+            {isUserDropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setIsUserDropdownOpen(false)} />
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute right-0 mt-2.5 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl z-20 py-2.5 text-left"
+                  id="user_profile_dropdown"
+                >
+                  <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-[#ebd7a7] text-[#c19a45] flex items-center justify-center font-bold text-sm">
+                      {userProfile.name.split(' ').map(n=>n[0]).join('')}
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-slate-900 leading-none">{userProfile.name}</h4>
+                      <p className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[150px]">{userProfile.email}</p>
+                    </div>
+                  </div>
+
+                  {/* Nav links (helpful on mobile too!) */}
+                  <div className="p-1 space-y-0.5 border-b border-slate-100">
+                    <button
+                      onClick={() => {
+                        setIsUserDropdownOpen(false);
+                        setIsProfileModalOpen(true);
+                      }}
+                      className="w-full text-left px-3.5 py-2 hover:bg-slate-50 text-xs font-bold text-slate-700 hover:text-slate-900 rounded-xl transition flex items-center gap-2.5"
+                    >
+                      <User size={14} className="text-[#c19a45]" />
+                      <span>👤 Mi Perfil de Usuario</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setIsUserDropdownOpen(false);
+                        setIsCartDrawerOpen(true);
+                      }}
+                      className="w-full text-left px-3.5 py-2 hover:bg-slate-50 text-xs font-bold text-slate-700 hover:text-slate-900 rounded-xl transition flex items-center justify-between"
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <ShoppingCart size={14} className="text-[#c19a45]" />
+                        <span>🛒 Carrito de Compras</span>
+                      </span>
+                      {cartItemsCount > 0 && (
+                        <span className="bg-[#c5a85c] text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold font-mono">
+                          {cartItemsCount}
+                        </span>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setIsUserDropdownOpen(false);
+                        setActiveViewMode('cart_orders');
+                        setIsOrderOrdered(false);
+                      }}
+                      className="w-full text-left px-3.5 py-2 hover:bg-slate-50 text-xs font-bold text-slate-700 hover:text-slate-900 rounded-xl transition flex items-center gap-2.5"
+                    >
+                      <ShoppingBag size={14} className="text-[#c19a45]" />
+                      <span>📦 Mis Compras Recientes</span>
+                    </button>
+                    
+                    {/* Mobile visible options for navigation */}
+                    <div className="block md:hidden border-t border-slate-50 pt-1 space-y-0.5">
+                      <button
+                        onClick={() => {
+                          setIsUserDropdownOpen(false);
+                          setActiveViewMode('shop');
+                          setSelectedCategory('Zapatos');
+                        }}
+                        className="w-full text-left px-3.5 py-2 hover:bg-slate-50 text-xs font-bold text-slate-600 rounded-xl transition flex items-center gap-2"
+                      >
+                        Shoes: Calzado Premium
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsUserDropdownOpen(false);
+                          setActiveViewMode('shop');
+                          setSelectedCategory('Productos de limpieza');
+                        }}
+                        className="w-full text-left px-3.5 py-2 hover:bg-slate-50 text-xs font-bold text-slate-600 rounded-xl transition flex items-center gap-2"
+                      >
+                        Limpieza: Fórmulas Hogar
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsUserDropdownOpen(false);
+                          setActiveViewMode('manager');
+                        }}
+                        className="w-full text-left px-3.5 py-2 hover:bg-slate-50 text-xs font-bold text-[#c5a85c] rounded-xl transition flex items-center gap-2"
+                      >
+                        ⚙️ Almacén Logística
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Return to selector of channels */}
+                  <div className="p-1">
+                    <button
+                      onClick={() => {
+                        setIsUserDropdownOpen(false);
+                        if (onNavigateToHome) {
+                          onAddLog('Salió del e-commerce premium regresando a selector de canales', 'info');
+                          onNavigateToHome();
+                        }
+                      }}
+                      className="w-full text-left px-3.5 py-2 hover:bg-red-50 text-xs font-extrabold text-red-600 rounded-xl transition flex items-center gap-2.5"
+                    >
+                      <LogOut size={14} />
+                      <span>🏛️ Cambiar de Rol</span>
+                    </button>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
+      </header>
+
+      {/* Hero Banner for Category awareness when browsing */}
+      {activeViewMode === 'shop' && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 mt-6">
+          <div className="bg-gradient-to-br from-slate-900 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden shadow-md">
+            <div className="absolute right-0 bottom-0 top-0 w-1/3 bg-radial from-[#c5a85c]/15 to-transparent pointer-events-none" />
+            <div className="relative z-10 max-w-xl space-y-2 text-left">
+              <span className="px-2.5 py-0.5 bg-[#c5a85c]/25 border border-[#c19a45]/30 rounded-full text-[9px] font-black tracking-widest uppercase inline-block text-[#ebd7a7]">
+                ATELIER BOUTIQUE
+              </span>
+              <h2 className="text-xl sm:text-2xl font-serif font-black tracking-tight text-white leading-tight">
+                {selectedCategory === 'Zapatos' ? '👠 Colección Calzado de Alta Costura' : 
+                 selectedCategory === 'Productos de limpieza' ? '🧴 Línea de Limpieza de Estándar Profesional' :
+                 'Catálogo Exclusivo Atelier'}
+              </h2>
+              <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                {selectedCategory === 'Zapatos' ? 'Selección ergonómica transpirable confeccionada con pieles selectas e ingeniería de soporte de alto impacto.' : 
+                 selectedCategory === 'Productos de limpieza' ? 'Agentes concentrados biodegradables libres de químicos nocivos que protegen tu salud familiar.' :
+                 'Descubre nuestras dos exclusivas divisiones diseñadas meticulosamente para brindar confort personal y sanidad impecable en tu hogar.'}
+              </p>
+
+              {/* Improved dynamic shortcut pills to switch categories */}
+              <div className="flex gap-2 pt-2.5">
                 <button
                   onClick={() => setSelectedCategory('todos')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer shrink-0 ${selectedCategory === 'todos' ? 'bg-[#c5a85c] text-white font-extrabold' : 'bg-natural-bg text-natural-silt hover:bg-natural-border/40'}`}
+                  className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${selectedCategory === 'todos' ? 'bg-[#c5a85c] text-white' : 'bg-white/10 text-slate-300 hover:bg-white/25'}`}
                 >
-                  Todos los Productos
+                  Ver Ambos
                 </button>
                 <button
                   onClick={() => setSelectedCategory('Zapatos')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer shrink-0 ${selectedCategory === 'Zapatos' ? 'bg-[#c5a85c] text-white font-extrabold' : 'bg-natural-bg text-natural-silt hover:bg-natural-border/40'}`}
+                  className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${selectedCategory === 'Zapatos' ? 'bg-[#c5a85c] text-white' : 'bg-white/10 text-slate-300 hover:bg-white/25'}`}
                 >
-                  👠 Calzado / Zapatos
+                  👠 Calzado
                 </button>
                 <button
                   onClick={() => setSelectedCategory('Productos de limpieza')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer shrink-0 ${selectedCategory === 'Productos de limpieza' ? 'bg-[#c5a85c] text-white font-extrabold' : 'bg-natural-bg text-natural-silt hover:bg-natural-border/40'}`}
+                  className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${selectedCategory === 'Productos de limpieza' ? 'bg-[#c5a85c] text-white' : 'bg-white/10 text-slate-300 hover:bg-white/25'}`}
                 >
-                  🧴 Artículos de Limpieza
+                  🧴 Limpieza
                 </button>
               </div>
-
-              <div className="text-xs font-bold text-natural-silt" id="catalog_counter">
-                Mostrando <span className="text-natural-dark font-black font-mono">{storeFilteredProducts.length}</span> productos
-              </div>
             </div>
+          </div>
+        </div>
+      )}
 
-            {/* THE RESPONSIVE PRODUCTS GRID: 6 columns fullscreen, 4 columns tablet, 2 columns mobile */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-6 gap-4" id="storefront_products_grid">
-              {storeFilteredProducts.map(product => {
-                const alreadyInCartCount = cart.find(i => i.product.id === product.id)?.quantity || 0;
-                return (
-                  <div 
-                    key={product.id} 
-                    className="bg-white border border-natural-border hover:border-[#c5a85c]/40 hover:shadow-md shadow-sm rounded-2xl overflow-hidden flex flex-col justify-between transition duration-200 group p-3 text-left relative"
-                    id={`store_card_${product.id}`}
-                  >
-                    {/* Badge indicando stock bajo o categoría */}
-                    <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
-                      <span className="text-[8px] font-black uppercase tracking-wider font-mono text-[#c5a85c] bg-white border border-[#c19a45]/20 px-1.5 py-0.5 rounded-md shadow-sm">
-                        {product.category === 'Zapatos' ? '👠 Zapatos' : '🧴 Limpieza'}
-                      </span>
-                      {product.stock <= 0 ? (
-                        <span className="text-[8px] font-black uppercase tracking-wider bg-red-100 text-red-600 border border-red-200 px-1.5 py-0.5 rounded-md">
-                          Agotado
-                        </span>
-                      ) : product.stock < 10 ? (
-                        <span className="text-[8px] font-black uppercase tracking-wider bg-orange-50 text-orange-600 border border-orange-200 px-1.5 py-0.5 rounded-md">
-                          Pocas piezas
-                        </span>
-                      ) : null}
-                    </div>
-
-                    {/* Product Image Area */}
-                    <div className="w-full aspect-square rounded-xl overflow-hidden bg-slate-50 border border-natural-border/20 mb-3 relative group-hover:opacity-95 transition-opacity">
-                      {product.imageUrl ? (
-                        <img
-                          src={product.imageUrl}
-                          alt={product.name}
-                          className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
-                          referrerPolicy="no-referrer"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-natural-muted">
-                          <Package size={28} />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Metadata & Title */}
-                    <div className="space-y-1 flex-1 flex flex-col justify-between">
+      {/* Main Body content according to View Mode */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-8 py-6">
+        <AnimatePresence mode="wait">
+          
+          {/* ================= VIEW 1: SHOPPING STOREFRONT (SEPARATED SECTIONS) ================= */}
+          {activeViewMode === 'shop' && (
+            <motion.div
+              key="storefront_main"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-12"
+            >
+              {/* SECTION A: ZAPATOS - Only shown if selectedCategory is 'todos' or 'Zapatos' */}
+              {(selectedCategory === 'todos' || selectedCategory === 'Zapatos') && (
+                <div className="space-y-4 text-left" id="section_zapatos_catalog">
+                  <div className="flex items-center justify-between border-b border-rose-200/50 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">👠</span>
                       <div>
-                        <h5 className="font-extrabold font-serif text-natural-dark text-xs sm:text-sm line-clamp-1 group-hover:text-[#c5a85c] transition-colors leading-tight mb-1" title={product.name}>
-                          {product.name}
-                        </h5>
-                        <p className="text-[10px] sm:text-xs text-natural-muted line-clamp-2 leading-relaxed mb-3">
-                          {product.description}
-                        </p>
-                      </div>
-
-                      {/* Pricing, Stock status and Add Button */}
-                      <div className="pt-2 border-t border-natural-border/60">
-                        <div className="flex items-baseline justify-between mb-2">
-                          <div>
-                            <span className="text-[8px] uppercase tracking-widest text-natural-muted font-black leading-none block">Precio unitario</span>
-                            <span className="text-sm font-black text-natural-dark font-mono">${product.price} MXN</span>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-[8px] uppercase tracking-widest text-natural-muted font-bold leading-none block">Disponibles</span>
-                            <span className="text-[10px] font-bold text-natural-silt font-mono">{product.stock} un</span>
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={() => addToCart(product)}
-                          disabled={product.stock <= 0}
-                          className={`w-full py-2 px-3 text-xs rounded-xl font-bold transition flex items-center justify-center gap-1 shadow-sm cursor-pointer ${product.stock <= 0 ? 'bg-natural-border text-natural-muted cursor-not-allowed border border-natural-border/20' : 'bg-white hover:bg-[#c5a85c] hover:text-white border border-[#c19a45]/40 text-[#c5a85c] hover:shadow-md'}`}
-                          id={`btn_store_add_${product.id}`}
-                        >
-                          <Plus size={12} className="shrink-0" />
-                          <span>Pagar</span>
-                          {alreadyInCartCount > 0 && (
-                            <span className="ml-1 bg-[#c5a85c] group-hover:bg-white group-hover:text-[#c5a85c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center font-mono shadow-sm">
-                              {alreadyInCartCount}
-                            </span>
-                          )}
-                        </button>
+                        <h3 className="text-md sm:text-lg font-serif font-black text-slate-900 tracking-tight">Colección de Calzado de Diseñador</h3>
+                        <p className="text-[10px] sm:text-xs text-rose-700/80 font-bold uppercase tracking-wider font-sans">Boutique & Ergonomía Exclusiva</p>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-
-        {/* VIEW 2: CART AND USER ORDERS HISTORY */}
-        {activeViewMode === 'cart_orders' && (
-          <motion.div
-            key="cart_orders_view"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left"
-            id="shopping_cart_panel"
-          >
-            {/* Left side: Shopping Cart List (lg:col-span-7) */}
-            <div className="lg:col-span-7 space-y-6">
-              <div className="bg-white p-5 rounded-2xl border border-natural-border shadow-sm space-y-4" id="cart_items_wrapper">
-                <div className="flex items-center justify-between border-b border-natural-border pb-3">
-                  <h4 className="text-base font-extrabold text-natural-dark font-serif flex items-center gap-2">
-                    <ShoppingCart size={18} className="text-[#c5a85c]" />
-                    <span>Mi Carrito de Compras</span>
-                  </h4>
-                  <span className="text-xs font-black text-[#c5a85c] font-mono uppercase bg-[#c5a85c]/10 px-2.5 py-1 rounded-full">
-                    {cartItemsCount} artículos
-                  </span>
-                </div>
-
-                {isOrderOrdered && (
-                  <motion.div 
-                    initial={{ scale: 0.95, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="p-5 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl space-y-3 relative text-center"
-                    id="order_success_notice"
-                  >
-                    <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white mx-auto shadow-sm">
-                      <Check size={26} className="animate-pulse" />
-                    </div>
-                    <div className="space-y-1">
-                      <h4 className="text-emerald-800 font-extrabold font-serif text-base">¡Pedido Registrado con Éxito!</h4>
-                      <p className="text-xs text-emerald-700 font-medium">
-                        Tu folio es <span className="font-mono font-extrabold text-natural-dark bg-white border border-emerald-200 px-2.5 py-1 rounded-md">{latestOrderId}</span>.
-                      </p>
-                      <p className="text-[11px] text-natural-silt leading-relaxed mt-2">
-                        El estatus inicial es <b>"Procesando"</b>. El despacho se asignó a logística nacional y realizarás el abono correspondiente en efectivo en la modalidad <b>Pago Contra Entrega</b> una vez que arribe a tu ubicación.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setIsOrderOrdered(false)}
-                      className="mt-2 py-1.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] uppercase rounded-lg shadow-sm cursor-pointer shrink-0"
-                    >
-                      Seguir Comprando
-                    </button>
-                  </motion.div>
-                )}
-
-                {cart.length === 0 ? (
-                  <div className="py-12 text-center space-y-4" id="empty_cart_view">
-                    <div className="p-4 bg-natural-bg text-natural-muted rounded-full inline-block">
-                      <ShoppingCart size={32} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-extrabold text-natural-dark">Tu carrito se encuentra vacío</p>
-                      <p className="text-xs text-natural-muted mt-1">Busca productos en el catálogo de Zapatos y Limpieza para agregarlos.</p>
-                    </div>
-                    <button
-                      onClick={() => setActiveViewMode('shop')}
-                      className="py-2.5 px-5 bg-[#c5a85c] hover:bg-[#b59549] text-white font-extrabold text-xs rounded-xl shadow-sm cursor-pointer transition uppercase"
-                    >
-                      Añadir productos ahora
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-4" id="cart_items_list">
-                    <div className="divide-y divide-natural-border">
-                      {cart.map(item => (
-                        <div key={item.product.id} className="py-3 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap" id={`cart_item_${item.product.id}`}>
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-slate-50 border border-natural-border/30 rounded-lg overflow-hidden shrink-0">
-                              <img
-                                src={item.product.imageUrl}
-                                alt={item.product.name}
-                                className="w-full h-full object-cover"
-                                referrerPolicy="no-referrer"
-                              />
-                            </div>
-                            <div>
-                              <h5 className="font-extrabold text-natural-dark text-xs sm:text-sm leading-tight line-clamp-1">{item.product.name}</h5>
-                              <p className="text-[10px] text-natural-muted font-mono">{item.product.sku}</p>
-                              <p className="text-xs font-black text-[#c5a85c] font-mono mt-0.5">${item.product.price} MXN</p>
-                            </div>
-                          </div>
-
-                          {/* Controls */}
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center bg-natural-bg border border-natural-border rounded-lg overflow-hidden shrink-0">
-                              <button
-                                onClick={() => updateQuantity(item.product.id, -1)}
-                                className="px-2 py-1 text-natural-silt hover:text-natural-dark hover:bg-natural-border font-bold text-xs"
-                                title="Descontar un producto"
-                              >
-                                -
-                              </button>
-                              <span className="px-3 text-xs font-extrabold text-natural-dark font-mono bg-white">{item.quantity}</span>
-                              <button
-                                onClick={() => updateQuantity(item.product.id, 1)}
-                                className="px-2 py-1 text-natural-silt hover:text-natural-dark hover:bg-natural-border font-bold text-xs"
-                                title="Agregar un producto"
-                              >
-                                +
-                              </button>
-                            </div>
-
-                            <span className="text-xs font-extrabold text-natural-dark font-mono text-right min-w-[70px]">
-                              ${(item.product.price * item.quantity).toLocaleString()} MXN
-                            </span>
-
-                            <button
-                              onClick={() => removeFromCart(item.product.id)}
-                              className="text-red-500 hover:text-red-700 transition p-1 hover:bg-red-50 rounded"
-                              title="Remover de mi carrito"
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Cart Settle Total Summary */}
-                    <div className="bg-natural-bg/75 rounded-xl p-4 space-y-2 border border-natural-border">
-                      <div className="flex justify-between text-xs text-natural-silt font-bold">
-                        <span>Subtotal de Compra:</span>
-                        <span className="font-mono text-natural-dark">${cartTotalAmount.toLocaleString()} MXN</span>
-                      </div>
-                      <div className="flex justify-between text-xs text-natural-silt font-bold border-b border-natural-border/30 pb-2">
-                        <span>Costo de Envío Nacional:</span>
-                        <span className="text-emerald-700 font-extrabold uppercase font-mono">Gratis (Pago contra entrega)</span>
-                      </div>
-                      <div className="flex justify-between text-sm text-natural-dark font-black pt-1">
-                        <span>Total Neto a Liquidar:</span>
-                        <span className="font-mono text-lg text-[#c5a85c]">${cartTotalAmount.toLocaleString()} MXN</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Checkout Payment Form Area */}
-              {cart.length > 0 && (
-                <div className="bg-white p-5 rounded-2xl border border-natural-border shadow-sm space-y-4" id="checkout_form_container">
-                  <div className="border-b border-natural-border pb-3 flex items-center justify-between">
-                    <h4 className="text-base font-extrabold text-natural-dark font-serif flex items-center gap-1.5 animate-none">
-                      <CreditCard size={18} className="text-[#c5a85c]" />
-                      <span>Formulario Pago Contra Entrega</span>
-                    </h4>
-                    <span className="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 text-[9px] font-black uppercase rounded-md tracking-wider flex items-center gap-1 shrink-0">
-                      🚚 Efectivo al recibir
+                    <span className="text-xs bg-rose-50 text-rose-700 px-2.5 py-1 rounded-full font-bold font-mono">
+                      {shoeCatalogItems.length} Modelos
                     </span>
                   </div>
 
-                  <form onSubmit={handleCheckoutSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {shoeCatalogItems.length === 0 ? (
+                    <div className="p-8 bg-white border border-slate-200 rounded-xl text-center text-slate-400">
+                      No hay calzado disponible en este momento.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                      {shoeCatalogItems.map(product => {
+                        const inCart = cart.find(i => i.product.id === product.id)?.quantity || 0;
+                        return (
+                          <div 
+                            key={product.id}
+                            className="bg-white border border-slate-200 hover:border-[#c5a85c] hover:shadow-lg rounded-2xl p-3 flex flex-col justify-between transition-all duration-300 group"
+                          >
+                            <div className="relative">
+                              <span className="absolute top-1 left-1.5 z-10 text-[8px] font-bold bg-[#c5a85c] text-white px-1.5 py-0.5 rounded-md uppercase">
+                                Calzado
+                              </span>
+                              {product.stock <= 0 ? (
+                                <span className="absolute top-1 right-1.5 z-10 text-[8px] font-black bg-red-100 text-red-600 px-1.5 py-0.5 border border-red-200 rounded-md">
+                                  Agotado
+                                </span>
+                              ) : product.stock < 10 ? (
+                                <span className="absolute top-1 right-1.5 z-10 text-[8px] font-black bg-amber-50 text-amber-700 px-1.5 py-0.5 border border-amber-200 rounded-md">
+                                  Pocas pz
+                                </span>
+                              ) : null}
+
+                              <div className="w-full aspect-square bg-[#f9f5f0] border border-slate-100 rounded-xl overflow-hidden mb-3">
+                                <img 
+                                  src={product.imageUrl} 
+                                  alt={product.name} 
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  referrerPolicy="no-referrer"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-1.5 flex-1 flex flex-col justify-between text-left">
+                              <div>
+                                <h4 className="font-serif font-black text-slate-800 text-xs leading-tight line-clamp-1 group-hover:text-[#c5a85c] transition-colors">
+                                  {product.name}
+                                </h4>
+                                <p className="text-[10px] text-slate-400 leading-normal line-clamp-2 mt-0.5">
+                                  {product.description}
+                                </p>
+                              </div>
+
+                              <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-1 items-center">
+                                <div>
+                                  <span className="text-[8px] text-slate-400 font-bold block uppercase">Inversión</span>
+                                  <span className="text-xs font-black text-slate-900 font-mono">${product.price} MXN</span>
+                                </div>
+                                <div className="text-right">
+                                  <span className="text-[8px] text-slate-400 font-bold block uppercase">Stock</span>
+                                  <span className="text-[10px] font-semibold text-slate-700 font-mono">{product.stock} un</span>
+                                </div>
+                              </div>
+
+                              <button
+                                onClick={() => addToCart(product)}
+                                disabled={product.stock <= 0}
+                                className={`w-full py-2 px-2 rounded-xl text-[11px] font-extrabold transition-all duration-250 flex items-center justify-center gap-1 cursor-pointer shadow-xs ${product.stock <= 0 ? 'bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200' : 'bg-[#c5a85c]/10 text-[#c5a85c] border border-[#c19a45]/30 hover:bg-[#c5a85c] hover:text-white hover:border-[#c5a85c]'}`}
+                              >
+                                <Plus size={11} />
+                                <span>Añadir</span>
+                                {inCart > 0 && (
+                                  <span className="bg-[#c5a85c] group-hover:bg-white group-hover:text-[#c5a85c] text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-mono ml-0.5">
+                                    {inCart}
+                                  </span>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* SECTION B: PRODUCTOS DE LIMPIEZA - Only shown if selectedCategory is 'todos' or 'Productos de limpieza' */}
+              {(selectedCategory === 'todos' || selectedCategory === 'Productos de limpieza') && (
+                <div className="space-y-4 text-left" id="section_limpieza_catalog">
+                  <div className="flex items-center justify-between border-b border-emerald-200/50 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">🧴</span>
                       <div>
-                        <label className="block text-[10px] font-black text-natural-muted uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                          <User size={12} /> Nombre Completo del Destinatario *
-                        </label>
+                        <h3 className="text-md sm:text-lg font-serif font-black text-slate-900 tracking-tight">Insumos Químicos y Limpieza Profesional</h3>
+                        <p className="text-[10px] sm:text-xs text-emerald-700/80 font-bold uppercase tracking-wider font-sans">Lavado Profundo & Cuidado Familiar</p>
+                      </div>
+                    </div>
+                    <span className="text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-bold font-mono">
+                      {cleaningCatalogItems.length} Soluciones
+                    </span>
+                  </div>
+
+                  {cleaningCatalogItems.length === 0 ? (
+                    <div className="p-8 bg-white border border-slate-200 rounded-xl text-center text-slate-400">
+                      No hay artículos de limpieza disponibles en este momento.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                      {cleaningCatalogItems.map(product => {
+                        const inCart = cart.find(i => i.product.id === product.id)?.quantity || 0;
+                        return (
+                          <div 
+                            key={product.id}
+                            className="bg-white border border-slate-200 hover:border-emerald-600 hover:shadow-lg rounded-2xl p-3 flex flex-col justify-between transition-all duration-300 group"
+                          >
+                            <div className="relative">
+                              <span className="absolute top-1 left-1.5 z-10 text-[8px] font-bold bg-emerald-600 text-white px-1.5 py-0.5 rounded-md uppercase">
+                                Limpieza
+                              </span>
+                              {product.stock <= 0 ? (
+                                <span className="absolute top-1 right-1.5 z-10 text-[8px] font-black bg-red-100 text-red-600 px-1.5 py-0.5 border border-red-200 rounded-md">
+                                  Agotado
+                                </span>
+                              ) : product.stock < 10 ? (
+                                <span className="absolute top-1 right-1.5 z-10 text-[8px] font-black bg-amber-50 text-amber-700 px-1.5 py-0.5 border border-amber-200 rounded-md">
+                                  Pocas pz
+                                </span>
+                              ) : null}
+
+                              <div className="w-full aspect-square bg-[#f0f9f6] border border-slate-100 rounded-xl overflow-hidden mb-3">
+                                <img 
+                                  src={product.imageUrl} 
+                                  alt={product.name} 
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  referrerPolicy="no-referrer"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-1.5 flex-1 flex flex-col justify-between text-left">
+                              <div>
+                                <h4 className="font-serif font-black text-slate-800 text-xs leading-tight line-clamp-1 group-hover:text-emerald-700 transition-colors">
+                                  {product.name}
+                                </h4>
+                                <p className="text-[10px] text-slate-400 leading-normal line-clamp-2 mt-0.5">
+                                  {product.description}
+                                </p>
+                              </div>
+
+                              <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-1 items-center">
+                                <div>
+                                  <span className="text-[8px] text-slate-400 font-bold block uppercase">Inversión</span>
+                                  <span className="text-xs font-black text-slate-900 font-mono">${product.price} MXN</span>
+                                </div>
+                                <div className="text-right">
+                                  <span className="text-[8px] text-slate-400 font-bold block uppercase">Stock</span>
+                                  <span className="text-[10px] font-semibold text-slate-700 font-mono">{product.stock} un</span>
+                                </div>
+                              </div>
+
+                              <button
+                                onClick={() => addToCart(product)}
+                                disabled={product.stock <= 0}
+                                className={`w-full py-2 px-2 rounded-xl text-[11px] font-extrabold transition-all duration-250 flex items-center justify-center gap-1 cursor-pointer shadow-xs ${product.stock <= 0 ? 'bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-300/60 hover:bg-emerald-600 hover:text-white hover:border-emerald-600'}`}
+                              >
+                                <Plus size={11} />
+                                <span>Añadir</span>
+                                {inCart > 0 && (
+                                  <span className="bg-emerald-600 group-hover:bg-white group-hover:text-emerald-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-mono ml-0.5">
+                                    {inCart}
+                                  </span>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* ================= VIEW 2: CART AND USER ORDERS HISTORY ================= */}
+          {activeViewMode === 'cart_orders' && (
+            <motion.div
+              key="cart_orders_view"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left"
+              id="shopping_cart_panel"
+            >
+              {/* Left Column: List of recent purchases (User Module Compras) */}
+              <div className="lg:col-span-7 space-y-6">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+                  <div className="border-b border-slate-100 pb-3 flex justify-between items-center">
+                    <h3 className="text-base font-serif font-black text-slate-900 flex items-center gap-2">
+                      <ShoppingBag size={18} className="text-[#c5a85c]" />
+                      <span>Mis Pedidos y Compras Recientes</span>
+                    </h3>
+                    <span className="text-xs font-mono font-bold bg-[#c5a85c]/10 text-[#c5a85c] px-2.5 py-1 rounded-full uppercase">
+                      Valeria Fuentes
+                    </span>
+                  </div>
+
+                  {orders.filter(o => o.customerEmail === userProfile.email).length === 0 ? (
+                    <div className="text-center py-12 text-slate-400 space-y-2">
+                      <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300">
+                        <ShoppingBag size={22} />
+                      </div>
+                      <p className="text-xs font-bold font-sans">No cuentas con compras registradas aún.</p>
+                      <button
+                        onClick={() => setActiveViewMode('shop')}
+                        className="text-xs text-[#c19a45] font-black underline"
+                      >
+                        Ir a explorar la tienda
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {orders
+                        .filter(o => o.customerEmail === userProfile.email)
+                        .map(order => (
+                          <div 
+                            key={order.id} 
+                            className="p-4 bg-slate-50 border border-slate-200/60 rounded-xl space-y-3 shadow-2xs hover:bg-slate-50/85 transition"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <span className="text-[10px] font-black text-slate-400 uppercase font-mono">ID de Compra</span>
+                                <p className="text-xs font-black text-slate-900 font-mono">{order.id}</p>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-[10px] font-black text-slate-400 uppercase font-mono block">Estatus Actual</span>
+                                <span className={`inline-block px-2.5 py-0.5 text-[9px] font-black rounded-lg uppercase border ${
+                                  order.status === 'procesando' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                  order.status === 'enviado' ? 'bg-indigo-50 text-indigo-700 border-indigo-250' :
+                                  order.status === 'entregado' ? 'bg-green-50 text-green-700 border-green-200' :
+                                  'bg-rose-50 text-rose-700 border-rose-200'
+                                }`}>
+                                  {order.status === 'procesando' ? 'Procesando' :
+                                   order.status === 'enviado' ? 'En reparto' :
+                                   order.status === 'entregado' ? 'Entregado' : 'Cancelado'}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="border-t border-b border-slate-200/40 py-2">
+                              <span className="text-[9px] font-black text-slate-400 uppercase font-mono">Detalles del Pedido:</span>
+                              <div className="space-y-1 mt-1 text-slate-700 text-xs font-bold font-sans">
+                                {order.productNames.map((p, index) => (
+                                  <div key={index} className="flex justify-between">
+                                    <span>• {p}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="flex justify-between items-center pt-1.5">
+                              <div>
+                                <span className="text-[9px] font-bold text-slate-400 block font-mono">FECHA</span>
+                                <span className="text-[10px] font-extrabold text-slate-600 font-mono">
+                                  {new Date(order.date).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-[9px] font-bold text-slate-400 block font-mono">TOTAL A PAGAR</span>
+                                <span className="text-sm font-black text-slate-900 font-mono">${order.total} MXN</span>
+                              </div>
+                            </div>
+
+                            {/* Delivery timeline tracker */}
+                            <div className="mt-3 bg-white p-3 rounded-xl border border-slate-100 flex items-center justify-between text-center max-w-lg mx-auto">
+                              <div className="flex-1 flex flex-col items-center">
+                                <div className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center text-[10px] font-black">✓</div>
+                                <span className="text-[9px] font-black text-slate-600 mt-1 uppercase">Procesada</span>
+                              </div>
+                              <div className="w-12 h-0.5 bg-slate-200 relative">
+                                <div className={`absolute inset-0 bg-green-500 ${order.status !== 'procesando' ? 'w-full' : 'w-0'}`} />
+                              </div>
+                              <div className="flex-1 flex flex-col items-center">
+                                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${order.status === 'enviado' || order.status === 'entregado' ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                                  {order.status === 'enviado' || order.status === 'entregado' ? '✓' : '2'}
+                                </div>
+                                <span className="text-[9px] font-black text-slate-500 mt-1 uppercase">En Reparto</span>
+                              </div>
+                              <div className="w-12 h-0.5 bg-slate-200 relative">
+                                <div className={`absolute inset-0 bg-green-500 ${order.status === 'entregado' ? 'w-full' : 'w-0'}`} />
+                              </div>
+                              <div className="flex-1 flex flex-col items-center">
+                                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${order.status === 'entregado' ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                                  {order.status === 'entregado' ? '✓' : '3'}
+                                </div>
+                                <span className="text-[9px] font-black text-slate-500 mt-1 uppercase">Liquidada</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Column: Checkout Info & Guarantee */}
+              <div className="lg:col-span-5 space-y-6">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-5">
+                  <h4 className="text-sm font-serif font-black text-[#c5a85c] uppercase tracking-wider">Normas de Adquisición Homeli</h4>
+                  
+                  <div className="space-y-4 text-xs font-bold text-slate-600 leading-relaxed font-sans">
+                    <div className="flex gap-3">
+                      <div className="p-2 bg-slate-100 text-slate-700 rounded-lg shrink-0 h-8 flex items-center justify-center">🤝</div>
+                      <div>
+                        <h5 className="text-slate-800 font-extrabold">Pago Contra Entrega Sencillo</h5>
+                        <p className="text-[11px] text-slate-400 font-medium">No ingresas tarjetas bancarias en línea. Realizas el abono correspondiente al recibir los artículos físicamente en tu domicilio.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <div className="p-2 bg-slate-100 text-slate-700 rounded-lg shrink-0 h-8 flex items-center justify-center font-bold">🧴</div>
+                      <div>
+                        <h5 className="text-slate-800 font-extrabold">Limpieza Grado Quirúrgico</h5>
+                        <p className="text-[11px] text-slate-400 font-medium">Nuestros líquidos e insumos químicos están completamente certificados bajo auditoría biológica de la marca.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <div className="p-2 bg-slate-100 text-slate-700 rounded-lg shrink-0 h-8 flex items-center justify-center">👠</div>
+                      <div>
+                        <h5 className="text-slate-800 font-extrabold">Calzado Pro-Estilo</h5>
+                        <p className="text-[11px] text-slate-400 font-medium">Cuentas con 15 días hábiles para solicitar modificaciones de tallas o devoluciones directas sin ningún costo adicional.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-[#c5a85c]/10 border border-[#c19a45]/20 rounded-xl space-y-1.5">
+                    <span className="text-[9px] font-black text-[#c5a85c] uppercase tracking-widest block font-mono">Canal Comercial</span>
+                    <h5 className="text-slate-800 font-extrabold text-xs">Atelieres Generales y Logísticos de México</h5>
+                    <p className="text-[10px] text-slate-500 leading-normal font-medium">La mercadería se despacha desde el almacén central ubicado en el centro logístico nacional garantizando la entrega en menos de 48 horas.</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ================= VIEW 3: OPERATIONS & ADMINISTRATIVO ================= */}
+          {activeViewMode === 'manager' && (
+            <motion.div
+              key="manager_logistics"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-6 text-left"
+            >
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+                <div>
+                  <h3 className="text-lg font-serif font-black text-slate-900">Panel de Control de Almacén y Pedidos Comerciales</h3>
+                  <p className="text-xs text-slate-400 mt-1">Módulo logístico de despacho nacional para la actualización manual de existencias y control de ventas.</p>
+                </div>
+                <button
+                  onClick={() => setShowAddProductModal(true)}
+                  className="px-4 py-2 bg-[#c5a85c] hover:bg-[#b59549] text-white text-xs font-extrabold rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus size={14} />
+                  <span>Nuevo Item</span>
+                </button>
+              </div>
+
+              {/* Table of Orders */}
+              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                <div className="p-4 bg-slate-50 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3">
+                  <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider font-mono">Control de Despacho Logístico</h4>
+                  <div className="relative w-full sm:w-64">
+                    <input
+                      type="text"
+                      value={orderQuery}
+                      onChange={(e) => setOrderQuery(e.target.value)}
+                      placeholder="Buscar pedido por ID o cliente..."
+                      className="w-full pl-7 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium"
+                    />
+                    <Search size={12} className="absolute left-2.5 top-2.5 text-slate-400" />
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-black uppercase text-slate-400 font-mono">
+                        <th className="py-3 px-5">Pedido</th>
+                        <th className="py-3 px-5">Cliente</th>
+                        <th className="py-3 px-5">Fecha</th>
+                        <th className="py-3 px-5">Mercadería</th>
+                        <th className="py-3 px-5 text-right">Cobro</th>
+                        <th className="py-3 px-5">Estatus</th>
+                        <th className="py-3 px-5 text-center">Gestión Logística</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-xs font-mono">
+                      {managerFilteredOrders.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="text-center py-12 text-slate-400 font-sans">
+                            No se encontraron pedidos de compra en el sistema.
+                          </td>
+                        </tr>
+                      ) : (
+                        managerFilteredOrders.map(order => (
+                          <tr key={order.id} className="hover:bg-slate-50/50 transition">
+                            <td className="py-3.5 px-5 font-black text-slate-800">{order.id}</td>
+                            <td className="py-3.5 px-5 font-sans">
+                              <p className="font-black text-slate-800 leading-tight">{order.customerName}</p>
+                              <p className="text-[10px] text-slate-400 leading-none mt-0.5">{order.customerEmail}</p>
+                            </td>
+                            <td className="py-3.5 px-5 text-slate-400">
+                              {new Date(order.date).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </td>
+                            <td className="py-3.5 px-5 max-w-[220px] font-sans truncate" title={order.productNames.join(', ')}>
+                              <p className="font-extrabold text-[#c5a85c] leading-tight">{order.productNames.join(', ')}</p>
+                              <span className="text-[9px] text-slate-400">{order.itemsCount} piezas en total</span>
+                            </td>
+                            <td className="py-3.5 px-5 text-right font-black text-slate-800">${order.total}</td>
+                            <td className="py-3.5 px-5">
+                              <span className={`inline-block px-2.5 py-0.5 text-[9px] font-black rounded-lg uppercase border ${
+                                order.status === 'procesando' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                order.status === 'enviado' ? 'bg-indigo-50 text-indigo-700 border-indigo-250' :
+                                order.status === 'entregado' ? 'bg-green-50 text-green-700 border-green-200' :
+                                'bg-rose-50 text-rose-700 border-rose-200'
+                              }`}>
+                                {order.status === 'procesando' ? 'Procesando' :
+                                 order.status === 'enviado' ? 'En ruta' :
+                                 order.status === 'entregado' ? 'Entregado' : 'Cancelado'}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-5 text-center font-sans">
+                              <div className="flex gap-1 justify-center">
+                                {order.status === 'procesando' && (
+                                  <button
+                                    onClick={() => {
+                                      onUpdateOrderStatus(order.id, 'enviado');
+                                      onAddLog(`Logística: Orden de venta ${order.id} despachada y en reparto`, 'info');
+                                    }}
+                                    className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 font-extrabold rounded-lg text-[10px] border border-amber-200 cursor-pointer flex items-center gap-1 transition"
+                                  >
+                                    <Truck size={10} />
+                                    <span>Despachar</span>
+                                  </button>
+                                )}
+                                {order.status === 'enviado' && (
+                                  <button
+                                    onClick={() => {
+                                      onUpdateOrderStatus(order.id, 'entregado');
+                                      onAddLog(`Logística: Orden de venta ${order.id} cobrada y liquidada con éxito`, 'info');
+                                    }}
+                                    className="px-2.5 py-1 bg-green-50 hover:bg-green-100 text-green-800 font-extrabold rounded-lg text-[10px] border border-green-200 cursor-pointer flex items-center gap-1 transition"
+                                  >
+                                    <Check size={10} />
+                                    <span>Registrar Pago</span>
+                                  </button>
+                                )}
+                                {order.status === 'entregado' && (
+                                  <span className="text-[10px] text-green-600 font-black flex items-center gap-0.5 justify-center">
+                                    <CheckCircle size={10} /> Concluido
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Grid of Catalog Stock Adjustment */}
+              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider font-mono">Existencias y Catálogo Físico</h4>
+                  <div className="relative w-full sm:w-64">
+                    <input
+                      type="text"
+                      value={productQuery}
+                      onChange={(e) => setProductQuery(e.target.value)}
+                      placeholder="Filtrar por nombre o SKU..."
+                      className="w-full pl-7 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium"
+                    />
+                    <Search size={12} className="absolute left-2.5 top-2.5 text-slate-400" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                  {managerFilteredProducts.map(p => (
+                    <div key={p.id} className="p-3 bg-slate-50 border border-slate-200/60 rounded-xl space-y-3 flex flex-col justify-between">
+                      <div className="flex gap-2 items-start">
+                        <div className="w-10 h-10 bg-white border border-slate-100 rounded-lg overflow-hidden shrink-0">
+                          <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        </div>
+                        <div className="min-w-0">
+                          <h5 className="font-extrabold text-slate-800 text-xs truncate leading-tight">{p.name}</h5>
+                          <span className="text-[9px] font-mono text-slate-400 block tracking-wider mt-0.5">{p.sku}</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-2 rounded-lg border border-slate-200/40 text-[10px] grid grid-cols-3 gap-1 text-center font-mono leading-tight">
+                        <div>
+                          <span className="text-slate-400 text-[8px] uppercase block">Precio</span>
+                          <span className="font-black text-slate-800">${p.price}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 text-[8px] uppercase block">Stock</span>
+                          <span className={`font-black ${p.stock < 10 ? 'text-red-600' : 'text-slate-700'}`}>{p.stock} pz</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 text-[8px] uppercase block">Vendido</span>
+                          <span className="font-black text-emerald-700">+{p.salesCount}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+        </AnimatePresence>
+      </main>
+
+      {/* ================= CARRITO DE COMPRAS FLOTANTE CON NOTIFICACIÓN ================= */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2" id="floating_cart_bubble_area">
+        <AnimatePresence>
+          {cartItemsCount > 0 && !isCartDrawerOpen && (
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: 10 }}
+              className="bg-slate-900 border border-slate-850 px-3 py-1.5 rounded-xl shadow-lg text-white text-[10px] font-bold flex items-center gap-2"
+            >
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
+              <span>Tienes e-items por comprar</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsCartDrawerOpen(true)}
+          className="relative bg-gradient-to-r from-[#c19a45] to-[#ebd7a7] text-white p-4 rounded-full shadow-2xl transition-all cursor-pointer flex items-center justify-center border border-[#c19a45]/20"
+          id="btn_floating_cart"
+        >
+          <ShoppingCart size={22} className="animate-pulse" />
+          
+          {/* Dynamic Floating Numeric Badge */}
+          {cartItemsCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 bg-slate-900 border border-[#ebd7a7] text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center font-mono">
+              {cartItemsCount}
+            </span>
+          )}
+        </motion.button>
+      </div>
+
+      {/* ================= EXPANSIVE SLIDE-OVER DRAWER (CARRITO FLOTANTE DESPLAZABLE) ================= */}
+      <AnimatePresence>
+        {isCartDrawerOpen && (
+          <>
+            {/* Dark Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsCartDrawerOpen(false)}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 transition"
+              id="cart_drawer_backdrop"
+            />
+            
+            {/* Sliding Drawer Body */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 24, stiffness: 220 }}
+              className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl z-50 flex flex-col justify-between p-6 border-l border-slate-200"
+              id="cart_drawer_slider"
+            >
+              {/* Header inside drawer */}
+              <div className="flex justify-between items-center pb-4 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <ShoppingCart size={20} className="text-[#c19a45]" />
+                  <h4 className="text-md font-serif font-black text-slate-900">Mi Carrito de Compras</h4>
+                </div>
+                <button 
+                  onClick={() => setIsCartDrawerOpen(false)}
+                  className="bg-slate-100 hover:bg-slate-200 p-1.5 rounded-lg text-slate-500 hover:text-slate-900 transition"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Interactive notification notice inside cart drawer */}
+              {isOrderOrdered && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 my-2 text-center text-emerald-800 space-y-3">
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white mx-auto">
+                    <Check size={20} />
+                  </div>
+                  <div>
+                    <h5 className="font-extrabold">¡Pedido Comercial Atendido!</h5>
+                    <p className="text-[10px] text-emerald-700 mt-1">Tu número de guía de abono es: <span className="font-mono font-black">{latestOrderId}</span></p>
+                    <p className="text-[10px] text-slate-500 leading-normal mt-2">La mercadería se asignó al camión repartidor para liquidar de forma segura en metálico al momento de la llegada.</p>
+                  </div>
+                  <button
+                    onClick={closeConfirmationState}
+                    className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black rounded-lg transition"
+                  >
+                    Seguir Comprando
+                  </button>
+                </div>
+              )}
+
+              {/* Items List Inside Slider */}
+              <div className="flex-1 overflow-y-auto py-4 space-y-3.5 scrollbar-thin">
+                {cart.length === 0 ? (
+                  <div className="h-44 flex flex-col items-center justify-center text-slate-400 space-y-2 mt-12">
+                    <div className="p-3 bg-slate-50 rounded-full text-slate-300">
+                      <ShoppingCart size={26} />
+                    </div>
+                    <span className="text-xs font-bold font-sans">El carrito está vacío.</span>
+                    <p className="text-[11px] text-slate-400 font-medium text-center max-w-[200px]">Selecciona tus tenis o detergentes preferidos para verlos aquí.</p>
+                  </div>
+                ) : (
+                  cart.map(item => (
+                    <div 
+                      key={item.product.id} 
+                      className="flex gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200/40 relative shadow-2xs group"
+                    >
+                      <div className="w-16 h-16 bg-white border border-slate-100 rounded-lg overflow-hidden shrink-0">
+                        <img src={item.product.imageUrl} alt={item.product.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      </div>
+                      
+                      <div className="min-w-0 flex-1 space-y-1 text-left">
+                        <div className="flex justify-between items-start pr-1">
+                          <h5 className="font-bold text-slate-800 text-xs truncate leading-normal pr-4">{item.product.name}</h5>
+                          <button 
+                            onClick={() => removeFromCart(item.product.id)}
+                            className="text-slate-400 hover:text-red-500 transition absolute top-2 right-2 duration-150"
+                            title="Eliminar artículo"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                        <span className="text-[9px] font-mono text-slate-400 block tracking-wider leading-none mt-0.5">{item.product.category === 'Zapatos' ? '👠 Calzado' : '🧴 Limpieza'}</span>
+                        
+                        <div className="pt-1.5 flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 bg-white border border-slate-200 p-0.5 rounded-lg">
+                            <button 
+                              onClick={() => updateQuantity(item.product.id, -1)}
+                              className="w-5 h-5 bg-slate-50 hover:bg-slate-100 rounded-sm text-xs font-black flex items-center justify-center text-slate-600 transition"
+                            >
+                              -
+                            </button>
+                            <span className="text-xs font-mono font-black text-slate-800 px-1">{item.quantity}</span>
+                            <button 
+                              onClick={() => updateQuantity(item.product.id, 1)}
+                              className="w-5 h-5 bg-slate-50 hover:bg-slate-100 rounded-sm text-xs font-black flex items-center justify-center text-slate-600 transition"
+                            >
+                              +
+                            </button>
+                          </div>
+                          
+                          <p className="text-xs font-black text-slate-800 font-mono">${item.product.price * item.quantity} MXN</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Subtotal & Checkout form (Inside sliding drawer only when populated!) */}
+              {cart.length > 0 && (
+                <div className="border-t border-slate-150 pt-4 space-y-4 text-left">
+                  <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/50 space-y-1.5">
+                    <div className="flex justify-between text-slate-500 font-bold text-xs font-sans">
+                      <span>Artículos del Hogar ({cartItemsCount})</span>
+                      <span className="font-mono">${cartTotalAmount} MXN</span>
+                    </div>
+                    <div className="flex justify-between text-slate-500 font-bold text-xs font-sans">
+                      <span>Logística de Envío Nacional</span>
+                      <span className="text-emerald-700 font-black uppercase">¡Gratis!</span>
+                    </div>
+                    <div className="flex justify-between items-baseline pt-2 border-t border-slate-200/30">
+                      <span className="text-xs font-serif font-black text-slate-900 uppercase">Monto Total a Liquidar</span>
+                      <span className="text-base font-black text-slate-900 font-mono">${cartTotalAmount} MXN</span>
+                    </div>
+                  </div>
+
+                  {/* Contact / Delivery form automatically populated with Valeria Fuentes' premium credentials */}
+                  <form onSubmit={handleCheckoutSubmit} className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[9px] font-black uppercase text-slate-400 mb-1">Nombre Entrega *</label>
                         <input
                           type="text"
                           required
                           value={checkoutName}
                           onChange={(e) => setCheckoutName(e.target.value)}
-                          placeholder="Ej. Valeria del Valle"
-                          className="w-full px-3.5 py-2.5 border border-natural-border rounded-xl focus:outline-none focus:border-[#c5a85c] text-xs bg-natural-bg font-extrabold text-natural-dark font-sans placeholder-natural-muted"
-                          id="checkout_name_input"
+                          className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-bold"
                         />
                       </div>
-
                       <div>
-                        <label className="block text-[10px] font-black text-natural-muted uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                          <Phone size={12} /> Número Telefónico de Contacto *
-                        </label>
+                        <label className="block text-[9px] font-black uppercase text-slate-400 mb-1">Celular Contacto *</label>
                         <input
                           type="tel"
                           required
                           value={checkoutPhone}
                           onChange={(e) => setCheckoutPhone(e.target.value)}
-                          placeholder="Ej. +52 55 1234 5678"
-                          className="w-full px-3.5 py-2.5 border border-natural-border rounded-xl focus:outline-none focus:border-[#c5a85c] text-xs bg-natural-bg font-bold text-natural-dark font-mono placeholder-natural-muted"
-                          id="checkout_phone_input"
+                          className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-mono font-bold"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-black text-natural-muted uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                        <MapPin size={12} /> Dirección de Entrega Completa *
-                      </label>
-                      <input
-                        type="text"
+                      <label className="block text-[9px] font-black uppercase text-slate-400 mb-1">Ubicación Domiciliar Residencia *</label>
+                      <textarea
                         required
                         value={checkoutAddress}
                         onChange={(e) => setCheckoutAddress(e.target.value)}
-                        placeholder="Calle, Número, Colonia, Municipio, Estado, CP"
-                        className="w-full px-3.5 py-2.5 border border-natural-border rounded-xl focus:outline-none focus:border-[#c5a85c] text-xs bg-natural-bg font-medium text-natural-dark font-sans placeholder-natural-muted"
-                        id="checkout_address_input"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-black text-natural-muted uppercase tracking-wider mb-1.5">
-                        Instrucciones o Notas de Entrega (Opcional)
-                      </label>
-                      <textarea
-                        value={checkoutNotes}
-                        onChange={(e) => setCheckoutNotes(e.target.value)}
-                        placeholder="Ej. Portón café de 2 plantas, tocar el intercom 4, llamar antes de llegar..."
-                        className="w-full px-3.5 py-2.5 border border-natural-border rounded-xl focus:outline-none focus:border-[#c5a85c] text-xs bg-natural-bg text-natural-dark text-left font-sans placeholder-natural-muted"
                         rows={2}
-                        id="checkout_notes_input"
+                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-bold leading-tight"
                       />
                     </div>
 
-                    <div className="pt-2">
-                      <button
-                        type="submit"
-                        className="w-full py-3 px-6 bg-[#c5a85c] hover:bg-[#b59549] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition duration-300 shadow-md transform active:scale-95 cursor-pointer flex items-center justify-center gap-2"
-                        id="btn_confirm_checkout"
-                      >
-                        <CheckCircle size={15} />
-                        <span>Confirmar Compra (Pago Contra Entrega)</span>
-                      </button>
-                    </div>
+                    <button
+                      type="submit"
+                      className="w-full py-3 bg-gradient-to-r from-slate-900 to-indigo-950 hover:opacity-90 text-white text-xs font-black rounded-xl shadow-md transition uppercase tracking-wider cursor-pointer"
+                    >
+                      🤝 Procesar Pedido (Pago Contra Entrega)
+                    </button>
+                    <p className="text-[9.5px] text-slate-400 text-center font-medium leading-none">Pagas de manera segura al mensajero al momento del arribo físico.</p>
                   </form>
                 </div>
               )}
-            </div>
-
-            {/* Right side: User Orders History Log (lg:col-span-5) */}
-            <div className="lg:col-span-5 space-y-6">
-              <div className="bg-white p-5 rounded-2xl border border-natural-border shadow-sm space-y-4" id="user_purchases_wrapper">
-                <div className="border-b border-natural-border pb-3 flex items-center justify-between">
-                  <h4 className="text-base font-extrabold text-natural-dark font-serif flex items-center gap-2">
-                    <CheckCircle size={18} className="text-[#c5a85c]" />
-                    <span>Mis Compras / Pedidos Realizados</span>
-                  </h4>
-                  <span className="text-[10px] bg-natural-bg border border-natural-border/60 text-natural-silt font-mono font-bold px-2 py-0.5 rounded-md">
-                    Historial Real (Sesión)
-                  </span>
-                </div>
-
-                {sessionOrders.length === 0 ? (
-                  <div className="py-16 text-center text-natural-muted" id="empty_purchases_log">
-                    <Clock size={28} className="mx-auto mb-2 text-natural-muted/60" />
-                    <p className="text-xs font-bold text-natural-dark">No has completado compras en esta sesión</p>
-                    <p className="text-[10px] text-natural-muted mt-1">Los pedidos que completes usando el formulario de check-out con pago contra entrega aparecerán aquí en tiempo real.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4" id="session_purchases_list">
-                    {sessionOrders.map(order => (
-                      <div 
-                        key={order.id} 
-                        className="p-4 bg-slate-50/70 border border-natural-border rounded-xl space-y-3 hover:border-[#c5a85c]/35 transition text-xs"
-                      >
-                        <div className="flex justify-between items-center bg-white p-2 rounded-lg border border-natural-border/45">
-                          <div>
-                            <span className="text-[8px] uppercase tracking-widest text-natural-muted leading-none font-bold">Folio Pedido</span>
-                            <span className="text-xs font-black text-natural-dark font-mono block mt-0.5">{order.id}</span>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-[8px] uppercase tracking-widest text-[#c5a85c] leading-none font-black block">Monto Total</span>
-                            <span className="text-xs font-extrabold text-natural-dark font-mono block mt-0.5" id={`price_sum_${order.id}`}>${order.total.toLocaleString()} MXN</span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <span className="text-[9px] uppercase tracking-wider text-natural-muted font-bold block">Artículos Solicitados:</span>
-                          <ul className="list-disc pl-4 space-y-0.5 text-natural-dark font-medium font-mono text-[11px]">
-                            {order.productNames.map((pn, i) => (
-                              <li key={i}>{pn}</li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        <div className="flex justify-between items-center pt-2 border-t border-natural-border/50">
-                          <div className="flex items-center gap-1 text-natural-silt font-medium font-mono text-[10px]">
-                            <Clock size={11} />
-                            <span>{new Date(order.date).toLocaleDateString('es-MX', { hour: '2-digit', minute: '2-digit' })}</span>
-                          </div>
-
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[9px] text-[#c5a85c] font-black uppercase bg-[#c5a85c]/10 border border-[#c5a85c]/25 px-2 py-0.5 rounded-full">
-                              Procesando
-                            </span>
-                            <span className="text-[9px] text-emerald-800 font-extrabold uppercase bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                              Contra Entrega
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* VIEW 3: DISPATCH CONTROL CENTER & CATALOG SETTINGS */}
-        {activeViewMode === 'manager' && (
-          <motion.div
-            key="manager_mode_view"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            className="space-y-6 text-left"
-            id="dispatch_operations_container"
-          >
-            {/* KPI Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 font-sans" id="sales_stats_grid">
-              
-              <div className="bg-white p-5 rounded-2xl border border-natural-border shadow-sm flex items-center justify-between" id="sales_revenue_card">
-                <div>
-                  <p className="text-[10px] font-black text-[#c5a85c] uppercase tracking-widest leading-none font-mono">Ventas Entregadas (MXN)</p>
-                  <h3 className="text-2xl font-black text-natural-dark mt-2 font-mono">
-                    ${totalManagerSalesRevenue.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                  </h3>
-                  <p className="text-[10px] text-natural-muted mt-1">Suma acumulada de pedidos cobrados</p>
-                </div>
-                <div className="p-3 bg-emerald-50 text-[#c5a85c] rounded-xl border border-emerald-100">
-                  <TrendingUp size={22} />
-                </div>
-              </div>
-
-              <div className="bg-white p-5 rounded-2xl border border-natural-border shadow-sm flex items-center justify-between" id="sales_orders_card">
-                <div>
-                  <p className="text-[10px] font-black text-[#c5a85c] uppercase tracking-widest leading-none font-mono">Total Pedidos Homeli</p>
-                  <h3 className="text-2xl font-black text-natural-dark mt-2 font-mono">
-                    {orders.length} órdenes
-                  </h3>
-                  <p className="text-[10px] text-[#c5a85c] font-bold mt-1">
-                    {orders.filter(o => o.status === 'procesando').length} pendientes de envío
-                  </p>
-                </div>
-                <div className="p-3 bg-amber-50 text-amber-700 rounded-xl border border-amber-100">
-                  <ShoppingBag size={22} />
-                </div>
-              </div>
-
-              <div className="bg-white p-5 rounded-2xl border border-natural-border shadow-sm flex items-center justify-between" id="sales_stock_warning_card">
-                <div>
-                  <p className="text-[10px] font-black text-[#c5a85c] uppercase tracking-widest leading-none font-mono">Módulos Inventario Crítico</p>
-                  <h3 className="text-2xl font-black text-natural-dark mt-2 font-mono">
-                    {lowStockProductsCount} productos
-                  </h3>
-                  <p className={`text-[10px] mt-1 font-bold ${lowStockProductsCount > 0 ? 'text-red-500 font-extrabold' : 'text-emerald-700'}`}>
-                    {lowStockProductsCount > 0 ? 'Requieren surtido urgente' : 'Niveles de mercancía en orden'}
-                  </p>
-                </div>
-                <div className={`p-3 rounded-xl border ${lowStockProductsCount > 0 ? 'bg-red-50 text-red-500 border-red-100 animate-pulse' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
-                  <AlertTriangle size={22} />
-                </div>
-              </div>
-            </div>
-
-            {/* Sub navigation inside logistics & catalog */}
-            <div className="bg-white p-4 rounded-xl border border-natural-border shadow-sm flex flex-col md:flex-row items-center justify-between gap-4" id="logistics_action_toolbar">
-              <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto" id="logistics_tabs">
-                <span className="text-[11px] font-black text-natural-muted uppercase font-mono bg-natural-bg py-1 px-2.5 rounded-md">LOGÍSTICA INTERNA</span>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3 w-full md:w-auto" id="manage_view_search_controls">
-                <Search size={14} className="text-natural-muted hidden sm:inline" />
-                <input
-                  type="text"
-                  value={orderQuery}
-                  onChange={(e) => setOrderQuery(e.target.value)}
-                  placeholder="Filtrar pedidos o clientes..."
-                  className="px-3 py-1.5 text-xs bg-natural-bg border border-natural-border rounded-lg text-natural-dark focus:outline-none focus:border-[#c5a85c] font-bold shrink-0 min-w-[200px]"
-                  id="logistic_order_search"
-                />
-
-                <button
-                  onClick={() => setShowAddProductModal(true)}
-                  className="px-4 py-2 bg-[#c5a85c] hover:bg-[#b59549] text-white rounded-lg text-xs font-black uppercase tracking-wider transition cursor-pointer shadow-sm flex items-center gap-1 shrink-0"
-                  id="btn_trigger_add_product"
-                >
-                  <Plus size={14} />
-                  <span>Nuevo Catálogo</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Logistical Orders list table */}
-            <div className="bg-white rounded-2xl border border-natural-border shadow-sm overflow-hidden" id="logistic_table_wrapper">
-              <div className="p-4 bg-slate-50/60 border-b border-natural-border">
-                <h5 className="font-extrabold text-natural-dark text-xs sm:text-sm font-serif">Despacho de Órdenes de E-Commerce</h5>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse" id="orders_dashboard_table">
-                  <thead>
-                    <tr className="bg-natural-bg text-[10px] font-bold uppercase text-natural-muted tracking-wider border-b border-natural-border font-mono">
-                      <th className="py-3 px-5">Código Orden</th>
-                      <th className="py-3 px-5">Comprador</th>
-                      <th className="py-3 px-5">Fecha</th>
-                      <th className="py-3 px-5">Ítems Solicitados</th>
-                      <th className="py-3 px-5 text-right">Monto</th>
-                      <th className="py-3 px-5">Estatus</th>
-                      <th className="py-3 px-5 text-center">Acciones Logísticas</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-natural-border text-xs text-natural-text font-mono">
-                    {managerFilteredOrders.length === 0 ? (
-                      <tr>
-                        <td colSpan={7} className="text-center py-12 text-natural-muted font-sans font-medium">
-                          No se han detectado órdenes de compra registradas en el sistema.
-                        </td>
-                      </tr>
-                    ) : (
-                      managerFilteredOrders.map(order => (
-                        <tr key={order.id} className="hover:bg-natural-bg/40 transition">
-                          <td className="py-3.5 px-5 font-bold text-natural-dark">
-                            {order.id}
-                          </td>
-                          <td className="py-3.5 px-5 font-sans">
-                            <p className="font-extrabold text-natural-dark">{order.customerName}</p>
-                            <p className="text-[10px] text-natural-muted font-mono">{order.customerEmail}</p>
-                          </td>
-                          <td className="py-3.5 px-5 text-natural-muted font-bold">
-                            {new Date(order.date).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                          </td>
-                          <td className="py-3.5 px-5 max-w-[200px] font-sans">
-                            <p className="font-bold text-natural-dark truncate" title={order.productNames.join(', ')}>
-                              {order.productNames.join(', ')}
-                            </p>
-                            <p className="text-[10px] text-amber-700 font-extrabold">{order.itemsCount} piezas</p>
-                          </td>
-                          <td className="py-3.5 px-5 text-right font-black text-natural-dark">
-                            ${order.total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                          </td>
-                          <td className="py-3.5 px-5 font-sans">
-                            <span className={`inline-block px-2.5 py-0.5 text-[10px] font-extrabold rounded-full border ${
-                              order.status === 'procesando' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                              order.status === 'enviado' ? 'bg-indigo-50 text-indigo-700 border-indigo-250' :
-                              order.status === 'entregado' ? 'bg-green-50 text-green-700 border-green-200' :
-                              'bg-rose-50 text-rose-700 border-rose-200'
-                            }`}>
-                              {order.status === 'procesando' ? 'Procesando' :
-                               order.status === 'enviado' ? 'En ruta' :
-                               order.status === 'entregado' ? 'Entregado' : 'Cancelado'}
-                            </span>
-                          </td>
-                          <td className="py-3.5 px-5 font-sans">
-                            <div className="flex gap-1 justify-center">
-                              {order.status === 'procesando' && (
-                                <button
-                                  onClick={() => {
-                                    onUpdateOrderStatus(order.id, 'enviado');
-                                    onAddLog(`Logística: Orden E-Commerce ${order.id} despachada - En ruta de reparto nacional`, 'info');
-                                  }}
-                                  className="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 font-extrabold rounded-lg text-[10px] flex items-center gap-1 transition border border-amber-200 cursor-pointer"
-                                  title="Marcar como Enviado"
-                                >
-                                  <Truck size={12} />
-                                  <span>Despachar</span>
-                                </button>
-                              )}
-                              {order.status === 'enviado' && (
-                                <button
-                                  onClick={() => {
-                                    onUpdateOrderStatus(order.id, 'entregado');
-                                    onAddLog(`Logística: Orden E-Commerce ${order.id} entregada y cobrada con éxito`, 'info');
-                                  }}
-                                  className="px-3 py-1 bg-green-50 hover:bg-green-100 text-green-800 font-extrabold rounded-lg text-[10px] flex items-center gap-1 transition border border-green-200 cursor-pointer"
-                                  title="Marcar como Entregado"
-                                >
-                                  <Check size={12} />
-                                  <span>Registrar pago</span>
-                                </button>
-                              )}
-                              {order.status === 'entregado' && (
-                                <span className="text-[10px] text-green-700 font-black flex items-center gap-0.5">
-                                  <CheckCircle size={12} /> Liquidado
-                                </span>
-                              )}
-                              {order.status === 'cancelado' && (
-                                <span className="text-[10px] text-red-500 font-bold">
-                                  Cancelado
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Master Catalog List Administration table */}
-            <div className="bg-white rounded-2xl border border-natural-border shadow-sm overflow-hidden" id="logistic_catalog_wrapper">
-              <div className="p-4 bg-slate-50/60 border-b border-natural-border flex justify-between items-center">
-                <h5 className="font-extrabold text-natural-dark text-xs sm:text-sm font-serif">Alineación de Catálogo e Inventario</h5>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={productQuery}
-                    onChange={(e) => setProductQuery(e.target.value)}
-                    placeholder="Filtrar catálogo..."
-                    className="pl-7 pr-3 py-1 bg-white border border-natural-border rounded-lg text-[11px] text-natural-dark font-medium"
-                  />
-                  <Search size={11} className="absolute left-2.5 top-2 text-natural-muted" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 p-4" id="inventory_admin_grid">
-                {managerFilteredProducts.map(p => (
-                  <div key={p.id} className="p-3 bg-slate-50 border border-natural-border rounded-xl space-y-2 flex flex-col justify-between" id={`invent_card_${p.id}`}>
-                    <div className="flex gap-2 items-start">
-                      <div className="w-10 h-10 bg-white border rounded overflow-hidden shrink-0">
-                        <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                      </div>
-                      <div className="min-w-0">
-                        <h6 className="font-bold text-natural-dark text-xs truncate leading-tight">{p.name}</h6>
-                        <span className="text-[9px] uppercase tracking-wider text-natural-muted font-mono leading-none block mt-0.5">{p.sku}</span>
-                      </div>
-                    </div>
-
-                    <div className="bg-white p-2 rounded-lg border border-natural-border/60 text-[10px] grid grid-cols-3 gap-1 text-center font-mono">
-                      <div>
-                        <span className="text-natural-muted block text-[8px] uppercase">Precio</span>
-                        <span className="font-bold text-natural-dark">${p.price}</span>
-                      </div>
-                      <div>
-                        <span className="text-natural-muted block text-[8px] uppercase">Stock</span>
-                        <span className={`font-bold ${p.stock < 10 ? 'text-red-500 font-black' : 'text-natural-dark'}`}>{p.stock} pz</span>
-                      </div>
-                      <div>
-                        <span className="text-natural-muted block text-[8px] uppercase">Vendido</span>
-                        <span className="font-bold text-emerald-800">+{p.salesCount}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
-      {/* Add Product Modal (In manager view) */}
+      {/* ================= USER PROFILE CUSTOMIZATION MODAL (Perfil de Usuario) ================= */}
+      <AnimatePresence>
+        {isProfileModalOpen && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl border border-slate-200 p-6 max-w-md w-full shadow-2xl text-left space-y-6"
+              id="user_profile_modal"
+            >
+              <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                <h3 className="text-base font-serif font-black text-slate-900 flex items-center gap-2">
+                  <User size={18} className="text-[#c19a45]" />
+                  <span>Módulo de Configuración de Perfil</span>
+                </h3>
+                <button
+                  onClick={() => setIsProfileModalOpen(false)}
+                  className="p-1 rounded-lg hover:bg-slate-50 transition text-slate-400 hover:text-slate-700"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Profile setup card */}
+              <div className="space-y-4 font-sans text-xs">
+                <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200/50">
+                  <div className="w-12 h-12 rounded-full bg-[#ebd7a7] text-[#c19a45] flex items-center justify-center font-black text-lg shadow-sm">
+                    {userProfile.name.split(' ').map(n=>n[0]).join('')}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-slate-900 leading-tight">{userProfile.name}</h4>
+                    <span className="text-[10px] font-black text-[#c5a85c] bg-white border border-[#c19a45]/20 px-2 py-0.5 rounded-md mt-1 inline-block uppercase font-mono tracking-wider">
+                      {userProfile.roleLabel}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-3.5 pt-2">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Nombre Completo del Comprador</label>
+                    <input 
+                      type="text" 
+                      value={userProfile.name}
+                      onChange={(e) => setUserProfile({...userProfile, name: e.target.value})}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold font-sans text-slate-800"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Correo Inteligente</label>
+                    <input 
+                      type="email" 
+                      value={userProfile.email}
+                      onChange={(e) => setUserProfile({...userProfile, email: e.target.value})}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold font-sans text-slate-800"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Celular de Contacto</label>
+                      <input 
+                        type="tel" 
+                        value={userProfile.phone}
+                        onChange={(e) => setUserProfile({...userProfile, phone: e.target.value})}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-xl font-mono font-bold text-slate-800"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Ciudad Residencia</label>
+                      <input 
+                        type="text" 
+                        value={userProfile.city}
+                        onChange={(e) => setUserProfile({...userProfile, city: e.target.value})}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold font-sans text-slate-800"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Dirección de Destino Predeterminada</label>
+                    <textarea 
+                      value={userProfile.address}
+                      onChange={(e) => setUserProfile({...userProfile, address: e.target.value})}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl font-bold font-sans text-slate-800 leading-tight"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 flex gap-2">
+                  <button
+                    onClick={() => setIsProfileModalOpen(false)}
+                    className="flex-1 py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 font-extrabold rounded-xl transition cursor-pointer text-center"
+                  >
+                    Guardar Configuración
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ================= ADD NEW PRODUCT MODAL (Alta Logística) ================= */}
       <AnimatePresence>
         {showAddProductModal && (
-          <div className="fixed inset-0 bg-natural-dark/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
             <motion.div 
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl border border-natural-border p-6 max-w-md w-full shadow-2xl space-y-6 text-left"
+              className="bg-white rounded-2xl border border-slate-200 p-6 max-w-md w-full shadow-2xl space-y-5 text-left"
               id="add_new_catalog_modal"
             >
-              <div className="flex justify-between items-center pb-3 border-b border-natural-border">
-                <h3 className="text-base font-extrabold font-serif text-natural-dark flex items-center gap-2">
+              <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                <h3 className="text-base font-serif font-black text-slate-900 flex items-center gap-2">
                   <Package size={18} className="text-[#c5a85c]" />
-                  <span>Dar de alta nuevo producto</span>
+                  <span>Alta de Nuevo Item de Almacén</span>
                 </h3>
                 <button 
                   onClick={() => setShowAddProductModal(false)}
-                  className="text-natural-muted hover:text-natural-dark text-sm font-bold cursor-pointer transition"
+                  className="text-slate-400 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 p-1.5 rounded-lg transition"
                 >
                   ✕
                 </button>
@@ -1179,25 +1575,25 @@ export default function VentasSection({
 
               <form onSubmit={handleManagerCreateProduct} className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-black text-natural-muted uppercase tracking-wider mb-1.5">Nombre comercial *</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Nombre Comercial *</label>
                   <input
                     type="text"
                     required
                     value={pName}
                     onChange={(e) => setPName(e.target.value)}
                     placeholder="Ej. Tenis Deportivos Pro-Flex"
-                    className="w-full px-3 py-2 border border-natural-border rounded-xl uppercase text-xs text-natural-dark font-extrabold focus:outline-none focus:border-[#c5a85c]"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 font-bold focus:border-[#c5a85c] focus:outline-none"
                     id="m_pname"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-black text-natural-muted uppercase tracking-wider mb-1.5">Categoría de Tienda</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Categoría</label>
                     <select
                       value={pCategory}
                       onChange={(e) => setPCategory(e.target.value as any)}
-                      className="w-full px-2 py-1.5 border border-natural-border rounded-xl text-xs bg-white text-natural-dark focus:outline-none focus:border-[#c5a85c]"
+                      className="w-full px-2.5 py-2 border border-slate-200 rounded-xl text-xs bg-white text-slate-800 font-bold focus:border-[#c5a85c] focus:outline-none"
                       id="m_pcategory"
                     >
                       <option value="Productos de limpieza">Productos de limpieza</option>
@@ -1205,53 +1601,53 @@ export default function VentasSection({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black text-[#c5a85c] uppercase tracking-wider mb-1.5">Stock de almacén *</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Stock de Almacén *</label>
                     <input
                       type="number"
                       required
                       value={pStock}
                       onChange={(e) => setPStock(e.target.value)}
                       placeholder="12"
-                      className="w-full px-3 py-1.5 border border-natural-border rounded-xl text-xs font-mono font-bold focus:outline-none focus:border-[#c5a85c]"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-mono font-bold focus:border-[#c5a85c] focus:outline-none"
                       id="m_pstock"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-black text-natural-muted uppercase tracking-wider mb-1.5">Precio de Venta ($ MXN) *</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Precio ($ MXN) *</label>
                     <input
                       type="number"
                       required
                       value={pPrice}
                       onChange={(e) => setPPrice(e.target.value)}
                       placeholder="899"
-                      className="w-full px-3 py-1.5 border border-natural-border rounded-xl text-xs font-mono font-bold focus:outline-none focus:border-[#c5a85c]"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-mono font-bold focus:border-[#c5a85c] focus:outline-none"
                       id="m_pprice"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-black text-natural-muted uppercase tracking-wider mb-1.5">URL de Imagen (Opcional)</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Imagen URL (Opcional)</label>
                     <input
                       type="url"
                       value={pImgUrl}
                       onChange={(e) => setPImgUrl(e.target.value)}
                       placeholder="https://ejemplo.com/foto.jpg"
-                      className="w-full px-3 py-1.5 border border-natural-border rounded-xl text-xs text-natural-dark focus:outline-none focus:border-[#c5a85c]"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 focus:border-[#c5a85c] focus:outline-none"
                       id="m_pimgurl"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black text-natural-muted uppercase tracking-wider mb-1.5">Descripción de Venta (Opcional)</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Descripción de Producto</label>
                   <textarea
                     value={pDesc}
                     onChange={(e) => setPDesc(e.target.value)}
-                    placeholder="Detalles sobre materiales, componentes o tallas..."
-                    className="w-full px-3 py-2 border border-natural-border rounded-xl text-xs text-natural-dark text-left focus:outline-none focus:border-[#c5a85c]"
+                    placeholder="Detalles técnicos, materiales o especificaciones..."
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 font-medium focus:border-[#c5a85c] focus:outline-none"
                     rows={2}
                     id="m_pdesc"
                   />
@@ -1261,15 +1657,15 @@ export default function VentasSection({
                   <button
                     type="button"
                     onClick={() => setShowAddProductModal(false)}
-                    className="flex-1 py-2 px-3 bg-natural-bg hover:bg-natural-border/60 text-natural-silt text-xs font-extrabold rounded-xl transition"
+                    className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-black rounded-xl transition"
                   >
-                    Cerrar
+                    Regresar
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-2 px-3 bg-[#c5a85c] hover:bg-[#b59549] text-white text-xs font-extrabold rounded-xl transition shadow-sm"
+                    className="flex-1 py-2 bg-[#c5a85c] hover:bg-[#b59549] text-white text-xs font-black rounded-xl transition shadow-sm"
                   >
-                    Crear Artículo
+                    Crear Item
                   </button>
                 </div>
               </form>
