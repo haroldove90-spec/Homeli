@@ -145,26 +145,26 @@ export default function App() {
       {/* Main Core Layout */}
       <div className="flex flex-col flex-1" id="core_layout">
 
-        {/* Master Top Header Navigation Bar */}
-        <header className="bg-white border-b border-natural-border py-2.5 px-5 flex justify-between items-center shadow-sm sticky top-0 z-40" id="header_navbar">
-          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setActiveSection('home')}>
-            {/* Standard Rectangular Logo Brand Area without restrictive circular frame encapsulation */}
-            <div className="w-11 bg-white shrink-0 border border-natural-border/40 rounded-lg p-0.5 overflow-hidden shadow-sm" id="navbar_brand_logo">
-              <img 
-                src="https://cossma.com.mx/homeli.jpg" 
-                alt="Homeli Logo Banner" 
-                className="w-full h-auto object-contain block"
-                referrerPolicy="no-referrer"
-              />
+        {/* Master Top Header Navigation Bar - Shown only inside internal roles views */}
+        {activeSection !== 'home' && (
+          <header className="bg-white border-b border-natural-border py-2.5 px-5 flex justify-between items-center shadow-sm sticky top-0 z-40" id="header_navbar">
+            <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setActiveSection('home')}>
+              {/* Standard Rectangular Logo Brand Area without restrictive circular frame encapsulation */}
+              <div className="w-11 bg-white shrink-0 border border-natural-border/40 rounded-lg p-0.5 overflow-hidden shadow-sm" id="navbar_brand_logo">
+                <img 
+                  src="https://cossma.com.mx/homeli.jpg" 
+                  alt="Homeli Logo Banner" 
+                  className="w-full h-auto object-contain block"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold font-serif tracking-tight text-natural-dark leading-none">Homeli</h2>
+              </div>
             </div>
-            <div>
-              <h2 className="text-sm font-bold font-serif tracking-tight text-natural-dark leading-none">Homeli</h2>
-            </div>
-          </div>
 
-          {/* Navigational shortcuts when active section is loaded */}
-          <div className="flex items-center gap-2">
-            {activeSection !== 'home' && (
+            {/* Navigational shortcuts when active section is loaded */}
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setActiveSection('home')}
                 className="px-3 py-1.5 text-xs text-natural-text hover:text-natural-dark hover:bg-natural-bg border border-natural-border rounded-xl transition font-bold flex items-center gap-1.5 cursor-pointer"
@@ -173,31 +173,31 @@ export default function App() {
                 <Home size={13} />
                 <span>Selector Roles</span>
               </button>
-            )}
-            
-            {/* Shortcuts directly in header */}
-            <div className="hidden sm:flex rounded-lg bg-natural-bg p-0.5 border border-natural-border" id="navbar_shortcuts">
-              <button 
-                onClick={() => setActiveSection('admin')}
-                className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'admin' ? 'bg-earth-copper text-white' : 'text-natural-muted hover:text-natural-dark'}`}
-              >
-                Admin
-              </button>
-              <button 
-                onClick={() => setActiveSection('servicios')}
-                className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'servicios' ? 'bg-earth-green text-white' : 'text-natural-muted hover:text-natural-dark'}`}
-              >
-                Servicios
-              </button>
-              <button 
-                onClick={() => setActiveSection('ventas')}
-                className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'ventas' ? 'bg-earth-slate text-white' : 'text-natural-muted hover:text-natural-dark'}`}
-              >
-                Ventas
-              </button>
+              
+              {/* Shortcuts directly in header */}
+              <div className="hidden sm:flex rounded-lg bg-natural-bg p-0.5 border border-natural-border" id="navbar_shortcuts">
+                <button 
+                  onClick={() => setActiveSection('admin')}
+                  className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'admin' ? 'bg-earth-copper text-white' : 'text-natural-muted hover:text-natural-dark'}`}
+                >
+                  Admin
+                </button>
+                <button 
+                  onClick={() => setActiveSection('servicios')}
+                  className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'servicios' ? 'bg-earth-green text-white' : 'text-natural-muted hover:text-natural-dark'}`}
+                >
+                  Servicios
+                </button>
+                <button 
+                  onClick={() => setActiveSection('ventas')}
+                  className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'ventas' ? 'bg-earth-slate text-white' : 'text-natural-muted hover:text-natural-dark'}`}
+                >
+                  Ventas
+                </button>
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
+        )}
 
         {/* Dynamic Page Views Body */}
         <main className="flex-1 p-6 max-w-7xl w-full mx-auto" id="main_layout_body">
@@ -211,9 +211,9 @@ export default function App() {
                 className="space-y-10 py-8 flex flex-col items-center justify-center min-h-[70vh]"
                 id="home_content"
               >
-                {/* Minimalist Centered Small Logo */}
-                <div className="flex flex-col items-center justify-center mb-4" id="minimalist_home_brand">
-                  <div className="w-14 bg-white rounded-xl shadow-sm border border-natural-border/60 p-0.5 overflow-hidden transition-all duration-300 hover:shadow-md hover:scale-105">
+                {/* Minimalist Centered Logo - Made significantly larger to ensure clear branding visibility */}
+                <div className="flex flex-col items-center justify-center mb-6" id="minimalist_home_brand">
+                  <div className="w-36 sm:w-44 bg-white rounded-2xl shadow-md border border-natural-border/60 p-1.5 overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-105">
                     <img 
                       src="https://cossma.com.mx/homeli.jpg" 
                       alt="Homeli Logo" 
