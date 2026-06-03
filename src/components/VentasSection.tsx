@@ -226,6 +226,11 @@ export default function VentasSection({
   const [checkoutAddress, setCheckoutAddress] = useState(userProfile.address);
   const [checkoutNotes, setCheckoutNotes] = useState('');
   
+  // Product Detail & Registration module States
+  const [selectedProductDetails, setSelectedProductDetails] = useState<any>(null);
+  const [detailsQuantity, setDetailsQuantity] = useState(1);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  
   const [isOrderOrdered, setIsOrderOrdered] = useState(false);
   const [latestOrderId, setLatestOrderId] = useState('');
 
@@ -425,34 +430,30 @@ export default function VentasSection({
       {/* ================= HEADER GENERAL DE LA TIENDA ================= */}
       <header className="bg-white border-b border-slate-200/85 sticky top-0 z-40 shadow-xs px-4 sm:px-8 py-3.5 flex items-center justify-between" id="boutique_header">
         {/* Left column: Brand Identifier (Quita Homeli E-Commerce y TIENDA PREMIUM MULTI-CATEGORÍA) */}
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setActiveViewMode('shop'); setSelectedCategory('todos'); }} id="brand_home_box">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#c19a45] to-[#ebd7a7] rounded-xl flex items-center justify-center p-0.5 shadow-sm">
-            <div className="w-full h-full bg-white rounded-lg flex items-center justify-center overflow-hidden">
-              <img 
-                src="https://cossma.com.mx/homeli.jpg" 
-                alt="Homeli Logo" 
-                className="w-8 h-8 object-contain"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-          </div>
+        <div className="flex items-center gap-4 cursor-pointer" onClick={() => { setActiveViewMode('shop'); setSelectedCategory('todos'); }} id="brand_home_box">
+          <img 
+            src="https://cossma.com.mx/homeli.jpg" 
+            alt="Homeli Logo" 
+            className="h-10 sm:h-12 w-auto object-contain block"
+            referrerPolicy="no-referrer"
+          />
           <div>
-            <h1 className="text-lg font-serif font-black tracking-tight text-slate-900 flex items-center gap-1.5 leading-none">
+            <h1 className="text-sm sm:text-base font-serif font-black tracking-tight text-slate-900 flex items-center gap-1.5 leading-none">
               Homeli <span className="text-[10px] font-sans font-bold bg-[#c5a85c]/10 text-[#c5a85c] px-1.5 py-0.5 rounded-sm tracking-normal uppercase">Atelier</span>
             </h1>
-            <p className="text-[9px] text-slate-400 font-bold font-sans tracking-wide uppercase mt-0.5">Cuidado & Estilo Sostenible</p>
+            <p className="text-[10px] text-slate-400 font-bold font-sans tracking-wide uppercase mt-1">Cuidado & Estilo Sostenible</p>
           </div>
         </div>
 
         {/* Middle column: Menu Bar showing User Modules & Categories (Barra de Menú Sus Módulos) */}
-        <nav className="hidden md:flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200/60" id="header_navbar_menu_bar">
+        <nav className="hidden md:flex items-center gap-2.5 bg-slate-100 p-1 rounded-xl border border-slate-200/60" id="header_navbar_menu_bar">
           <button
             onClick={() => {
               setActiveViewMode('shop');
               setSelectedCategory('Zapatos');
               setIsOrderOrdered(false);
             }}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${activeViewMode === 'shop' && selectedCategory === 'Zapatos' ? 'bg-white text-[#c19a45] shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+            className={`px-5 py-2.5 rounded-lg text-sm font-black transition flex items-center gap-1.5 cursor-pointer ${activeViewMode === 'shop' && selectedCategory === 'Zapatos' ? 'bg-white text-[#c19a45] shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
           >
             <span>👠 Calzado Premium</span>
           </button>
@@ -463,7 +464,7 @@ export default function VentasSection({
               setSelectedCategory('Productos de limpieza');
               setIsOrderOrdered(false);
             }}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${activeViewMode === 'shop' && selectedCategory === 'Productos de limpieza' ? 'bg-white text-[#c19a45] shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+            className={`px-5 py-2.5 rounded-lg text-sm font-black transition flex items-center gap-1.5 cursor-pointer ${activeViewMode === 'shop' && selectedCategory === 'Productos de limpieza' ? 'bg-white text-[#c19a45] shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
           >
             <span>🧴 Limpieza Avanzada</span>
           </button>
@@ -473,20 +474,9 @@ export default function VentasSection({
               setActiveViewMode('cart_orders');
               setIsOrderOrdered(false);
             }}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${activeViewMode === 'cart_orders' ? 'bg-white text-[#c19a45] shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+            className={`px-5 py-2.5 rounded-lg text-sm font-black transition flex items-center gap-1.5 cursor-pointer ${activeViewMode === 'cart_orders' ? 'bg-white text-[#c19a45] shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
           >
             <span>📦 Mis Compras</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveViewMode('manager');
-              setIsOrderOrdered(false);
-            }}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${activeViewMode === 'manager' ? 'bg-white text-[#c19a45] shadow-xs animate-pulse' : 'text-slate-500 hover:text-slate-800'}`}
-            title="Alinear catálogo y administrar pedidos logísticos"
-          >
-            <span>⚙️ Almacén Logística</span>
           </button>
         </nav>
 
@@ -494,18 +484,18 @@ export default function VentasSection({
         <div className="relative" id="user_dropdown_container">
           <button
             onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 border border-slate-200 hover:border-slate-300 rounded-xl bg-white shadow-2xs hover:shadow-xs transition duration-150 text-left cursor-pointer"
+            className="flex items-center gap-3 px-4 py-2 border-2 border-[#c5a85c] hover:border-[#b59549] rounded-xl bg-[#c5a85c]/5 hover:bg-[#c5a85c]/10 shadow-sm transition duration-150 text-left cursor-pointer"
             id="user_header_trigger_btn"
           >
-            {/* User Avatar Circle */}
-            <div className="w-7 h-7 rounded-lg bg-[#c19a45] text-white flex items-center justify-center font-bold text-xs shadow-inner">
-              {userProfile.name.split(' ').map(n=>n[0]).join('')}
+            {/* Highly Visible Real User Icon instead of just initials */}
+            <div className="w-8 h-8 rounded-lg bg-[#c19a45] text-white flex items-center justify-center font-bold text-xs shadow-inner shrink-0">
+              <User size={18} className="stroke-[2.5]" />
             </div>
             <div className="hidden sm:block">
-              <p className="text-[11px] font-black leading-none text-slate-800">{userProfile.name}</p>
-              <span className="text-[9px] text-slate-400 font-semibold">{userProfile.roleLabel}</span>
+              <p className="text-xs sm:text-sm font-black leading-none text-slate-900">{userProfile.name}</p>
+              <span className="text-[10px] text-slate-500 font-bold block mt-1">{userProfile.roleLabel}</span>
             </div>
-            <ChevronDown size={12} className={`text-slate-400 transition-transform duration-200 ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={14} className="text-[#c19a45] transition-transform duration-200" />
           </button>
 
           {/* User Menu Dropdown Panel */}
@@ -594,15 +584,6 @@ export default function VentasSection({
                         className="w-full text-left px-3.5 py-2 hover:bg-slate-50 text-xs font-bold text-slate-600 rounded-xl transition flex items-center gap-2"
                       >
                         Limpieza: Fórmulas Hogar
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsUserDropdownOpen(false);
-                          setActiveViewMode('manager');
-                        }}
-                        className="w-full text-left px-3.5 py-2 hover:bg-slate-50 text-xs font-bold text-[#c5a85c] rounded-xl transition flex items-center gap-2"
-                      >
-                        ⚙️ Almacén Logística
                       </button>
                     </div>
                   </div>
@@ -718,65 +699,71 @@ export default function VentasSection({
                             key={product.id}
                             className="bg-white border border-slate-200 hover:border-[#c5a85c] hover:shadow-lg rounded-2xl p-3 flex flex-col justify-between transition-all duration-300 group"
                           >
-                            <div className="relative">
-                              <span className="absolute top-1 left-1.5 z-10 text-[8px] font-bold bg-[#c5a85c] text-white px-1.5 py-0.5 rounded-md uppercase">
-                                Calzado
-                              </span>
-                              {product.stock <= 0 ? (
-                                <span className="absolute top-1 right-1.5 z-10 text-[8px] font-black bg-red-100 text-red-600 px-1.5 py-0.5 border border-red-200 rounded-md">
-                                  Agotado
+                            <div 
+                              className="cursor-pointer space-y-2 flex-1 flex flex-col justify-between"
+                              onClick={() => { setSelectedProductDetails(product); setDetailsQuantity(1); }}
+                              title="Haz clic para ver la sección detallada de este producto"
+                            >
+                              <div className="relative">
+                                <span className="absolute top-1 left-1.5 z-10 text-[8px] font-bold bg-[#c5a85c] text-white px-1.5 py-0.5 rounded-md uppercase">
+                                  Calzado
                                 </span>
-                              ) : product.stock < 10 ? (
-                                <span className="absolute top-1 right-1.5 z-10 text-[8px] font-black bg-amber-50 text-amber-700 px-1.5 py-0.5 border border-amber-200 rounded-md">
-                                  Pocas pz
-                                </span>
-                              ) : null}
-
-                              <div className="w-full aspect-square bg-[#f9f5f0] border border-slate-100 rounded-xl overflow-hidden mb-3">
-                                <img 
-                                  src={product.imageUrl} 
-                                  alt={product.name} 
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                  referrerPolicy="no-referrer"
-                                />
-                              </div>
-                            </div>
-
-                            <div className="space-y-1.5 flex-1 flex flex-col justify-between text-left">
-                              <div>
-                                <h4 className="font-serif font-black text-slate-800 text-xs leading-tight line-clamp-1 group-hover:text-[#c5a85c] transition-colors">
-                                  {product.name}
-                                </h4>
-                                <p className="text-[10px] text-slate-400 leading-normal line-clamp-2 mt-0.5">
-                                  {product.description}
-                                </p>
-                              </div>
-
-                              <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-1 items-center">
-                                <div>
-                                  <span className="text-[8px] text-slate-400 font-bold block uppercase">Inversión</span>
-                                  <span className="text-xs font-black text-slate-900 font-mono">${product.price} MXN</span>
-                                </div>
-                                <div className="text-right">
-                                  <span className="text-[8px] text-slate-400 font-bold block uppercase">Stock</span>
-                                  <span className="text-[10px] font-semibold text-slate-700 font-mono">{product.stock} un</span>
-                                </div>
-                              </div>
-
-                              <button
-                                onClick={() => addToCart(product)}
-                                disabled={product.stock <= 0}
-                                className={`w-full py-2 px-2 rounded-xl text-[11px] font-extrabold transition-all duration-250 flex items-center justify-center gap-1 cursor-pointer shadow-xs ${product.stock <= 0 ? 'bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200' : 'bg-[#c5a85c]/10 text-[#c5a85c] border border-[#c19a45]/30 hover:bg-[#c5a85c] hover:text-white hover:border-[#c5a85c]'}`}
-                              >
-                                <Plus size={11} />
-                                <span>Añadir</span>
-                                {inCart > 0 && (
-                                  <span className="bg-[#c5a85c] group-hover:bg-white group-hover:text-[#c5a85c] text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-mono ml-0.5">
-                                    {inCart}
+                                {product.stock <= 0 ? (
+                                  <span className="absolute top-1 right-1.5 z-10 text-[8px] font-black bg-red-100 text-red-600 px-1.5 py-0.5 border border-red-200 rounded-md">
+                                    Agotado
                                   </span>
-                                )}
-                              </button>
+                                ) : product.stock < 10 ? (
+                                  <span className="absolute top-1 right-1.5 z-10 text-[8px] font-black bg-amber-50 text-amber-700 px-1.5 py-0.5 border border-amber-200 rounded-md">
+                                    Pocas pz
+                                  </span>
+                                ) : null}
+
+                                <div className="w-full aspect-square bg-[#f9f5f0] border border-slate-100 rounded-xl overflow-hidden mb-3">
+                                  <img 
+                                    src={product.imageUrl} 
+                                    alt={product.name} 
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="space-y-1.5 flex-1 flex flex-col justify-between text-left">
+                                <div>
+                                  <h4 className="font-serif font-black text-slate-800 text-sm leading-tight line-clamp-1 group-hover:text-[#c5a85c] transition-colors">
+                                    {product.name}
+                                  </h4>
+                                  <p className="text-xs text-slate-400 leading-normal line-clamp-2 mt-0.5">
+                                    {product.description}
+                                  </p>
+                                </div>
+
+                                <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-1 items-center mb-2">
+                                  <div>
+                                    <span className="text-[8px] text-slate-400 font-bold block uppercase">Inversión</span>
+                                    <span className="text-sm font-black text-slate-900 font-mono">${product.price} MXN</span>
+                                  </div>
+                                  <div className="text-right">
+                                    <span className="text-[8px] text-slate-400 font-bold block uppercase">Stock</span>
+                                    <span className="text-xs font-semibold text-slate-755 font-mono">{product.stock} un</span>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
+
+                            <button
+                              onClick={() => addToCart(product)}
+                              disabled={product.stock <= 0}
+                              className={`w-full py-2 px-2 rounded-xl text-[11px] font-extrabold transition-all duration-250 flex items-center justify-center gap-1 cursor-pointer shadow-xs ${product.stock <= 0 ? 'bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200' : 'bg-[#c5a85c]/10 text-[#c5a85c] border border-[#c19a45]/30 hover:bg-[#c5a85c] hover:text-white hover:border-[#c5a85c]'}`}
+                            >
+                              <Plus size={11} />
+                              <span>Añadir</span>
+                              {inCart > 0 && (
+                                <span className="bg-[#c5a85c] group-hover:bg-white group-hover:text-[#c5a85c] text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-mono ml-0.5">
+                                  {inCart}
+                                </span>
+                              )}
+                            </button>
                           </div>
                         );
                       })}
@@ -814,65 +801,71 @@ export default function VentasSection({
                             key={product.id}
                             className="bg-white border border-slate-200 hover:border-emerald-600 hover:shadow-lg rounded-2xl p-3 flex flex-col justify-between transition-all duration-300 group"
                           >
-                            <div className="relative">
-                              <span className="absolute top-1 left-1.5 z-10 text-[8px] font-bold bg-emerald-600 text-white px-1.5 py-0.5 rounded-md uppercase">
-                                Limpieza
-                              </span>
-                              {product.stock <= 0 ? (
-                                <span className="absolute top-1 right-1.5 z-10 text-[8px] font-black bg-red-100 text-red-600 px-1.5 py-0.5 border border-red-200 rounded-md">
-                                  Agotado
+                            <div 
+                              className="cursor-pointer space-y-2 flex-1 flex flex-col justify-between"
+                              onClick={() => { setSelectedProductDetails(product); setDetailsQuantity(1); }}
+                              title="Haz clic para ver la sección detallada de este producto"
+                            >
+                              <div className="relative">
+                                <span className="absolute top-1 left-1.5 z-10 text-[8px] font-bold bg-emerald-600 text-white px-1.5 py-0.5 rounded-md uppercase">
+                                  Limpieza
                                 </span>
-                              ) : product.stock < 10 ? (
-                                <span className="absolute top-1 right-1.5 z-10 text-[8px] font-black bg-amber-50 text-amber-700 px-1.5 py-0.5 border border-amber-200 rounded-md">
-                                  Pocas pz
-                                </span>
-                              ) : null}
-
-                              <div className="w-full aspect-square bg-[#f0f9f6] border border-slate-100 rounded-xl overflow-hidden mb-3">
-                                <img 
-                                  src={product.imageUrl} 
-                                  alt={product.name} 
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                  referrerPolicy="no-referrer"
-                                />
-                              </div>
-                            </div>
-
-                            <div className="space-y-1.5 flex-1 flex flex-col justify-between text-left">
-                              <div>
-                                <h4 className="font-serif font-black text-slate-800 text-xs leading-tight line-clamp-1 group-hover:text-emerald-700 transition-colors">
-                                  {product.name}
-                                </h4>
-                                <p className="text-[10px] text-slate-400 leading-normal line-clamp-2 mt-0.5">
-                                  {product.description}
-                                </p>
-                              </div>
-
-                              <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-1 items-center">
-                                <div>
-                                  <span className="text-[8px] text-slate-400 font-bold block uppercase">Inversión</span>
-                                  <span className="text-xs font-black text-slate-900 font-mono">${product.price} MXN</span>
-                                </div>
-                                <div className="text-right">
-                                  <span className="text-[8px] text-slate-400 font-bold block uppercase">Stock</span>
-                                  <span className="text-[10px] font-semibold text-slate-700 font-mono">{product.stock} un</span>
-                                </div>
-                              </div>
-
-                              <button
-                                onClick={() => addToCart(product)}
-                                disabled={product.stock <= 0}
-                                className={`w-full py-2 px-2 rounded-xl text-[11px] font-extrabold transition-all duration-250 flex items-center justify-center gap-1 cursor-pointer shadow-xs ${product.stock <= 0 ? 'bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-300/60 hover:bg-emerald-600 hover:text-white hover:border-emerald-600'}`}
-                              >
-                                <Plus size={11} />
-                                <span>Añadir</span>
-                                {inCart > 0 && (
-                                  <span className="bg-emerald-600 group-hover:bg-white group-hover:text-emerald-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-mono ml-0.5">
-                                    {inCart}
+                                {product.stock <= 0 ? (
+                                  <span className="absolute top-1 right-1.5 z-10 text-[8px] font-black bg-red-100 text-red-600 px-1.5 py-0.5 border border-red-200 rounded-md">
+                                    Agotado
                                   </span>
-                                )}
-                              </button>
+                                ) : product.stock < 10 ? (
+                                  <span className="absolute top-1 right-1.5 z-10 text-[8px] font-black bg-amber-50 text-amber-700 px-1.5 py-0.5 border border-amber-200 rounded-md">
+                                    Pocas pz
+                                  </span>
+                                ) : null}
+
+                                <div className="w-full aspect-square bg-[#f0f9f6] border border-slate-100 rounded-xl overflow-hidden mb-3">
+                                  <img 
+                                    src={product.imageUrl} 
+                                    alt={product.name} 
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="space-y-1.5 flex-1 flex flex-col justify-between text-left">
+                                <div>
+                                  <h4 className="font-serif font-black text-slate-800 text-sm leading-tight line-clamp-1 group-hover:text-emerald-700 transition-colors">
+                                    {product.name}
+                                  </h4>
+                                  <p className="text-xs text-slate-400 leading-normal line-clamp-2 mt-0.5">
+                                    {product.description}
+                                  </p>
+                                </div>
+
+                                <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-1 items-center mb-2">
+                                  <div>
+                                    <span className="text-[8px] text-slate-400 font-bold block uppercase">Inversión</span>
+                                    <span className="text-sm font-black text-slate-900 font-mono">${product.price} MXN</span>
+                                  </div>
+                                  <div className="text-right">
+                                    <span className="text-[8px] text-slate-400 font-bold block uppercase">Stock</span>
+                                    <span className="text-xs font-semibold text-slate-755 font-mono">{product.stock} un</span>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
+
+                            <button
+                              onClick={() => addToCart(product)}
+                              disabled={product.stock <= 0}
+                              className={`w-full py-2 px-2 rounded-xl text-[11px] font-extrabold transition-all duration-250 flex items-center justify-center gap-1 cursor-pointer shadow-xs ${product.stock <= 0 ? 'bg-slate-100 text-slate-400 cursor-not-allowed border-slate-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-300/60 hover:bg-emerald-600 hover:text-white hover:border-emerald-600'}`}
+                            >
+                              <Plus size={11} />
+                              <span>Añadir</span>
+                              {inCart > 0 && (
+                                <span className="bg-emerald-600 group-hover:bg-white group-hover:text-emerald-600 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-mono ml-0.5">
+                                  {inCart}
+                                </span>
+                              )}
+                            </button>
                           </div>
                         );
                       })}
@@ -1004,41 +997,117 @@ export default function VentasSection({
                 </div>
               </div>
 
-              {/* Right Column: Checkout Info & Guarantee */}
+              {/* Right Column: Checkout Info & Active Registration Module (Formulario de Registro) */}
               <div className="lg:col-span-5 space-y-6">
                 <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-5">
-                  <h4 className="text-sm font-serif font-black text-[#c5a85c] uppercase tracking-wider">Normas de Adquisición Homeli</h4>
+                  <div>
+                    <h4 className="text-sm sm:text-base font-serif font-black text-[#c5a85c] uppercase tracking-wider">Módulo de Registro / Cuenta de Cliente</h4>
+                    <p className="text-xs text-slate-400 mt-1">Completa o actualiza tus credenciales del Cliente Oficial para activar el despacho directo y tus beneficios de Atelier.</p>
+                  </div>
                   
-                  <div className="space-y-4 text-xs font-bold text-slate-600 leading-relaxed font-sans">
-                    <div className="flex gap-3">
-                      <div className="p-2 bg-slate-100 text-slate-700 rounded-lg shrink-0 h-8 flex items-center justify-center">🤝</div>
+                  {/* Registry Input Fields */}
+                  <div className="space-y-4 font-sans text-left">
+                    <div>
+                      <label className="block text-[11px] font-black uppercase text-slate-400 mb-1 tracking-wider">Nombre Completo del Titular</label>
+                      <input
+                        type="text"
+                        value={userProfile.name}
+                        onChange={(e) => {
+                          const newName = e.target.value;
+                          setUserProfile(prev => ({ ...prev, name: newName }));
+                          setCheckoutName(newName);
+                        }}
+                        placeholder="Nombre Completo..."
+                        className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:border-[#c5a85c] focus:outline-none bg-slate-50 hover:bg-slate-100/50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-black uppercase text-slate-400 mb-1 tracking-wider">Correo Electrónico de Cuenta</label>
+                      <input
+                        type="email"
+                        value={userProfile.email}
+                        onChange={(e) => {
+                          const newEmail = e.target.value;
+                          setUserProfile(prev => ({ ...prev, email: newEmail }));
+                        }}
+                        placeholder="email@ejemplo.com"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:border-[#c5a85c] focus:outline-none bg-slate-50"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <h5 className="text-slate-800 font-extrabold">Pago Contra Entrega Sencillo</h5>
-                        <p className="text-[11px] text-slate-400 font-medium">No ingresas tarjetas bancarias en línea. Realizas el abono correspondiente al recibir los artículos físicamente en tu domicilio.</p>
+                        <label className="block text-[11px] font-black uppercase text-slate-400 mb-1 tracking-wider">Celular de Contacto</label>
+                        <input
+                          type="tel"
+                          value={userProfile.phone}
+                          onChange={(e) => {
+                            const newPhone = e.target.value;
+                            setUserProfile(prev => ({ ...prev, phone: newPhone }));
+                            setCheckoutPhone(newPhone);
+                          }}
+                          placeholder="55-XXXX-XXXX"
+                          className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:border-[#c5a85c] focus:outline-none bg-slate-50"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-black uppercase text-slate-400 mb-1 tracking-wider">Ciudad Residencia</label>
+                        <input
+                          type="text"
+                          value={userProfile.city}
+                          onChange={(e) => {
+                            const newCity = e.target.value;
+                            setUserProfile(prev => ({ ...prev, city: newCity }));
+                          }}
+                          placeholder="Ciudad..."
+                          className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:border-[#c5a85c] focus:outline-none bg-slate-50"
+                        />
                       </div>
                     </div>
 
-                    <div className="flex gap-3">
-                      <div className="p-2 bg-slate-100 text-slate-700 rounded-lg shrink-0 h-8 flex items-center justify-center font-bold">🧴</div>
-                      <div>
-                        <h5 className="text-slate-800 font-extrabold">Limpieza Grado Quirúrgico</h5>
-                        <p className="text-[11px] text-slate-400 font-medium">Nuestros líquidos e insumos químicos están completamente certificados bajo auditoría biológica de la marca.</p>
-                      </div>
+                    <div>
+                      <label className="block text-[11px] font-black uppercase text-slate-400 mb-1 tracking-wider">Dirección de Destino Predeterminada</label>
+                      <textarea
+                        value={userProfile.address}
+                        onChange={(e) => {
+                          const newAddr = e.target.value;
+                          setUserProfile(prev => ({ ...prev, address: newAddr }));
+                          setCheckoutAddress(newAddr);
+                        }}
+                        rows={2}
+                        placeholder="Dirección completa de entrega..."
+                        className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:border-[#c5a85c] focus:outline-none bg-slate-50 leading-normal"
+                      />
                     </div>
 
-                    <div className="flex gap-3">
-                      <div className="p-2 bg-slate-100 text-slate-700 rounded-lg shrink-0 h-8 flex items-center justify-center">👠</div>
-                      <div>
-                        <h5 className="text-slate-800 font-extrabold">Calzado Pro-Estilo</h5>
-                        <p className="text-[11px] text-slate-400 font-medium">Cuentas con 15 días hábiles para solicitar modificaciones de tallas o devoluciones directas sin ningún costo adicional.</p>
-                      </div>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRegistrationSuccess(true);
+                        onAddLog(`Registro: Datos de inscripción actualizados para ${userProfile.name}`, 'info');
+                        setTimeout(() => setRegistrationSuccess(false), 5000);
+                      }}
+                      className="w-full py-2.5 bg-gradient-to-r from-[#c19a45] to-[#ebd7a7] text-white text-xs sm:text-sm font-black rounded-xl shadow-xs transition hover:opacity-90 cursor-pointer"
+                    >
+                      ✓ Guardar y Registrar Datos de Cliente
+                    </button>
+
+                    {registrationSuccess && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-xs font-bold text-center"
+                      >
+                        ¡Registro de Cliente actualizado y guardado correctamente! Se ha sincronizado con tu formulario de compra.
+                      </motion.div>
+                    )}
                   </div>
 
-                  <div className="p-4 bg-[#c5a85c]/10 border border-[#c19a45]/20 rounded-xl space-y-1.5">
-                    <span className="text-[9px] font-black text-[#c5a85c] uppercase tracking-widest block font-mono">Canal Comercial</span>
-                    <h5 className="text-slate-800 font-extrabold text-xs">Atelieres Generales y Logísticos de México</h5>
-                    <p className="text-[10px] text-slate-500 leading-normal font-medium">La mercadería se despacha desde el almacén central ubicado en el centro logístico nacional garantizando la entrega en menos de 48 horas.</p>
+                  <div className="p-4 bg-slate-50 border border-slate-200/50 rounded-xl space-y-1.5 text-left">
+                    <span className="text-[9px] font-black text-[#c5a85c] uppercase tracking-widest block font-mono">Garantías Atelier de México</span>
+                    <h5 className="text-slate-800 font-extrabold text-xs">Entregas en Menos de 48 Horas con Seguro Comercial</h5>
+                    <p className="text-[11px] text-slate-500 leading-normal font-medium">Todos tus tenis premium o fórmulas de alta limpieza están cubiertos con reembolsos o cambio de tallas gratuitos dentro de los primeros 15 días.</p>
                   </div>
                 </div>
               </div>
@@ -1669,6 +1738,134 @@ export default function VentasSection({
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ================= SECCIÓN DE DETALLE / VISTA COMPLETA DEL PRODUCTO ================= */}
+      <AnimatePresence>
+        {selectedProductDetails && (
+          <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 max-w-2xl w-full shadow-2xl text-left space-y-6 relative overflow-hidden"
+              id="product_details_modal"
+            >
+              <button
+                onClick={() => setSelectedProductDetails(null)}
+                className="absolute top-5 right-5 p-2 rounded-full hover:bg-slate-100 transition text-slate-400 hover:text-slate-850 cursor-pointer"
+                title="Cerrar vista"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 pt-2">
+                {/* Product Large Image Showcase */}
+                <div className="space-y-3">
+                  <div className="aspect-square w-full rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 shadow-sm flex items-center justify-center">
+                    <img 
+                      src={selectedProductDetails.imageUrl} 
+                      alt={selectedProductDetails.name} 
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] sm:text-xs font-mono text-slate-400">
+                    <span>SKU: {selectedProductDetails.sku || 'N/A'}</span>
+                    <span className="bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-md uppercase font-bold">
+                      {selectedProductDetails.category === 'Zapatos' ? '👠 Calzado' : '🧴 Limpieza'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Product Meta & Interactive Quantity Counter Selector */}
+                <div className="flex flex-col justify-between space-y-4">
+                  <div className="space-y-3">
+                    <h3 className="text-lg sm:text-2xl font-serif font-black text-slate-900 leading-tight">
+                      {selectedProductDetails.name}
+                    </h3>
+                    
+                    {/* Price Tag with larger readable fonts */}
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-xl sm:text-2xl font-black text-[#c19a45] font-mono">
+                        ${selectedProductDetails.price} MXN
+                      </span>
+                      <span className="text-xs text-slate-400 line-through">
+                        ${Math.round(selectedProductDetails.price * 1.25)} MXN
+                      </span>
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
+                      {selectedProductDetails.description}
+                    </p>
+
+                    <div className="pt-2">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Disponibilidad Física</span>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2.5 h-2.5 rounded-full ${selectedProductDetails.stock > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                        <span className="text-xs font-bold text-slate-700">
+                          {selectedProductDetails.stock > 0 ? `${selectedProductDetails.stock} unidades en almacén central` : 'Producto temporalmente agotado'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 pt-4 border-t border-slate-100">
+                    {/* Quantity Choice counter selector */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs sm:text-sm font-black text-slate-800">Cantidad deseada:</span>
+                      <div className="flex items-center gap-2.5 bg-slate-100 border border-[#ebd7a7]/30 p-1 rounded-xl">
+                        <button 
+                          onClick={() => setDetailsQuantity(q => Math.max(1, q - 1))}
+                          className="w-8 h-8 bg-white hover:bg-slate-50 border border-slate-200/40 rounded-lg text-sm font-black flex items-center justify-center text-slate-700 transition cursor-pointer"
+                        >
+                          -
+                        </button>
+                        <span className="text-sm font-mono font-black text-slate-800 px-2 min-w-4 text-center">
+                          {detailsQuantity}
+                        </span>
+                        <button 
+                          onClick={() => setDetailsQuantity(q => Math.min(selectedProductDetails.stock, q + 1))}
+                          disabled={detailsQuantity >= selectedProductDetails.stock}
+                          className="w-8 h-8 bg-white hover:bg-slate-50 border border-slate-200/40 rounded-lg text-sm font-black flex items-center justify-center text-slate-700 transition disabled:opacity-50 cursor-pointer"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Submit Purchase option */}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setSelectedProductDetails(null)}
+                        className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs sm:text-sm font-black rounded-xl transition font-sans text-center cursor-pointer"
+                      >
+                        Cerrar Sección
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (selectedProductDetails.stock > 0) {
+                            // Add with computed counter quantity
+                            for (let i = 0; i < detailsQuantity; i++) {
+                              addToCart(selectedProductDetails);
+                            }
+                            setSelectedProductDetails(null);
+                            setIsCartDrawerOpen(true);
+                            onAddLog(`Carrito: Se agregaron ${detailsQuantity} unidades de ${selectedProductDetails.name}`, 'info');
+                          }
+                        }}
+                        disabled={selectedProductDetails.stock <= 0}
+                        className={`flex-1.5 py-3 text-white text-xs sm:text-sm font-black rounded-xl shadow-md transition-all font-sans text-center cursor-pointer ${selectedProductDetails.stock <= 0 ? 'bg-slate-300 cursor-not-allowed' : 'bg-gradient-to-r from-slate-900 to-indigo-950 hover:opacity-95'}`}
+                      >
+                        🛒 Agregar {detailsQuantity} al Carrito
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           </div>
         )}
