@@ -54,9 +54,12 @@ export default function App() {
   const [products, setProducts] = useState<ProductItem[]>(() => {
     try {
       const persisted = localStorage.getItem('homeli_products');
-      return persisted ? JSON.parse(persisted) : initialProducts;
+      const parsed = persisted ? JSON.parse(persisted) : initialProducts;
+      return Array.isArray(parsed) 
+        ? parsed.filter((p: ProductItem) => p.category === 'Productos de limpieza' || p.category === 'Zapatos')
+        : initialProducts.filter((p: ProductItem) => p.category === 'Productos de limpieza' || p.category === 'Zapatos');
     } catch {
-      return initialProducts;
+      return initialProducts.filter((p: ProductItem) => p.category === 'Productos de limpieza' || p.category === 'Zapatos');
     }
   });
 

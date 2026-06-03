@@ -1691,7 +1691,7 @@ export default function VentasSection({
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Imagen URL (Opcional)</label>
                     <input
-                      type="url"
+                      type="text"
                       value={pImgUrl}
                       onChange={(e) => setPImgUrl(e.target.value)}
                       placeholder="https://ejemplo.com/foto.jpg"

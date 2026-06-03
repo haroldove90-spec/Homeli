@@ -1058,7 +1058,7 @@ export default function AdminSection({
                 <div>
                   <label className="block text-[11px] font-black uppercase text-slate-450 mb-1">Dirección URL de Imagen (Foto Referencia)</label>
                   <input
-                    type="url"
+                    type="text"
                     value={pImgUrl}
                     onChange={(e) => setPImgUrl(e.target.value)}
                     placeholder="https://ejemplo.com/foto-producto.jpg (Dejar vacío para predeterminada)"
