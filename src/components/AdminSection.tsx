@@ -446,8 +446,8 @@ export default function AdminSection({
         </div>
       </div>
 
-      {/* ================================== TAB 1: METRICAS E-COMMERCE & GENERAL (DESACTIVADO) ================================== */}
-      {false && (
+      {/* ================================== TAB 1: METRICAS E-COMMERCE & GENERAL ================================== */}
+      {activeTab === 'metrics' && (
         <motion.div
           key="metrics_tab"
           initial={{ opacity: 0, y: 10 }}

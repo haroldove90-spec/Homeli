@@ -116,7 +116,7 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(false);
 
   // States to control active admin module via header hamburger dropdown
-  const [adminActiveTab, setAdminActiveTab] = useState<'metrics' | 'ecommerce'>('ecommerce');
+  const [adminActiveTab, setAdminActiveTab] = useState<'metrics' | 'ecommerce'>('metrics');
   const [showAdminHamburgerDropdown, setShowAdminHamburgerDropdown] = useState(false);
 
   // Custom Banner States for Atelier Boutique Hero with localStorage Persistence
@@ -357,6 +357,24 @@ export default function App() {
                         <div className="px-3 py-1.5 text-xs uppercase tracking-wider font-black text-slate-500 border-b border-slate-100 mb-1">
                           🛠️ Administración
                         </div>
+
+                        <button
+                          onClick={() => {
+                            setAdminActiveTab('metrics');
+                            setShowAdminHamburgerDropdown(false);
+                          }}
+                          className={`w-full text-left px-3 py-3 rounded-xl text-sm font-black transition flex items-center justify-between cursor-pointer ${
+                            adminActiveTab === 'metrics'
+                              ? 'bg-[#c5a85c]/10 text-[#a38439]'
+                              : 'text-slate-705 hover:bg-slate-50 hover:text-slate-900'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2">
+                            <span className="text-base">📈</span>
+                            <span>Métricas del Negocio</span>
+                          </span>
+                          {adminActiveTab === 'metrics' && <span className="w-2 h-2 rounded-full bg-[#c5a85c]" />}
+                        </button>
 
                         <button
                           onClick={() => {
