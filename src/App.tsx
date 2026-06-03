@@ -340,37 +340,23 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Sub Panel Router */}
+                {/* Sub Panel Router - Temporarily rendered as clean empty white containers by user request */}
                 {activeSection === 'admin' && (
-                  <AdminSection 
-                    services={services}
-                    products={products}
-                    orders={orders}
-                    logs={logs}
-                    profiles={profiles}
-                    onAddUser={handleAddUser}
-                    onAddLog={onAddLog}
-                    onClearLogs={handleClearLogs}
-                  />
+                  <div className="min-h-[50vh] bg-white rounded-2xl border border-natural-border/30 shadow-sm flex items-center justify-center p-8" id="admin_blank_placeholder">
+                    <span className="text-sm font-bold text-natural-muted uppercase tracking-wider">Módulo Admin en Blanco</span>
+                  </div>
                 )}
 
                 {activeSection === 'servicios' && (
-                  <ServiciosSection 
-                    services={services}
-                    onAddService={handleAddService}
-                    onUpdateServiceStatus={handleUpdateServiceStatus}
-                    onAddLog={onAddLog}
-                  />
+                  <div className="min-h-[50vh] bg-white rounded-2xl border border-natural-border/30 shadow-sm flex items-center justify-center p-8" id="servicios_blank_placeholder">
+                    <span className="text-sm font-bold text-natural-muted uppercase tracking-wider">Módulo Servicios en Blanco</span>
+                  </div>
                 )}
 
                 {activeSection === 'ventas' && (
-                  <VentasSection 
-                    products={products}
-                    orders={orders}
-                    onAddProduct={handleAddProduct}
-                    onUpdateOrderStatus={handleUpdateOrderStatus}
-                    onAddLog={onAddLog}
-                  />
+                  <div className="min-h-[50vh] bg-white rounded-2xl border border-natural-border/30 shadow-sm flex items-center justify-center p-8" id="ventas_blank_placeholder">
+                    <span className="text-sm font-bold text-natural-muted uppercase tracking-wider">Módulo Ventas en Blanco</span>
+                  </div>
                 )}
               </motion.div>
             )}
