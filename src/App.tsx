@@ -94,7 +94,13 @@ export default function App() {
   // Navigational & brand States with localStorage persistence and URL tracking
   const [activeSection, setActiveSection] = useState<'home' | 'admin' | 'servicios' | 'ventas'>(() => {
     try {
-      // Prioritize URL search parameters or Hash to enable direct deep-linking
+      // Prioritize localStorage so that refreshing the browser maintains the exact current view/session robustly
+      const persisted = localStorage.getItem('homeli_active_section');
+      if (persisted && ['home', 'admin', 'servicios', 'ventas'].includes(persisted)) {
+        return persisted as 'home' | 'admin' | 'servicios' | 'ventas';
+      }
+
+      // Fall back to URL search parameters or Hash to enable initial direct deep-linking
       const urlParams = new URL(window.location.href);
       const sectionParam = urlParams.searchParams.get('section') || urlParams.searchParams.get('rol');
       if (sectionParam && ['home', 'admin', 'servicios', 'ventas'].includes(sectionParam)) {
@@ -106,8 +112,7 @@ export default function App() {
         return hashParam as 'home' | 'admin' | 'servicios' | 'ventas';
       }
 
-      const persisted = localStorage.getItem('homeli_active_section');
-      return (persisted as 'home' | 'admin' | 'servicios' | 'ventas') || 'home';
+      return 'home';
     } catch {
       return 'home';
     }
@@ -115,8 +120,15 @@ export default function App() {
 
   const [showSplash, setShowSplash] = useState(false);
 
-  // States to control active admin module via header hamburger dropdown
-  const [adminActiveTab, setAdminActiveTab] = useState<'metrics' | 'ecommerce'>('metrics');
+  // States to control active admin module via header hamburger dropdown with localStorage persistence
+  const [adminActiveTab, setAdminActiveTab] = useState<'metrics' | 'ecommerce'>(() => {
+    try {
+      const persisted = localStorage.getItem('homeli_admin_active_tab');
+      return (persisted as 'metrics' | 'ecommerce') || 'metrics';
+    } catch {
+      return 'metrics';
+    }
+  });
   const [showAdminHamburgerDropdown, setShowAdminHamburgerDropdown] = useState(false);
 
   // Custom Banner States for Atelier Boutique Hero with localStorage Persistence
@@ -163,7 +175,18 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem('homeli_active_section', activeSection);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('section', activeSection);
+      window.history.replaceState({}, '', url.toString());
+    } catch (e) {
+      console.warn("Failed to update URL on section change", e);
+    }
   }, [activeSection]);
+
+  useEffect(() => {
+    localStorage.setItem('homeli_admin_active_tab', adminActiveTab);
+  }, [adminActiveTab]);
 
   useEffect(() => {
     localStorage.setItem('homeli_banner_bg', bannerBg);
@@ -465,7 +488,7 @@ export default function App() {
                   <img 
                     src="https://cossma.com.mx/homeli.jpg" 
                     alt="Homeli Logo" 
-                    className="w-64 sm:w-80 h-auto object-contain block transition-all duration-300 hover:scale-105"
+                    className="w-44 sm:w-72 h-auto object-contain block transition-all duration-300 hover:scale-105"
                     referrerPolicy="no-referrer"
                   />
                 </div>

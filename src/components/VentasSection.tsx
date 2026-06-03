@@ -206,7 +206,18 @@ export default function VentasSection({
   bannerOverlayOpacity = 60
 }: VentasSectionProps) {
   // Views inside e-commerce: 'shop', 'cart_orders', 'manager'
-  const [activeViewMode, setActiveViewMode] = useState<'shop' | 'cart_orders' | 'manager'>('shop');
+  const [activeViewMode, setActiveViewMode] = useState<'shop' | 'cart_orders' | 'manager'>(() => {
+    try {
+      const persisted = localStorage.getItem('homeli_ventas_active_view_mode');
+      return (persisted as 'shop' | 'cart_orders' | 'manager') || 'shop';
+    } catch {
+      return 'shop';
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('homeli_ventas_active_view_mode', activeViewMode);
+  }, [activeViewMode]);
   
   // Catalog containing products
   const [storeCatalog, setStoreCatalog] = useState<ProductItem[]>([]);
