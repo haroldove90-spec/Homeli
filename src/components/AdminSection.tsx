@@ -355,20 +355,9 @@ export default function AdminSection({
           <p className="text-xs text-slate-500 mt-1">Supervisa estadísticas comerciales de despacho, administra e-commerce y configura parámetros estratégicos de marca.</p>
         </div>
 
-        {/* Global Action Selector Tabs */}
-        <div className="flex gap-1.5 p-1 bg-slate-100 rounded-2xl border border-slate-200/50 self-stretch sm:self-auto justify-center">
-          <button
-            onClick={() => setActiveTab('metrics')}
-            className={`px-4 py-2 text-xs font-black rounded-xl transition cursor-pointer ${activeTab === 'metrics' ? 'bg-white text-slate-900 shadow-xs border border-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
-          >
-            📈 Métricas
-          </button>
-          <button
-            onClick={() => setActiveTab('ecommerce')}
-            className={`px-4 py-2 text-xs font-black rounded-xl transition cursor-pointer ${activeTab === 'ecommerce' ? 'bg-white text-slate-900 shadow-xs border border-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
-          >
-            🛍️ Admin E-Commerce
-          </button>
+        {/* Simple Label indicating we are in catalog dashboard */}
+        <div className="px-4 py-2 bg-amber-50 rounded-xl border border-[#c5a85c]/30 text-[#a38439] text-sm font-bold flex items-center gap-1.5 shadow-xs">
+          🛍️ Gestión de Catálogo y Marca
         </div>
       </div>
 
@@ -457,8 +446,8 @@ export default function AdminSection({
         </div>
       </div>
 
-      {/* ================================== TAB 1: METRICAS E-COMMERCE & GENERAL ================================== */}
-      {activeTab === 'metrics' && (
+      {/* ================================== TAB 1: METRICAS E-COMMERCE & GENERAL (DESACTIVADO) ================================== */}
+      {false && (
         <motion.div
           key="metrics_tab"
           initial={{ opacity: 0, y: 10 }}
@@ -664,28 +653,28 @@ export default function AdminSection({
             id="admin_banner_customizer_container"
           >
             <div className="border-b border-slate-100 pb-4">
-              <h3 className="font-serif font-black text-slate-800 text-[15px] sm:text-lg">Personalización de Cabecera E-commerce</h3>
-              <p className="text-xs text-slate-400">Modifica en tiempo real los textos, colores y la imagen de fondo de la tarjeta Atelier Boutique de la tienda.</p>
+              <h3 className="font-serif font-black text-slate-800 text-lg sm:text-2xl">Personalización de Cabecera E-commerce</h3>
+              <p className="text-sm text-slate-500">Modifica en tiempo real los textos, colores y la imagen de fondo de la tarjeta Atelier Boutique de la tienda.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Form Input fields */}
               <form onSubmit={handleSaveBannerSettings} className="space-y-4 text-left">
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   <div className="flex justify-between items-center pb-0.5">
-                    <label className="block text-[10px] font-black uppercase text-slate-450">Imagen de Fondo del Banner</label>
+                    <label className="block text-xs font-black uppercase text-slate-500 tracking-wider">Imagen de Fondo del Banner</label>
                     <div className="flex gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
                       <button
                         type="button"
                         onClick={() => setBannerImageUploadType('url')}
-                        className={`px-2 py-0.5 rounded text-[8px] font-black tracking-wider transition cursor-pointer ${bannerImageUploadType === 'url' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-400 hover:text-slate-600'}`}
+                        className={`px-3 py-1 rounded text-xs font-black tracking-wider transition cursor-pointer ${bannerImageUploadType === 'url' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
                       >
                         Enlace (URL)
                       </button>
                       <button
                         type="button"
                         onClick={() => setBannerImageUploadType('upload')}
-                        className={`px-2 py-0.5 rounded text-[8px] font-black tracking-wider transition cursor-pointer ${bannerImageUploadType === 'upload' ? 'bg-white text-[#c5a85c] shadow-xs' : 'text-slate-400 hover:text-slate-600'}`}
+                        className={`px-3 py-1 rounded text-xs font-black tracking-wider transition cursor-pointer ${bannerImageUploadType === 'upload' ? 'bg-white text-[#c5a85c] shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
                       >
                         Subir Archivo 📤
                       </button>
@@ -698,7 +687,7 @@ export default function AdminSection({
                       value={localBannerBg.startsWith('data:') ? '' : localBannerBg}
                       onChange={(e) => setLocalBannerBg(e.target.value)}
                       placeholder="https://ejemplo.com/diseno-atelier.webp"
-                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800 font-mono"
+                      className="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800 font-mono"
                     />
                   ) : (
                     <div className="flex items-center gap-2">
@@ -719,12 +708,12 @@ export default function AdminSection({
                               reader.readAsDataURL(file);
                             }
                           }}
-                          className="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-xl file:border-0 file:text-[9px] file:font-black file:bg-[#c5a85c]/10 file:text-[#a38439] hover:file:bg-[#c5a85c]/20 file:cursor-pointer cursor-pointer"
+                          className="w-full text-sm text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-[#c5a85c]/10 file:text-[#a38439] hover:file:bg-[#c5a85c]/20 file:cursor-pointer cursor-pointer"
                         />
                       </div>
                     </div>
                   )}
-                  <p className="text-[9px] text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-500 mt-0.5">
                     {bannerImageUploadType === 'url' 
                       ? 'Escribe la URL directa de la imagen de fondo. Deja vacío para usar el color de overlay sólido.' 
                       : 'Carga un archivo PNG, JPG o WEBP directo desde tu dispositivo para almacenarlo localmente.'}
@@ -733,38 +722,38 @@ export default function AdminSection({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-450 mb-1">Subtítulo / Etiqueta (Overline)</label>
+                    <label className="block text-xs font-black uppercase text-slate-500 tracking-wider mb-1">Subtítulo / Etiqueta (Overline)</label>
                     <input
                       type="text"
                       value={localBannerTag}
                       onChange={(e) => setLocalBannerTag(e.target.value)}
                       placeholder="ATELIER BOUTIQUE"
                       maxLength={40}
-                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800"
+                      className="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-450 mb-1">Título de la Tarjeta</label>
+                    <label className="block text-xs font-black uppercase text-slate-500 tracking-wider mb-1">Título de la Tarjeta</label>
                     <input
                       type="text"
                       value={localBannerTitle}
                       onChange={(e) => setLocalBannerTitle(e.target.value)}
                       placeholder="Catálogo Exclusivo Atelier"
                       maxLength={60}
-                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800"
+                      className="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-450 mb-1">Color de Overlay (Filtro tinto)</label>
+                    <label className="block text-xs font-black uppercase text-slate-500 tracking-wider mb-1">Color de Overlay (Filtro tinto)</label>
                     <div className="flex items-center gap-2">
                       <input
                         type="color"
                         value={localBannerOverlayCol.startsWith('#') && localBannerOverlayCol.length === 7 ? localBannerOverlayCol : '#0f172a'}
                         onChange={(e) => setLocalBannerOverlayCol(e.target.value)}
-                        className="w-10 h-8 rounded-lg border border-slate-200 cursor-pointer bg-transparent shrink-0"
+                        className="w-12 h-10 rounded-lg border border-slate-200 cursor-pointer bg-transparent shrink-0"
                       />
                       <input
                         type="text"
@@ -772,13 +761,13 @@ export default function AdminSection({
                         onChange={(e) => setLocalBannerOverlayCol(e.target.value)}
                         placeholder="#0f172a"
                         maxLength={20}
-                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800 font-mono"
+                        className="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800 font-mono"
                       />
                     </div>
                   </div>
                   
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-450 mb-1">Opacidad del Overlay ({localBannerOverlayOpacity}%)</label>
+                    <label className="block text-xs font-black uppercase text-slate-500 tracking-wider mb-1">Opacidad del Overlay ({localBannerOverlayOpacity}%)</label>
                     <div className="flex items-center gap-2 py-1">
                       <input
                         type="range"
@@ -788,14 +777,14 @@ export default function AdminSection({
                         onChange={(e) => setLocalBannerOverlayOpacity(Number(e.target.value))}
                         className="w-full accent-[#c5a85c] cursor-pointer"
                       />
-                      <span className="text-xs font-mono font-bold text-slate-600 w-8 text-right shrink-0">{localBannerOverlayOpacity}%</span>
+                      <span className="text-sm font-mono font-bold text-slate-650 w-10 text-right shrink-0">{localBannerOverlayOpacity}%</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Pre-sets palette quick select */}
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-450 mb-1">Paletas de Marca Recomendadas</label>
+                  <label className="block text-xs font-black uppercase text-slate-500 tracking-wider mb-1">Paletas de Marca Recomendadas</label>
                   <div className="flex flex-wrap gap-2 pt-0.5">
                     {[
                       { name: 'Noche', hex: '#0f172a', opacity: 70 },
@@ -811,9 +800,9 @@ export default function AdminSection({
                           setLocalBannerOverlayCol(preset.hex);
                           setLocalBannerOverlayOpacity(preset.opacity);
                         }}
-                        className="px-2 py-1 bg-slate-50 border border-slate-200 hover:border-[#c5a85c] rounded-xl text-[9px] font-bold text-slate-650 hover:text-slate-900 transition cursor-pointer flex items-center gap-1.5"
+                        className="px-3 py-1.5 bg-slate-50 border border-slate-200 hover:border-[#c5a85c] rounded-xl text-xs font-bold text-slate-650 hover:text-slate-900 transition cursor-pointer flex items-center gap-1.5"
                       >
-                        <span className="w-2.5 h-2.5 rounded-full border border-slate-300" style={{ backgroundColor: preset.hex }} />
+                        <span className="w-3.5 h-3.5 rounded-full border border-slate-300 shadow-xs" style={{ backgroundColor: preset.hex }} />
                         <span>{preset.name}</span>
                       </button>
                     ))}
@@ -821,21 +810,21 @@ export default function AdminSection({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-slate-450 mb-1">Descripción de la Tarjeta</label>
+                  <label className="block text-xs font-black uppercase text-slate-500 tracking-wider mb-1">Descripción de la Tarjeta</label>
                   <textarea
                     value={localBannerDesc}
                     onChange={(e) => setLocalBannerDesc(e.target.value)}
                     placeholder="Escribe los detalles o promociones..."
                     rows={3}
                     maxLength={300}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800 leading-relaxed"
+                    className="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800 leading-relaxed"
                   />
                 </div>
 
                 <div className="pt-2 flex gap-3">
                   <button
                     type="submit"
-                    className="px-4 py-2.5 bg-gradient-to-r from-slate-900 to-[#c5a85c] text-white font-black text-xs rounded-xl hover:opacity-95 cursor-pointer shadow-sm transition"
+                    className="px-5 py-3 bg-gradient-to-r from-slate-900 to-[#c5a85c] text-white font-black text-sm rounded-xl hover:opacity-95 cursor-pointer shadow-md transition"
                   >
                     Guardar Configuración de Banner
                   </button>
@@ -849,7 +838,7 @@ export default function AdminSection({
                       setLocalBannerOverlayCol('#0f172a');
                       setLocalBannerOverlayOpacity(60);
                     }}
-                    className="px-3 py-2 text-xs font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer"
+                    className="px-4 py-2.5 text-sm font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer"
                   >
                     Restaurar Original
                   </button>
@@ -909,165 +898,165 @@ export default function AdminSection({
             {/* List Toolbar controllers */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-5">
               <div>
-                <h3 className="font-serif font-black text-slate-800 text-[15px] sm:text-lg">Catálogo Maestro de Artículos</h3>
-                <p className="text-xs text-slate-400">Cualquier cambio guardado se reflejará en tiempo real y modificará el stock, fotos y precios de la tienda en línea.</p>
+                <h3 className="font-serif font-black text-slate-800 text-lg sm:text-2xl">Catálogo Maestro de Artículos</h3>
+                <p className="text-sm sm:text-base text-slate-500 mt-1">Cualquier cambio guardado se reflejará en tiempo real y modificará el stock, fotos y precios de la tienda en línea.</p>
               </div>
 
-            <button
-              onClick={handleOpenAddProduct}
-              className="px-4 py-2.5 bg-gradient-to-r from-slate-900 to-indigo-950 text-white font-black text-xs rounded-xl flex items-center gap-2 shadow-sm hover:opacity-95 cursor-pointer"
-            >
-              <PlusCircle size={15} />
-              Agregar Producto E-commerce
-            </button>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
-            {/* Category Filter Chips */}
-            <div className="flex gap-2 self-start">
-              {(['todos', 'Productos de limpieza', 'Zapatos'] as const).map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setCatalogCategoryFilter(cat)}
-                  className={`px-3 py-1.5 text-xs font-black rounded-xl transition cursor-pointer border ${
-                    catalogCategoryFilter === cat 
-                      ? 'bg-[#c5a85c]/10 text-[#c5a85c] border-[#c19a45]/40' 
-                      : 'bg-slate-50 border-slate-200 text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  {cat === 'todos' ? '🌐 Todos los Productos' : cat === 'Zapatos' ? '👠 Zapatos' : '🧴 Limpieza'}
-                </button>
-              ))}
+              <button
+                onClick={handleOpenAddProduct}
+                className="px-5 py-3 bg-gradient-to-r from-slate-900 to-indigo-950 text-white font-black text-sm rounded-xl flex items-center gap-2 shadow-sm hover:opacity-95 cursor-pointer"
+              >
+                <PlusCircle size={16} />
+                Agregar Producto E-commerce
+              </button>
             </div>
 
-            {/* Search Input bar */}
-            <div className="relative w-full sm:w-64">
-              <input
-                type="text"
-                value={productSearch}
-                onChange={(e) => setProductSearch(e.target.value)}
-                placeholder="Buscar por nombre o SKU..."
-                className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800"
-              />
-              <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
-            </div>
-          </div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
+              {/* Category Filter Chips */}
+              <div className="flex flex-wrap gap-2 self-start animate-fade-in">
+                {(['todos', 'Productos de limpieza', 'Zapatos'] as const).map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setCatalogCategoryFilter(cat)}
+                    className={`px-4 py-2 text-sm font-black rounded-xl transition cursor-pointer border ${
+                      catalogCategoryFilter === cat 
+                        ? 'bg-[#c5a85c]/10 text-[#c5a85c] border-[#c19a45]/40 shadow-xs' 
+                        : 'bg-white border-slate-200 text-slate-655 hover:text-slate-900'
+                    }`}
+                  >
+                    {cat === 'todos' ? '🌐 Todos los Productos' : cat === 'Zapatos' ? '👠 Zapatos' : '🧴 Limpieza'}
+                  </button>
+                ))}
+              </div>
 
-          {/* Interactive Products Table Grid */}
-          <div className="overflow-x-auto border border-slate-100 rounded-2xl">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-105 text-[11px] font-black uppercase text-slate-450">
-                  <th className="p-4">Artículo</th>
-                  <th className="p-4">SKU / ID</th>
-                  <th className="p-4 text-center">Categoría</th>
-                  <th className="p-4 text-right">Inversión</th>
-                  <th className="p-4 text-center">Stock Almacén</th>
-                  <th className="p-4 text-center">Ventas</th>
-                  <th className="p-4 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-sans">
-                {filteredProducts.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="text-center py-12 text-slate-400 bg-slate-50/50">
-                      <Package size={24} className="mx-auto mb-2 opacity-50" />
-                      No se encontraron productos registrados que cumplan este filtro.
-                    </td>
+              {/* Search Input bar */}
+              <div className="relative w-full sm:w-80">
+                <input
+                  type="text"
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  placeholder="Buscar por nombre o SKU..."
+                  className="w-full pl-10 pr-3 py-2.5 text-sm bg-white border border-slate-205 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800"
+                />
+                <Search size={16} className="absolute left-3 top-3 text-slate-400" />
+              </div>
+            </div>
+
+            {/* Interactive Products Table Grid */}
+            <div className="overflow-x-auto border border-slate-150 rounded-2xl shadow-xs">
+              <table className="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-105 text-xs font-black uppercase tracking-wider text-slate-500">
+                    <th className="p-4">Artículo</th>
+                    <th className="p-4">SKU / ID</th>
+                    <th className="p-4 text-center">Categoría / Estado</th>
+                    <th className="p-4 text-right">Inversión</th>
+                    <th className="p-4 text-center">Stock Almacén</th>
+                    <th className="p-4 text-center">Ventas</th>
+                    <th className="p-4 text-right">Acciones</th>
                   </tr>
-                ) : (
-                  filteredProducts.map(p => (
-                    <tr key={p.id} className="hover:bg-slate-50/50 transition">
-                      {/* Product details thumbnail */}
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-50 border border-slate-105 shrink-0 flex items-center justify-center">
-                            <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                          </div>
-                          <div>
-                            <h5 className="font-serif font-black text-slate-800 leading-tight text-sm hover:text-[#c5a85c] transition-colors">{p.name}</h5>
-                            <span className="text-[10px] text-slate-400 font-medium leading-normal line-clamp-1 max-w-[200px] sm:max-w-xs">{p.description}</span>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* SKU / ID columns */}
-                      <td className="p-4 font-mono font-bold text-slate-500 uppercase">{p.sku || p.id}</td>
-
-                      {/* Category Badge columns */}
-                      <td className="p-4 text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          <span className={`inline-block px-2 py-0.5 rounded-md text-[9px] font-black uppercase ${
-                            p.category === 'Zapatos' ? 'bg-[#c5a85c]/10 text-[#c5a85c]' : 'bg-emerald-50 text-emerald-700'
-                          }`}>
-                            {p.category}
-                          </span>
-                          <span className={`inline-block px-1.5 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider ${
-                            p.active !== false 
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                              : 'bg-rose-55 text-rose-600 border border-rose-200 bg-rose-50'
-                          }`}>
-                            {p.active !== false ? '● Activo' : '● Pausado'}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Price columns */}
-                      <td className="p-4 text-right font-mono font-black text-slate-800">${p.price} MXN</td>
-
-                      {/* Stock levels columns */}
-                      <td className="p-4 text-center">
-                        <span className={`px-2 py-0.5 font-mono font-extrabold rounded-lg ${
-                          p.stock <= 0 ? 'bg-red-50 text-red-600 border border-red-200' :
-                          p.stock < 15 ? 'bg-amber-50 text-amber-700' : 'bg-slate-50 text-slate-700'
-                        }`}>
-                          {p.stock} un
-                        </span>
-                      </td>
-
-                      {/* Sales items columns */}
-                      <td className="p-4 text-center font-mono font-extrabold text-slate-650">{p.salesCount || 0}</td>
-
-                      {/* Interactive Edit / Delete actions */}
-                      <td className="p-4 text-right">
-                        <div className="flex justify-end gap-1.5 shrink-0 flex-wrap">
-                          <button
-                            onClick={() => {
-                              onUpdateProduct({ ...p, active: p.active === false });
-                              showToast(`Producto "${p.name}" ${p.active === false ? 'activado' : 'desactivado'} con éxito`, 'success');
-                            }}
-                            className={`px-2.5 py-1.5 rounded-xl text-[10px] font-bold transition cursor-pointer flex items-center gap-1 border ${
-                              p.active !== false
-                                ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
-                                : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
-                            }`}
-                            title={p.active !== false ? 'Desactivar de la tienda' : 'Activar en la tienda'}
-                          >
-                            {p.active !== false ? '⏸️ Desactivar' : '▶️ Activar'}
-                          </button>
-                          <button
-                            onClick={() => handleOpenEditProduct(p)}
-                            className="p-1.5 px-2.5 bg-slate-50 border border-slate-205 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 text-[10px] font-bold transition cursor-pointer"
-                            title="Editar propiedades de producto"
-                          >
-                            ✏️ Editar
-                          </button>
-                          <button
-                            onClick={() => handleDeleteProductClick(p.id, p.name)}
-                            className="p-1.5 px-2 bg-rose-50 border border-rose-105 rounded-xl text-rose-600 hover:text-rose-700 hover:bg-rose-100 text-[10px] font-bold transition cursor-pointer"
-                            title="Dar de baja de la tienda"
-                          >
-                            🗑️ Baja
-                          </button>
-                        </div>
+                </thead>
+                <tbody className="divide-y divide-slate-150 font-sans">
+                  {filteredProducts.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-12 text-slate-400 bg-slate-50/55 text-base">
+                        <Package size={30} className="mx-auto mb-3 opacity-50" />
+                        No se encontraron productos registrados que cumplan este filtro.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </motion.div>
+                  ) : (
+                    filteredProducts.map(p => (
+                      <tr key={p.id} className="hover:bg-slate-50/70 transition">
+                        {/* Product details thumbnail */}
+                        <td className="p-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-50 border border-slate-200 shrink-0 flex items-center justify-center shadow-xs">
+                              <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            </div>
+                            <div>
+                              <h5 className="font-serif font-black text-slate-800 leading-snug text-base hover:text-[#c5a85c] transition-colors">{p.name}</h5>
+                              <span className="text-xs text-slate-500 font-medium leading-normal line-clamp-1 max-w-[200px] sm:max-w-xs">{p.description}</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* SKU / ID columns */}
+                        <td className="p-4 font-mono font-bold text-slate-600 uppercase text-xs sm:text-sm">{p.sku || p.id}</td>
+
+                        {/* Category Badge columns */}
+                        <td className="p-4 text-center">
+                          <div className="flex flex-col items-center gap-1.5">
+                            <span className={`inline-block px-2.5 py-1 rounded-md text-xs font-black uppercase tracking-wider ${
+                              p.category === 'Zapatos' ? 'bg-[#c5a85c]/10 text-[#a38439]' : 'bg-emerald-50 text-emerald-800'
+                            }`}>
+                              {p.category}
+                            </span>
+                            <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest ${
+                              p.active !== false 
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                                : 'bg-rose-50 text-rose-600 border border-rose-250'
+                            }`}>
+                              {p.active !== false ? '● Activo' : '● Pausado'}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Price columns */}
+                        <td className="p-4 text-right font-mono font-black text-slate-800 text-sm sm:text-base">${p.price} MXN</td>
+
+                        {/* Stock levels columns */}
+                        <td className="p-4 text-center">
+                          <span className={`px-3 py-1 font-mono font-extrabold rounded-lg text-sm ${
+                            p.stock <= 0 ? 'bg-red-50 text-red-600 border border-red-200 shadow-3xs' :
+                            p.stock < 15 ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 text-slate-700 border border-slate-205'
+                          }`}>
+                            {p.stock} un
+                          </span>
+                        </td>
+
+                        {/* Sales items columns */}
+                        <td className="p-4 text-center font-mono font-extrabold text-slate-650 text-sm sm:text-base">{p.salesCount || 0}</td>
+
+                        {/* Interactive Edit / Delete actions */}
+                        <td className="p-4 text-right">
+                          <div className="flex justify-end gap-2 shrink-0 flex-wrap">
+                            <button
+                              onClick={() => {
+                                onUpdateProduct({ ...p, active: p.active === false });
+                                showToast(`Producto "${p.name}" ${p.active === false ? 'activado' : 'desactivado'} con éxito`, 'success');
+                              }}
+                              className={`px-3 py-2 rounded-xl text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1 border ${
+                                p.active !== false
+                                  ? 'bg-amber-50 border-amber-250 text-amber-700 hover:bg-amber-100'
+                                  : 'bg-emerald-50 border-emerald-250 text-emerald-700 hover:bg-emerald-100'
+                              }`}
+                              title={p.active !== false ? 'Desactivar de la tienda' : 'Activar en la tienda'}
+                            >
+                              {p.active !== false ? '⏸️ Desactivar' : '▶️ Activar'}
+                            </button>
+                            <button
+                              onClick={() => handleOpenEditProduct(p)}
+                              className="p-2 px-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-750 hover:text-slate-900 hover:bg-slate-100/80 text-xs font-bold transition cursor-pointer shadow-3xs"
+                              title="Editar propiedades de producto"
+                            >
+                              ✏️ Editar
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProductClick(p.id, p.name)}
+                              className="p-2 px-2.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 hover:text-rose-700 hover:bg-rose-100 text-xs font-bold transition cursor-pointer shadow-3xs"
+                              title="Dar de baja de la tienda"
+                            >
+                              🗑️ Baja
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
         </div>
       )}
 
@@ -1284,9 +1273,9 @@ export default function AdminSection({
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-slate-100 text-[10px] text-slate-400 flex items-center justify-between font-bold">
+            <div className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between font-bold">
               <span className="flex items-center gap-1.5 text-emerald-600">
-                <CheckCircle size={11} />
+                <CheckCircle size={13} />
                 Sincronización de Catálogo Sólida
               </span>
               <span>Servidor Local Homeli Base</span>
@@ -1308,16 +1297,16 @@ export default function AdminSection({
             >
               <div className="flex justify-between items-center pb-3 border-b border-slate-100">
                 <div>
-                  <span className="px-2 py-0.5 bg-[#c5a85c]/10 text-[#c5a85c] rounded text-[10px] font-black uppercase tracking-wider">
+                  <span className="px-3 py-1 bg-[#c5a85c]/10 text-[#c5a85c] rounded-lg text-xs font-black uppercase tracking-wider">
                     {editingProduct ? 'Modificando Ficha de Artículo' : 'Nuevo Registro de Tienda'}
                   </span>
-                  <h3 className="text-lg sm:text-xl font-serif font-black text-slate-805 mt-1">
+                  <h3 className="text-xl sm:text-2xl font-serif font-black text-slate-850 mt-1">
                     {editingProduct ? `Editar: ${editingProduct.name}` : 'Registrar Producto del E-commerce'}
                   </h3>
                 </div>
                 <button 
                   onClick={() => setShowProductModal(false)}
-                  className="p-1 px-2 hover:bg-slate-50 border border-slate-200 text-slate-400 hover:text-slate-700 text-xs font-black rounded-lg cursor-pointer transition"
+                  className="p-1.5 px-3 hover:bg-slate-50 border border-slate-200 text-slate-400 hover:text-slate-750 text-sm font-black rounded-lg cursor-pointer transition"
                 >
                   ✕
                 </button>
@@ -1326,26 +1315,26 @@ export default function AdminSection({
               <form onSubmit={handleSubmitProductForm} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[11px] font-black uppercase text-slate-450 mb-1">Nombre Comercial del Producto</label>
+                    <label className="block text-xs font-black uppercase text-slate-500 tracking-wider mb-1">Nombre Comercial del Producto</label>
                     <input
                       type="text"
                       required
                       value={pName}
                       onChange={(e) => setPName(e.target.value)}
                       placeholder="Ej. Tenis Deportivos Pro-Run"
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 bg-slate-50 focus:border-[#c5a85c] focus:outline-none"
+                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm sm:text-base font-bold text-slate-805 bg-slate-50 focus:border-[#c5a85c] focus:outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-black uppercase text-slate-455 mb-1">Categoría del E-commerce</label>
+                    <label className="block text-xs font-black uppercase text-slate-500 tracking-wider mb-1">Categoría del E-commerce</label>
                     <select
                       value={pCategory}
                       onChange={(e) => {
                         const val = e.target.value as 'Productos de limpieza' | 'Zapatos';
                         setPCategory(val);
                       }}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold bg-white text-slate-800 bg-slate-50 focus:border-[#c5a85c] focus:outline-none"
+                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm sm:text-base font-bold bg-white text-slate-805 bg-slate-50 focus:border-[#c5a85c] focus:outline-none"
                     >
                       <option value="Productos de limpieza">🧴 Productos de limpieza</option>
                       <option value="Zapatos">👠 Zapatos (Calzado)</option>
@@ -1355,7 +1344,7 @@ export default function AdminSection({
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-[11px] font-black uppercase text-slate-450 mb-1">SKU Oficial</label>
+                    <label className="block text-xs font-black uppercase text-slate-500 tracking-wider mb-1">SKU Oficial</label>
                     <div className="flex gap-1.5">
                       <input
                         type="text"
@@ -1363,12 +1352,12 @@ export default function AdminSection({
                         value={pSku}
                         onChange={(e) => setPSku(e.target.value)}
                         placeholder="HML-SKU"
-                        className="w-full px-2 py-2 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-800 bg-slate-50 focus:border-[#c5a85c] focus:outline-none"
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-805 bg-slate-50 focus:border-[#c5a85c] focus:outline-none"
                       />
                       <button
                         type="button"
                         onClick={handleGenerateSku}
-                        className="px-2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-650 border border-slate-205 text-[10px] font-black rounded-xl transition cursor-pointer"
+                        className="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-650 border border-slate-205 text-xs font-black rounded-xl transition cursor-pointer"
                         title="Auto-generar código"
                       >
                         ⚡ Generar
@@ -1377,7 +1366,7 @@ export default function AdminSection({
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-black uppercase text-slate-450 mb-1">Precio Unitario ($ MXN)</label>
+                    <label className="block text-xs font-black uppercase text-slate-500 tracking-wider mb-1">Precio Unitario ($ MXN)</label>
                     <input
                       type="number"
                       required
@@ -1385,12 +1374,12 @@ export default function AdminSection({
                       value={pPrice === 0 ? '' : pPrice}
                       onChange={(e) => setPPrice(Math.round(Number(e.target.value)))}
                       placeholder="Precio..."
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-mono font-black text-slate-800 bg-slate-50 focus:border-[#c5a85c] focus:outline-none"
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-mono font-black text-slate-805 bg-slate-50 focus:border-[#c5a85c] focus:outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-black uppercase text-slate-450 mb-1">Stock Almacén Inicial</label>
+                    <label className="block text-xs font-black uppercase text-slate-500 tracking-wider mb-1">Stock Almacén Inicial</label>
                     <input
                       type="number"
                       required
@@ -1398,7 +1387,7 @@ export default function AdminSection({
                       value={pStock === 0 ? '' : pStock}
                       onChange={(e) => setPStock(Math.round(Number(e.target.value)))}
                       placeholder="Unidades..."
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-mono font-black text-slate-800 bg-slate-50 focus:border-[#c5a85c] focus:outline-none"
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-mono font-black text-slate-805 bg-slate-50 focus:border-[#c5a85c] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -1406,19 +1395,19 @@ export default function AdminSection({
                 {/* Product Image Option Selection with URL and Upload methods */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center pb-1">
-                    <label className="block text-[11px] font-black uppercase text-slate-450">Foto Ilustrativa del Producto</label>
+                    <label className="block text-xs font-black uppercase text-slate-500 tracking-wider">Foto Ilustrativa del Producto</label>
                     <div className="flex gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
                       <button
                         type="button"
                         onClick={() => setProdImageUploadType('url')}
-                        className={`px-2 py-0.5 rounded text-[9px] font-black tracking-wider transition cursor-pointer ${prodImageUploadType === 'url' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-400 hover:text-slate-600'}`}
+                        className={`px-3 py-1 rounded text-xs font-black tracking-wider transition cursor-pointer ${prodImageUploadType === 'url' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
                       >
                         Enlace (URL)
                       </button>
                       <button
                         type="button"
                         onClick={() => setProdImageUploadType('upload')}
-                        className={`px-2 py-0.5 rounded text-[9px] font-black tracking-wider transition cursor-pointer ${prodImageUploadType === 'upload' ? 'bg-white text-[#c5a85c] shadow-xs' : 'text-slate-400 hover:text-slate-600'}`}
+                        className={`px-3 py-1 rounded text-xs font-black tracking-wider transition cursor-pointer ${prodImageUploadType === 'upload' ? 'bg-white text-[#c5a85c] shadow-xs' : 'text-slate-500 hover:text-slate-805'}`}
                       >
                         Subir Archivo 📤
                       </button>
@@ -1431,7 +1420,7 @@ export default function AdminSection({
                       value={pImgUrl.startsWith('data:') ? '' : pImgUrl}
                       onChange={(e) => setPImgUrl(e.target.value)}
                       placeholder="https://ejemplo.com/foto-producto.jpg (Dejar vacío para predeterminada)"
-                      className="w-full px-3 py-2 border border-slate-205 rounded-xl text-[11px] font-mono text-slate-650 bg-slate-50 focus:border-[#c5a85c] focus:outline-none"
+                      className="w-full px-3.5 py-2.5 border border-slate-205 rounded-xl text-sm font-mono text-slate-700 bg-slate-50 focus:border-[#c5a85c] focus:outline-none"
                     />
                   ) : (
                     <div className="flex items-center gap-2">
@@ -1452,17 +1441,17 @@ export default function AdminSection({
                               reader.readAsDataURL(file);
                             }
                           }}
-                          className="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:bg-[#c5a85c]/10 file:text-[#a38439] hover:file:bg-[#c5a85c]/20 file:cursor-pointer cursor-pointer"
+                          className="w-full text-sm text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-[#c5a85c]/10 file:text-[#a38439] hover:file:bg-[#c5a85c]/20 file:cursor-pointer cursor-pointer"
                         />
                       </div>
                       {pImgUrl.startsWith('data:') && (
-                        <div className="w-10 h-10 rounded-lg border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center bg-slate-50">
+                        <div className="w-12 h-12 rounded-xl border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center bg-slate-50 shadow-xs">
                           <img src={pImgUrl} alt="Vista previa del artículo" className="w-full h-full object-cover" />
                         </div>
                       )}
                     </div>
                   )}
-                  <span className="text-[10px] text-slate-400 block mt-1">
+                  <span className="text-xs text-slate-500 block mt-1">
                     {prodImageUploadType === 'url' 
                       ? 'Inserta un enlace web directo. Si lo dejas vacío, usaremos una imagen genérica alusiva.' 
                       : 'Carga un archivo PNG, JPG o WEBP directo desde tu dispositivo para almacenarlo localmente.'}
@@ -1470,10 +1459,10 @@ export default function AdminSection({
                 </div>
 
                 {/* Active/Inactive Status Switch */}
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                  <div className="space-y-px">
-                    <span className="text-xs font-black text-slate-800 block">Estatus de Disponibilidad</span>
-                    <span className="text-[10px] text-slate-400 block leading-normal">Determina si este producto estará visible/activo para la venta en el e-commerce.</span>
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="space-y-0.5">
+                    <span className="text-sm font-black text-slate-805 block">Estatus de Disponibilidad</span>
+                    <span className="text-xs text-slate-500 block leading-normal">Determina si este producto estará visible/activo para la venta en el e-commerce.</span>
                   </div>
                   <button
                     type="button"
@@ -1487,28 +1476,28 @@ export default function AdminSection({
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-black uppercase text-slate-450 mb-1">Descripción Comercial de Ficha Técnica</label>
+                  <label className="block text-xs font-black uppercase text-slate-500 tracking-wider mb-1">Descripción Comercial de Ficha Técnica</label>
                   <textarea
                     required
                     value={pDesc}
                     onChange={(e) => setPDesc(e.target.value)}
                     rows={3}
                     placeholder="Describe los beneficios ecológicos, materiales, tallas, o atributos de alto impacto del producto..."
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 bg-slate-50 focus:border-[#c5a85c] focus:outline-none leading-normal"
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 bg-slate-50 focus:border-[#c5a85c] focus:outline-none leading-normal"
                   />
                 </div>
 
-                <div className="flex gap-3 pt-4 border-t border-slate-100">
+                <div className="flex gap-4 pt-4 border-t border-slate-100">
                   <button
                     type="button"
                     onClick={() => setShowProductModal(false)}
-                    className="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-black transition cursor-pointer"
+                    className="flex-1 py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-black transition cursor-pointer"
                   >
                     Salir sin Guardar
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-2.5 px-4 bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-xl text-xs font-black transition shadow-md hover:scale-[1.01] cursor-pointer"
+                    className="flex-1 py-3 px-5 bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-xl text-sm font-black transition shadow-md hover:scale-[1.01] cursor-pointer"
                   >
                     {editingProduct ? '✓ Guardar Modificaciones' : '✓ Registrar y Publicar Artículo'}
                   </button>

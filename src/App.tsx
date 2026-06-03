@@ -116,7 +116,7 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(false);
 
   // States to control active admin module via header hamburger dropdown
-  const [adminActiveTab, setAdminActiveTab] = useState<'metrics' | 'ecommerce'>('metrics');
+  const [adminActiveTab, setAdminActiveTab] = useState<'metrics' | 'ecommerce'>('ecommerce');
   const [showAdminHamburgerDropdown, setShowAdminHamburgerDropdown] = useState(false);
 
   // Custom Banner States for Atelier Boutique Hero with localStorage Persistence
@@ -337,11 +337,11 @@ export default function App() {
                 <div className="relative" id="admin_hamburger_menu_wrapper">
                   <button
                     onClick={() => setShowAdminHamburgerDropdown(prev => !prev)}
-                    className="p-2 sm:px-3 sm:py-2 text-slate-705 text-slate-800 hover:bg-slate-50 border border-slate-200 bg-white rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer font-black text-xs transition"
+                    className="p-2 sm:px-3.5 sm:py-2.5 text-slate-850 text-slate-800 hover:bg-slate-50 border border-slate-205 bg-white rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer font-black text-xs"
                     id="admin_hamburger_btn"
                   >
-                    <Menu size={16} className="text-[#c5a85c]" />
-                    <span className="hidden sm:inline font-sans text-[10px] font-black uppercase text-slate-500 tracking-wider">Menú del Sistema</span>
+                    <Menu size={18} className="text-[#c5a85c]" />
+                    <span className="hidden sm:inline font-sans text-xs font-black uppercase text-slate-500 tracking-wider">Menú del Sistema</span>
                   </button>
 
                   <AnimatePresence>
@@ -351,58 +351,40 @@ export default function App() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute right-0 mt-2 w-60 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 p-2 space-y-1 text-left"
+                        className="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 p-3 space-y-1.5 text-left"
                         id="admin_hamburger_nav_dropdown"
                       >
-                        <div className="px-3 py-1.5 text-[9px] uppercase tracking-widest font-black text-slate-400 border-b border-slate-100 mb-1">
-                          🛠️ Módulos de Administración
+                        <div className="px-3 py-1.5 text-xs uppercase tracking-wider font-black text-slate-500 border-b border-slate-100 mb-1">
+                          🛠️ Administración
                         </div>
-                        
-                        <button
-                          onClick={() => {
-                            setAdminActiveTab('metrics');
-                            setShowAdminHamburgerDropdown(false);
-                          }}
-                          className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-between cursor-pointer ${
-                            adminActiveTab === 'metrics'
-                              ? 'bg-[#c5a85c]/10 text-[#a38439]'
-                              : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
-                          }`}
-                        >
-                          <span className="flex items-center gap-2">
-                            <span>📈</span>
-                            <span>Métricas del Negocio</span>
-                          </span>
-                          {adminActiveTab === 'metrics' && <span className="w-1.5 h-1.5 rounded-full bg-[#c5a85c]" />}
-                        </button>
 
                         <button
                           onClick={() => {
                             setAdminActiveTab('ecommerce');
                             setShowAdminHamburgerDropdown(false);
                           }}
-                          className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-between cursor-pointer ${
+                          className={`w-full text-left px-3 py-3 rounded-xl text-sm font-black transition flex items-center justify-between cursor-pointer ${
                             adminActiveTab === 'ecommerce'
                               ? 'bg-[#c5a85c]/10 text-[#a38439]'
-                              : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                              : 'text-slate-705 hover:bg-slate-50 hover:text-slate-900'
                           }`}
                         >
                           <span className="flex items-center gap-2">
-                            <span>🛍️</span>
-                            <span>Admin E-Commerce</span>
+                            <span className="text-base">🛍️</span>
+                            <span>Catálogo de E-Commerce</span>
                           </span>
-                          {adminActiveTab === 'ecommerce' && <span className="w-1.5 h-1.5 rounded-full bg-[#c5a85c]" />}
+                          {adminActiveTab === 'ecommerce' && <span className="w-2 h-2 rounded-full bg-[#c5a85c]" />}
                         </button>
 
-                        <div className="border-t border-slate-100 my-1 pt-1">
+                        <div className="border-t border-slate-100 my-1 pt-1.5">
                           <button
                             onClick={() => {
                               setActiveSection('home');
                               setShowAdminHamburgerDropdown(false);
                             }}
-                            className="w-full text-left px-3 py-2 rounded-xl text-[11px] font-bold text-slate-450 hover:bg-slate-50 hover:text-slate-850 text-slate-500 transition flex items-center gap-2 cursor-pointer"
+                            className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-805 transition flex items-center gap-2 cursor-pointer"
                           >
-                            <Home size={13} />
+                            <Home size={15} />
                             <span>Selector de Roles (Inicio)</span>
                           </button>
                         </div>
