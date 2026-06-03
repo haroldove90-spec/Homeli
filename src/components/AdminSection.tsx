@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ServiceRequest, ProductItem, SalesOrder, SystemLog, UserProfile } from '../types';
 import { 
   Users, 
@@ -50,7 +50,11 @@ interface AdminSectionProps {
   bannerTitle?: string;
   bannerTag?: string;
   bannerDesc?: string;
-  onUpdateBannerSettings?: (bg: string, title: string, tag: string, desc: string) => void;
+  bannerOverlayCol?: string;
+  bannerOverlayOpacity?: number;
+  onUpdateBannerSettings?: (bg: string, title: string, tag: string, desc: string, overlayCol: string, overlayOpacity: number) => void;
+  activeTab?: 'metrics' | 'ecommerce';
+  onChangeTab?: (tab: 'metrics' | 'ecommerce') => void;
 }
 
 export default function AdminSection({
@@ -69,10 +73,48 @@ export default function AdminSection({
   bannerTitle = 'Catálogo Exclusivo Atelier',
   bannerTag = 'ATELIER BOUTIQUE',
   bannerDesc = 'Descubre nuestras dos exclusivas divisiones diseñadas meticulosamente para brindar confort personal y sanidad impecable en tu hogar.',
-  onUpdateBannerSettings
+  bannerOverlayCol = '#0f172a',
+  bannerOverlayOpacity = 60,
+  onUpdateBannerSettings,
+  activeTab: propActiveTab,
+  onChangeTab: propOnChangeTab
 }: AdminSectionProps) {
-  // Navigation tabs: 'metrics' | 'ecommerce' | 'operational'
-  const [activeTab, setActiveTab] = useState<'metrics' | 'ecommerce' | 'operational'>('metrics');
+  // Sync state to handle parent changes in real time
+  const [localBannerBg, setLocalBannerBg] = useState(bannerBg);
+  const [localBannerTitle, setLocalBannerTitle] = useState(bannerTitle);
+  const [localBannerTag, setLocalBannerTag] = useState(bannerTag);
+  const [localBannerDesc, setLocalBannerDesc] = useState(bannerDesc);
+  const [localBannerOverlayCol, setLocalBannerOverlayCol] = useState(bannerOverlayCol);
+  const [localBannerOverlayOpacity, setLocalBannerOverlayOpacity] = useState(bannerOverlayOpacity);
+
+  useEffect(() => {
+    setLocalBannerBg(bannerBg);
+  }, [bannerBg]);
+
+  useEffect(() => {
+    setLocalBannerTitle(bannerTitle);
+  }, [bannerTitle]);
+
+  useEffect(() => {
+    setLocalBannerTag(bannerTag);
+  }, [bannerTag]);
+
+  useEffect(() => {
+    setLocalBannerDesc(bannerDesc);
+  }, [bannerDesc]);
+
+  useEffect(() => {
+    setLocalBannerOverlayCol(bannerOverlayCol);
+  }, [bannerOverlayCol]);
+
+  useEffect(() => {
+    setLocalBannerOverlayOpacity(bannerOverlayOpacity);
+  }, [bannerOverlayOpacity]);
+
+  // Navigation tabs: 'metrics' | 'ecommerce' (with 'operational' deactivated as per request)
+  const [localActiveTab, setLocalActiveTab] = useState<'metrics' | 'ecommerce'>('metrics');
+  const activeTab = propActiveTab || localActiveTab;
+  const setActiveTab = propOnChangeTab || setLocalActiveTab;
 
   // Local Config Settings
   const [config, setConfig] = useState({
@@ -110,16 +152,17 @@ export default function AdminSection({
   const [pImgUrl, setPImgUrl] = useState('');
   const [pSalesCount, setPSalesCount] = useState(0);
 
-  // Local state for Banner Settings Form
-  const [localBannerBg, setLocalBannerBg] = useState(bannerBg);
-  const [localBannerTitle, setLocalBannerTitle] = useState(bannerTitle);
-  const [localBannerTag, setLocalBannerTag] = useState(bannerTag);
-  const [localBannerDesc, setLocalBannerDesc] = useState(bannerDesc);
-
   const handleSaveBannerSettings = (e: React.FormEvent) => {
     e.preventDefault();
     if (onUpdateBannerSettings) {
-      onUpdateBannerSettings(localBannerBg.trim(), localBannerTitle.trim(), localBannerTag.trim(), localBannerDesc.trim());
+      onUpdateBannerSettings(
+        localBannerBg.trim(),
+        localBannerTitle.trim(),
+        localBannerTag.trim(),
+        localBannerDesc.trim(),
+        localBannerOverlayCol,
+        localBannerOverlayOpacity
+      );
       onAddLog('Se actualizaron las configuraciones del banner oficial Atelier Boutique', 'info');
       showToast('¡Configuración del Banner Atelier guardada con éxito!', 'success');
     }
@@ -310,12 +353,6 @@ export default function AdminSection({
             className={`px-4 py-2 text-xs font-black rounded-xl transition cursor-pointer ${activeTab === 'ecommerce' ? 'bg-white text-slate-900 shadow-xs border border-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
           >
             🛍️ Admin E-Commerce
-          </button>
-          <button
-            onClick={() => setActiveTab('operational')}
-            className={`px-4 py-2 text-xs font-black rounded-xl transition cursor-pointer ${activeTab === 'operational' ? 'bg-white text-slate-900 shadow-xs border border-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
-          >
-            ⚙️ Operación & Logs
           </button>
         </div>
       </div>
@@ -613,7 +650,7 @@ export default function AdminSection({
           >
             <div className="border-b border-slate-100 pb-4">
               <h3 className="font-serif font-black text-slate-800 text-[15px] sm:text-lg">Personalización de Cabecera E-commerce</h3>
-              <p className="text-xs text-slate-400">Modifica en tiempo real los textos y la imagen de fondo de la tarjeta Atelier Boutique de la tienda.</p>
+              <p className="text-xs text-slate-400">Modifica en tiempo real los textos, colores y la imagen de fondo de la tarjeta Atelier Boutique de la tienda.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -628,12 +665,12 @@ export default function AdminSection({
                     placeholder="https://ejemplo.com/diseno-atelier.webp"
                     className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800 font-mono"
                   />
-                  <p className="text-[10px] text-slate-400 mt-1">Escribe la URL directa de la imagen de fondo. Deja vacío para mantener el degradado nocturno básico.</p>
+                  <p className="text-[10px] text-slate-400 mt-1">Escribe la URL directa de la imagen de fondo. Deja vacío para usar el color de overlay sólido.</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-black uppercase text-slate-450 mb-1">Sutbítulo / Etiqueta (Overline)</label>
+                    <label className="block text-[10px] font-black uppercase text-slate-450 mb-1">Subtítulo / Etiqueta (Overline)</label>
                     <input
                       type="text"
                       value={localBannerTag}
@@ -653,6 +690,70 @@ export default function AdminSection({
                       maxLength={60}
                       className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800"
                     />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-450 mb-1">Color de Overlay (Filtro tinto)</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={localBannerOverlayCol.startsWith('#') && localBannerOverlayCol.length === 7 ? localBannerOverlayCol : '#0f172a'}
+                        onChange={(e) => setLocalBannerOverlayCol(e.target.value)}
+                        className="w-10 h-8 rounded-lg border border-slate-200 cursor-pointer bg-transparent shrink-0"
+                      />
+                      <input
+                        type="text"
+                        value={localBannerOverlayCol}
+                        onChange={(e) => setLocalBannerOverlayCol(e.target.value)}
+                        placeholder="#0f172a"
+                        maxLength={20}
+                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800 font-mono"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-450 mb-1">Opacidad del Overlay ({localBannerOverlayOpacity}%)</label>
+                    <div className="flex items-center gap-2 py-1">
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={localBannerOverlayOpacity}
+                        onChange={(e) => setLocalBannerOverlayOpacity(Number(e.target.value))}
+                        className="w-full accent-[#c5a85c] cursor-pointer"
+                      />
+                      <span className="text-xs font-mono font-bold text-slate-600 w-8 text-right shrink-0">{localBannerOverlayOpacity}%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pre-sets palette quick select */}
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-slate-450 mb-1">Paletas de Marca Recomendadas</label>
+                  <div className="flex flex-wrap gap-2 pt-0.5">
+                    {[
+                      { name: 'Noche', hex: '#0f172a', opacity: 70 },
+                      { name: 'Pure Noir', hex: '#000000', opacity: 60 },
+                      { name: 'Oro Atelier', hex: '#634d1a', opacity: 50 },
+                      { name: 'Esmeralda', hex: '#064e3b', opacity: 65 },
+                      { name: 'Vino Imperial', hex: '#4c0519', opacity: 60 }
+                    ].map(preset => (
+                      <button
+                        key={preset.hex}
+                        type="button"
+                        onClick={() => {
+                          setLocalBannerOverlayCol(preset.hex);
+                          setLocalBannerOverlayOpacity(preset.opacity);
+                        }}
+                        className="px-2 py-1 bg-slate-50 border border-slate-200 hover:border-[#c5a85c] rounded-xl text-[9px] font-bold text-slate-650 hover:text-slate-900 transition cursor-pointer flex items-center gap-1.5"
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full border border-slate-300" style={{ backgroundColor: preset.hex }} />
+                        <span>{preset.name}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -682,6 +783,8 @@ export default function AdminSection({
                       setLocalBannerTitle('Catálogo Exclusivo Atelier');
                       setLocalBannerTag('ATELIER BOUTIQUE');
                       setLocalBannerDesc('Descubre nuestras dos exclusivas divisiones diseñadas meticulosamente para brindar confort personal y sanidad impecable en tu hogar.');
+                      setLocalBannerOverlayCol('#0f172a');
+                      setLocalBannerOverlayOpacity(60);
                     }}
                     className="px-3 py-2 text-xs font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer"
                   >
@@ -696,13 +799,22 @@ export default function AdminSection({
                 
                 {/* Simulated e-commerce banner */}
                 <div 
-                  className="rounded-2xl p-6 text-white relative overflow-hidden min-h-[160px] flex flex-col justify-center text-left bg-cover bg-center transition-all duration-300"
+                  className="rounded-2xl p-6 text-white relative overflow-hidden min-h-[180px] flex flex-col justify-center text-left bg-cover bg-center transition-all duration-300"
                   style={{
-                    backgroundImage: localBannerBg ? `linear-gradient(to right, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.45)), url(${localBannerBg})` : 'none',
-                    backgroundColor: localBannerBg ? 'transparent' : '#0f172a'
+                    backgroundImage: localBannerBg ? `url(${localBannerBg})` : 'none',
+                    backgroundColor: localBannerBg ? 'transparent' : localBannerOverlayCol
                   }}
                 >
-                  {!localBannerBg && (
+                  {/* Customizable Background Tint / Color Overlay */}
+                  <div 
+                    className="absolute inset-0 transition-all duration-300 pointer-events-none"
+                    style={{
+                      background: `linear-gradient(to right, ${localBannerOverlayCol}, ${localBannerOverlayCol}e6, ${localBannerOverlayCol}a0, rgba(0,0,0,0))`,
+                      opacity: localBannerBg ? (localBannerOverlayOpacity / 100) : 1
+                    }}
+                  />
+                  {/* Default elegant space gradient fallback if no photo and default slate overlay is active */}
+                  {!localBannerBg && localBannerOverlayCol === '#0f172a' && (
                     <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-indigo-950 pointer-events-none" />
                   )}
                   <div className="absolute right-0 bottom-0 top-0 w-1/3 bg-radial from-[#c5a85c]/15 to-transparent pointer-events-none" />
@@ -716,7 +828,7 @@ export default function AdminSection({
                     <h2 className="text-sm sm:text-base font-serif font-black tracking-tight text-white leading-tight">
                       {localBannerTitle || 'Catálogo Exclusivo Atelier'}
                     </h2>
-                    <p className="text-[9px] text-slate-300 leading-relaxed font-medium">
+                    <p className="text-[9px] text-slate-300 leading-relaxed font-semibold">
                       {localBannerDesc || 'Descubre nuestras dos exclusivas divisiones...'}
                     </p>
                   </div>
@@ -873,8 +985,8 @@ export default function AdminSection({
         </div>
       )}
 
-      {/* ================================== TAB 3: CONTROL OPERATIVO & BITACORA LOGS ================================== */}
-      {activeTab === 'operational' && (
+      {/* ================================== TAB 3: CONTROL OPERATIVO & BITACORA LOGS (DESACTIVADO) ================================== */}
+      {(activeTab as string) === 'operational' && (
         <motion.div
           key="operational_tab"
           initial={{ opacity: 0, y: 10 }}

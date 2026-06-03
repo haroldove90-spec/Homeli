@@ -36,7 +36,8 @@ import {
   Smartphone,
   ExternalLink,
   Laptop,
-  RefreshCw
+  RefreshCw,
+  Menu
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -114,6 +115,10 @@ export default function App() {
 
   const [showSplash, setShowSplash] = useState(false);
 
+  // States to control active admin module via header hamburger dropdown
+  const [adminActiveTab, setAdminActiveTab] = useState<'metrics' | 'ecommerce'>('metrics');
+  const [showAdminHamburgerDropdown, setShowAdminHamburgerDropdown] = useState(false);
+
   // Custom Banner States for Atelier Boutique Hero with localStorage Persistence
   const [bannerBg, setBannerBg] = useState<string>(() => {
     return localStorage.getItem('homeli_banner_bg') || '';
@@ -126,6 +131,13 @@ export default function App() {
   });
   const [bannerDesc, setBannerDesc] = useState<string>(() => {
     return localStorage.getItem('homeli_banner_desc') || 'Descubre nuestras dos exclusivas divisiones diseñadas meticulosamente para brindar confort personal y sanidad impecable en tu hogar.';
+  });
+  const [bannerOverlayCol, setBannerOverlayCol] = useState<string>(() => {
+    return localStorage.getItem('homeli_banner_overlay_col') || '#0f172a';
+  });
+  const [bannerOverlayOpacity, setBannerOverlayOpacity] = useState<number>(() => {
+    const raw = localStorage.getItem('homeli_banner_overlay_opacity');
+    return raw ? Number(raw) : 60;
   });
 
   // Sync state changes to localStorage
@@ -168,6 +180,14 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('homeli_banner_desc', bannerDesc);
   }, [bannerDesc]);
+
+  useEffect(() => {
+    localStorage.setItem('homeli_banner_overlay_col', bannerOverlayCol);
+  }, [bannerOverlayCol]);
+
+  useEffect(() => {
+    localStorage.setItem('homeli_banner_overlay_opacity', String(bannerOverlayOpacity));
+  }, [bannerOverlayOpacity]);
 
   // Progressive Web App Installation states
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -282,6 +302,8 @@ export default function App() {
     localStorage.removeItem('homeli_banner_title');
     localStorage.removeItem('homeli_banner_tag');
     localStorage.removeItem('homeli_banner_desc');
+    localStorage.removeItem('homeli_banner_overlay_col');
+    localStorage.removeItem('homeli_banner_overlay_opacity');
     
     // Perform hard reload to ensure all static files and memory is completely cleansed
     window.location.reload();
@@ -311,36 +333,117 @@ export default function App() {
 
             {/* Navigational shortcuts when active section is loaded */}
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setActiveSection('home')}
-                className="px-3 py-1.5 text-xs text-natural-text hover:text-natural-dark hover:bg-natural-bg border border-natural-border rounded-xl transition font-bold flex items-center gap-1.5 cursor-pointer"
-                id="btn_nav_back_home"
-              >
-                <Home size={13} />
-                <span>Selector Roles</span>
-              </button>
-              
-              {/* Shortcuts directly in header */}
-              <div className="hidden sm:flex rounded-lg bg-natural-bg p-0.5 border border-natural-border" id="navbar_shortcuts">
-                <button 
-                  onClick={() => setActiveSection('admin')}
-                  className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'admin' ? 'bg-earth-copper text-white' : 'text-natural-muted hover:text-natural-dark'}`}
-                >
-                  Admin
-                </button>
-                <button 
-                  onClick={() => setActiveSection('servicios')}
-                  className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'servicios' ? 'bg-earth-green text-white' : 'text-natural-muted hover:text-natural-dark'}`}
-                >
-                  Servicios
-                </button>
-                <button 
-                  onClick={() => setActiveSection('ventas')}
-                  className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'ventas' ? 'bg-earth-slate text-white' : 'text-natural-muted hover:text-natural-dark'}`}
-                >
-                  Ventas
-                </button>
-              </div>
+              {activeSection === 'admin' ? (
+                <div className="relative" id="admin_hamburger_menu_wrapper">
+                  <button
+                    onClick={() => setShowAdminHamburgerDropdown(prev => !prev)}
+                    className="p-2 sm:px-3 sm:py-2 text-slate-705 text-slate-800 hover:bg-slate-50 border border-slate-200 bg-white rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer font-black text-xs transition"
+                    id="admin_hamburger_btn"
+                  >
+                    <Menu size={16} className="text-[#c5a85c]" />
+                    <span className="hidden sm:inline font-sans text-[10px] font-black uppercase text-slate-500 tracking-wider">Menú del Sistema</span>
+                  </button>
+
+                  <AnimatePresence>
+                    {showAdminHamburgerDropdown && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 mt-2 w-60 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 p-2 space-y-1 text-left"
+                        id="admin_hamburger_nav_dropdown"
+                      >
+                        <div className="px-3 py-1.5 text-[9px] uppercase tracking-widest font-black text-slate-400 border-b border-slate-100 mb-1">
+                          🛠️ Módulos de Administración
+                        </div>
+                        
+                        <button
+                          onClick={() => {
+                            setAdminActiveTab('metrics');
+                            setShowAdminHamburgerDropdown(false);
+                          }}
+                          className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-between cursor-pointer ${
+                            adminActiveTab === 'metrics'
+                              ? 'bg-[#c5a85c]/10 text-[#a38439]'
+                              : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2">
+                            <span>📈</span>
+                            <span>Métricas del Negocio</span>
+                          </span>
+                          {adminActiveTab === 'metrics' && <span className="w-1.5 h-1.5 rounded-full bg-[#c5a85c]" />}
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setAdminActiveTab('ecommerce');
+                            setShowAdminHamburgerDropdown(false);
+                          }}
+                          className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-between cursor-pointer ${
+                            adminActiveTab === 'ecommerce'
+                              ? 'bg-[#c5a85c]/10 text-[#a38439]'
+                              : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2">
+                            <span>🛍️</span>
+                            <span>Admin E-Commerce</span>
+                          </span>
+                          {adminActiveTab === 'ecommerce' && <span className="w-1.5 h-1.5 rounded-full bg-[#c5a85c]" />}
+                        </button>
+
+                        <div className="border-t border-slate-100 my-1 pt-1">
+                          <button
+                            onClick={() => {
+                              setActiveSection('home');
+                              setShowAdminHamburgerDropdown(false);
+                            }}
+                            className="w-full text-left px-3 py-2 rounded-xl text-[11px] font-bold text-slate-450 hover:bg-slate-50 hover:text-slate-850 text-slate-500 transition flex items-center gap-2 cursor-pointer"
+                          >
+                            <Home size={13} />
+                            <span>Selector de Roles (Inicio)</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setActiveSection('home')}
+                    className="px-3 py-1.5 text-xs text-natural-text hover:text-natural-dark hover:bg-natural-bg border border-natural-border rounded-xl transition font-bold flex items-center gap-1.5 cursor-pointer"
+                    id="btn_nav_back_home"
+                  >
+                    <Home size={13} />
+                    <span>Selector Roles</span>
+                  </button>
+                  
+                  {/* Shortcuts directly in header */}
+                  <div className="hidden sm:flex rounded-lg bg-natural-bg p-0.5 border border-natural-border" id="navbar_shortcuts">
+                    <button 
+                      onClick={() => setActiveSection('admin')}
+                      className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'admin' ? 'bg-earth-copper text-white' : 'text-natural-muted hover:text-natural-dark'}`}
+                    >
+                      Admin
+                    </button>
+                    <button 
+                      onClick={() => setActiveSection('servicios')}
+                      className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'servicios' ? 'bg-earth-green text-white' : 'text-natural-muted hover:text-natural-dark'}`}
+                    >
+                      Servicios
+                    </button>
+                    <button 
+                      onClick={() => setActiveSection('ventas')}
+                      className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'ventas' ? 'bg-earth-slate text-white' : 'text-natural-muted hover:text-natural-dark'}`}
+                    >
+                      Ventas
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </header>
         )}
@@ -515,12 +618,18 @@ export default function App() {
                     bannerTitle={bannerTitle}
                     bannerTag={bannerTag}
                     bannerDesc={bannerDesc}
-                    onUpdateBannerSettings={(bg: string, title: string, tag: string, desc: string) => {
+                    bannerOverlayCol={bannerOverlayCol}
+                    bannerOverlayOpacity={bannerOverlayOpacity}
+                    onUpdateBannerSettings={(bg: string, title: string, tag: string, desc: string, overlayCol: string, overlayOpacity: number) => {
                       setBannerBg(bg);
                       setBannerTitle(title);
                       setBannerTag(tag);
                       setBannerDesc(desc);
+                      setBannerOverlayCol(overlayCol);
+                      setBannerOverlayOpacity(overlayOpacity);
                     }}
+                    activeTab={adminActiveTab}
+                    onChangeTab={setAdminActiveTab}
                   />
                 )}
 
@@ -543,6 +652,8 @@ export default function App() {
                     bannerTitle={bannerTitle}
                     bannerTag={bannerTag}
                     bannerDesc={bannerDesc}
+                    bannerOverlayCol={bannerOverlayCol}
+                    bannerOverlayOpacity={bannerOverlayOpacity}
                   />
                 )}
               </motion.div>

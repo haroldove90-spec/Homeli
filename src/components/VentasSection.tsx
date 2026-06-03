@@ -47,6 +47,8 @@ interface VentasSectionProps {
   bannerTitle?: string;
   bannerTag?: string;
   bannerDesc?: string;
+  bannerOverlayCol?: string;
+  bannerOverlayOpacity?: number;
 }
 
 // Exact 12 products with corresponding category classification
@@ -199,7 +201,9 @@ export default function VentasSection({
   bannerBg = '',
   bannerTitle = 'Catálogo Exclusivo Atelier',
   bannerTag = 'ATELIER BOUTIQUE',
-  bannerDesc = 'Descubre nuestras dos exclusivas divisiones diseñadas meticulosamente para brindar confort personal y sanidad impecable en tu hogar.'
+  bannerDesc = 'Descubre nuestras dos exclusivas divisiones diseñadas meticulosamente para brindar confort personal y sanidad impecable en tu hogar.',
+  bannerOverlayCol = '#0f172a',
+  bannerOverlayOpacity = 60
 }: VentasSectionProps) {
   // Views inside e-commerce: 'shop', 'cart_orders', 'manager'
   const [activeViewMode, setActiveViewMode] = useState<'shop' | 'cart_orders' | 'manager'>('shop');
@@ -616,12 +620,20 @@ export default function VentasSection({
           <div 
             className="rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden shadow-md bg-cover bg-center transition-all duration-300"
             style={{
-              backgroundImage: bannerBg ? `linear-gradient(to right, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.45)), url(${bannerBg})` : 'none',
-              backgroundColor: bannerBg ? 'transparent' : '#0f172a'
+              backgroundImage: bannerBg ? `url(${bannerBg})` : 'none',
+              backgroundColor: bannerBg ? 'transparent' : bannerOverlayCol
             }}
           >
-            {/* If no custom background URL is defined, use the elegant space gradient */}
-            {!bannerBg && (
+            {/* Customizable Background Tint / Color Overlay */}
+            <div 
+              className="absolute inset-0 transition-all duration-300 pointer-events-none"
+              style={{
+                background: `linear-gradient(to right, ${bannerOverlayCol}, ${bannerOverlayCol}e6, ${bannerOverlayCol}a0, rgba(0,0,0,0))`,
+                opacity: bannerBg ? (bannerOverlayOpacity / 100) : 1
+              }}
+            />
+            {/* Default elegant space gradient fallback if no photo and default slate overlay is active */}
+            {!bannerBg && bannerOverlayCol === '#0f172a' && (
               <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-indigo-950 pointer-events-none" />
             )}
             <div className="absolute right-0 bottom-0 top-0 w-1/3 bg-radial from-[#c5a85c]/15 to-transparent pointer-events-none" />
