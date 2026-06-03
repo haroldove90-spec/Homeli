@@ -49,7 +49,7 @@ export default function App() {
 
   // Navigational & brand States
   const [activeSection, setActiveSection] = useState<'home' | 'admin' | 'servicios' | 'ventas'>('home');
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(false);
 
   // Progressive Web App Installation states
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -142,115 +142,14 @@ export default function App() {
   return (
     <div className="min-h-screen bg-natural-bg text-natural-text flex flex-col justify-between" id="master_app_container">
       
-      {/* 1. Splash Screen containing the full unclipped Homeli logo */}
-      <AnimatePresence>
-        {showSplash && (
-          <motion.div 
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="fixed inset-0 bg-natural-bg z-50 flex flex-col justify-between items-center p-8 text-center"
-            id="splash_screen"
-          >
-            <div></div> {/* spacer */}
-
-            <div className="space-y-6 max-w-sm flex flex-col items-center">
-              {/* Unclipped logo container ensuring full visibility without round/tight clipping */}
-              <motion.div 
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.1, duration: 0.6 }}
-                className="w-72 bg-white rounded-2xl shadow-md border border-natural-border overflow-hidden"
-              >
-                <img 
-                  src="https://cossma.com.mx/homeli.jpg" 
-                  alt="Homeli Logo Natural" 
-                  className="w-full h-auto block"
-                  referrerPolicy="no-referrer"
-                />
-              </motion.div>
-              
-              <div className="space-y-2">
-                <h1 className="text-4xl font-extrabold font-serif tracking-tight text-natural-dark leading-none">Homeli</h1>
-                <p className="text-sm font-semibold text-earth-green tracking-wide uppercase">Tu Hogar Inteligente & Servicios Profesionalizados</p>
-                <p className="text-xs text-natural-silt px-2 leading-relaxed">
-                  Consola única multi-rol para la optimización de Mantenimiento de Hogares, Ventas E-commerce y Auditoría de Operaciones.
-                </p>
-              </div>
-            </div>
-
-            {/* Splash triggers and installing alerts */}
-            <div className="w-full max-w-xs space-y-3">
-              <button
-                onClick={() => setShowSplash(false)}
-                className="w-full py-3 px-6 bg-earth-green hover:bg-earth-green-dark border border-transparent text-white font-bold rounded-2xl transition shadow-lg shadow-earth-green/10 flex items-center justify-center gap-2 text-sm cursor-pointer"
-                id="btn_enter_dashboard"
-              >
-                <span>Acceder al Dashboard</span>
-                <span className="font-mono text-[10px] bg-earth-green-dark text-white px-1.5 py-0.5 rounded">v1.2</span>
-              </button>
-
-              <button
-                onClick={triggerPWAInstall}
-                className="w-full py-2.5 px-4 bg-white hover:bg-natural-bg border border-natural-border text-natural-text font-semibold rounded-2xl transition flex items-center justify-center gap-2 text-xs cursor-pointer"
-                id="btn_splash_install"
-              >
-                <Download size={14} className="text-earth-green" />
-                Instalar Aplicación (PWA)
-              </button>
-              
-              <p className="text-[10px] text-natural-muted">Compatible con iOS, Android, macOS y Windows</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Main Core Layout */}
       <div className="flex flex-col flex-1" id="core_layout">
-        
-        {/* Dynamic Installer Banner */}
-        <div className="bg-natural-dark text-natural-bg text-xs py-2 px-4 flex justify-between items-center gap-4 border-b border-natural-border/20" id="top_installer_badge">
-          <div className="flex items-center gap-2">
-            <span className="flex h-2 w-2 relative bg-transparent">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-earth-green opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-earth-green"></span>
-            </span>
-            <span className="font-medium text-natural-bg/90">
-              {isInstalled ? '✓ Homeli está activo en modo aplicación nativa' : 'Homeli está listo para descargarse en tu pantalla de inicio'}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {!isInstalled && (
-              <button
-                onClick={triggerPWAInstall}
-                className="bg-earth-green hover:bg-earth-green-dark text-white font-bold px-3 py-1 rounded-lg text-[11px] transition shadow flex items-center gap-1.5 active:scale-95 cursor-pointer"
-                id="btn_top_bar_install"
-              >
-                <Download size={12} />
-                <span>Instalar Homeli</span>
-              </button>
-            )}
-            {isInstalled && (
-              <span className="text-[10px] bg-earth-green-light/20 text-earth-green font-bold px-2 py-0.5 rounded-full border border-earth-green/30">
-                PWA Instalada
-              </span>
-            )}
-            <button
-              onClick={() => setShowInstallInstructions(true)}
-              className="text-natural-bg/50 hover:text-white transition leading-none p-1 cursor-pointer"
-              title="Manual de instalación rápida"
-            >
-              <Info size={14} />
-            </button>
-          </div>
-        </div>
 
         {/* Master Top Header Navigation Bar */}
-        <header className="bg-white border-b border-natural-border py-3.5 px-6 flex justify-between items-center shadow-sm sticky top-0 z-40" id="header_navbar">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveSection('home')}>
+        <header className="bg-white border-b border-natural-border py-2.5 px-5 flex justify-between items-center shadow-sm sticky top-0 z-40" id="header_navbar">
+          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setActiveSection('home')}>
             {/* Standard Rectangular Logo Brand Area without restrictive circular frame encapsulation */}
-            <div className="w-16 bg-white shrink-0" id="navbar_brand_logo">
+            <div className="w-11 bg-white shrink-0 border border-natural-border/40 rounded-lg p-0.5 overflow-hidden shadow-sm" id="navbar_brand_logo">
               <img 
                 src="https://cossma.com.mx/homeli.jpg" 
                 alt="Homeli Logo Banner" 
@@ -259,8 +158,7 @@ export default function App() {
               />
             </div>
             <div>
-              <h2 className="text-base font-extrabold font-serif tracking-tight text-natural-dark leading-none">Homeli</h2>
-              <p className="text-[10px] font-bold text-earth-green leading-none mt-1 uppercase tracking-widest">Dashboard Multi-Rol</p>
+              <h2 className="text-sm font-bold font-serif tracking-tight text-natural-dark leading-none">Homeli</h2>
             </div>
           </div>
 
@@ -269,21 +167,13 @@ export default function App() {
             {activeSection !== 'home' && (
               <button
                 onClick={() => setActiveSection('home')}
-                className="px-3.5 py-1.5 text-xs text-natural-text hover:text-natural-dark hover:bg-natural-bg border border-natural-border rounded-xl transition font-bold flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-1.5 text-xs text-natural-text hover:text-natural-dark hover:bg-natural-bg border border-natural-border rounded-xl transition font-bold flex items-center gap-1.5 cursor-pointer"
                 id="btn_nav_back_home"
               >
-                <Home size={14} />
+                <Home size={13} />
                 <span>Selector Roles</span>
               </button>
             )}
-
-            <button
-              onClick={() => setShowSplash(true)}
-              className="p-1 px-2.5 hover:bg-natural-bg text-xs font-semibold text-natural-muted hover:text-natural-dark transition rounded-lg cursor-pointer"
-              id="btn_show_splash_launcher"
-            >
-              Ver Iniciador
-            </button>
             
             {/* Shortcuts directly in header */}
             <div className="hidden sm:flex rounded-lg bg-natural-bg p-0.5 border border-natural-border" id="navbar_shortcuts">
@@ -318,156 +208,99 @@ export default function App() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}
-                className="space-y-12 py-6"
+                className="space-y-10 py-8 flex flex-col items-center justify-center min-h-[70vh]"
                 id="home_content"
               >
-                {/* Brand Greetings Area */}
-                <div className="text-center space-y-3 max-w-xl mx-auto">
-                  <span className="px-3 py-1 bg-earth-green-light border border-earth-green/20 rounded-full text-earth-green-dark text-xs font-bold tracking-widest uppercase inline-block">
-                    CONSOLA INTEGRADA DE NEGOCIOS
-                  </span>
-                  <h2 className="text-4xl font-extrabold font-serif tracking-tight text-natural-dark">
-                    Bienvenido de vuelta a Homeli
-                  </h2>
-                  <p className="text-sm text-natural-silt leading-relaxed font-sans">
-                    Navega a través de los diversos entornos operativos seleccionando tu rol de acceso. Modifica parámetros, monitorea solicitudes en ruta o despacha órdenes e-commerce.
-                  </p>
+                {/* Minimalist Centered Small Logo */}
+                <div className="flex flex-col items-center justify-center mb-4" id="minimalist_home_brand">
+                  <div className="w-14 bg-white rounded-xl shadow-sm border border-natural-border/60 p-0.5 overflow-hidden transition-all duration-300 hover:shadow-md hover:scale-105">
+                    <img 
+                      src="https://cossma.com.mx/homeli.jpg" 
+                      alt="Homeli Logo" 
+                      className="w-full h-auto block"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
                 </div>
 
-                {/* The 3 requested entries: Icon and Name exactly */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto" id="three_roles_access_grid">
+                {/* The 3 requested entries: Icon in an elegant solid golden block, label exactly underneath */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 max-w-md w-full px-4 justify-items-center" id="three_roles_access_grid">
                   {/* Category 1: Admin */}
                   <motion.div
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => {
                       setActiveSection('admin');
                       onAddLog('Acceso autorizado a Panel de Administración', 'info');
                     }}
-                    className="bg-white p-7 rounded-2xl border border-natural-border hover:border-earth-copper shadow-sm cursor-pointer transition flex flex-col justify-between h-64 text-left relative group overflow-hidden"
+                    className="flex flex-col items-center gap-2 cursor-pointer group"
                     id="access_entry_admin"
                   >
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-earth-copper/5 rounded-full -mr-6 -mt-6 group-hover:scale-125 transition duration-500" />
-                    
-                    <div className="space-y-4">
-                      <div className="p-4 bg-earth-copper-light text-earth-copper rounded-xl inline-block group-hover:bg-earth-copper group-hover:text-white transition duration-300">
-                        <ShieldAlert size={26} />
-                      </div>
-                      <div>
-                        <h4 className="text-xl font-bold font-serif text-natural-dark tracking-tight flex items-center gap-1.5">
-                          Administrador
-                        </h4>
-                        <p className="text-xs text-natural-silt mt-1.5 leading-relaxed">
-                          Control total. Supervisión de bitácoras de seguridad, administración de personal, toggles del sistema y analíticas financieras consolidadas.
-                        </p>
-                      </div>
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 bg-[#c5a85c] rounded-2xl flex items-center justify-center text-white shadow-md group-hover:bg-[#b59549] transition-all duration-200">
+                      <ShieldAlert size={32} />
                     </div>
-
-                    <span className="text-xs font-bold text-earth-copper flex items-center gap-1 group-hover:translate-x-1 transition mt-4 pt-3 border-t border-natural-border/50">
-                      Entrar como Administrador ➔
-                    </span>
+                    <span className="text-xs sm:text-sm font-bold text-natural-dark select-none mt-1 group-hover:text-[#c5a85c] transition-colors">Admin</span>
                   </motion.div>
 
                   {/* Category 2: Servicios */}
                   <motion.div
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => {
                       setActiveSection('servicios');
                       onAddLog('Acceso autorizado a Panel de Operaciones de Servicios', 'info');
                     }}
-                    className="bg-white p-7 rounded-2xl border border-natural-border hover:border-earth-green shadow-sm cursor-pointer transition flex flex-col justify-between h-64 text-left relative group overflow-hidden"
+                    className="flex flex-col items-center gap-2 cursor-pointer group"
                     id="access_entry_servicios"
                   >
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-earth-green/5 rounded-full -mr-6 -mt-6 group-hover:scale-125 transition duration-500" />
-
-                    <div className="space-y-4">
-                      <div className="p-4 bg-earth-green-light text-earth-green-dark rounded-xl inline-block group-hover:bg-earth-green group-hover:text-white transition duration-300">
-                        <Wrench size={26} />
-                      </div>
-                      <div>
-                        <h4 className="text-xl font-bold font-serif text-natural-dark tracking-tight flex items-center gap-1.5">
-                          Servicios
-                        </h4>
-                        <p className="text-xs text-natural-silt mt-1.5 leading-relaxed">
-                          Coordinador de especialistas técnicos. Agenda nuevas órdenes de limpieza o fontanería, modifica estados en ruta y asigna técnicos oficiales.
-                        </p>
-                      </div>
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 bg-[#c5a85c] rounded-2xl flex items-center justify-center text-white shadow-md group-hover:bg-[#b59549] transition-all duration-200">
+                      <Wrench size={32} />
                     </div>
-
-                    <span className="text-xs font-bold text-earth-green-dark flex items-center gap-1 group-hover:translate-x-1 transition mt-4 pt-3 border-t border-natural-border/50">
-                      Entrar a Servicios ➔
-                    </span>
+                    <span className="text-xs sm:text-sm font-bold text-natural-dark select-none mt-1 group-hover:text-[#c5a85c] transition-colors">Servicios</span>
                   </motion.div>
 
-                  {/* Category 3: Ventas Ecommerce */}
+                  {/* Category 3: Ventas (col-span-2 on mobile, centered; standard on desktop/tablet) */}
                   <motion.div
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => {
                       setActiveSection('ventas');
                       onAddLog('Acceso autorizado a Consola de E-commerce y Ventas', 'info');
                     }}
-                    className="bg-white p-7 rounded-2xl border border-natural-border hover:border-earth-slate shadow-sm cursor-pointer transition flex flex-col justify-between h-64 text-left relative group overflow-hidden"
+                    className="col-span-2 sm:col-span-1 justify-self-center flex flex-col items-center gap-2 cursor-pointer group"
                     id="access_entry_ventas"
                   >
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-earth-slate/5 rounded-full -mr-6 -mt-6 group-hover:scale-125 transition duration-500" />
-
-                    <div className="space-y-4">
-                      <div className="p-4 bg-earth-slate-light text-earth-slate rounded-xl inline-block group-hover:bg-earth-slate group-hover:text-white transition duration-300">
-                        <ShoppingBag size={26} />
-                      </div>
-                      <div>
-                        <h4 className="text-xl font-bold font-serif text-natural-dark tracking-tight flex items-center gap-1.5">
-                          Ventas Ecommerce
-                        </h4>
-                        <p className="text-xs text-natural-silt mt-1.5 leading-relaxed">
-                          Consola comercial. Gestiona stock y disponibilidad de productos premium de domótica del hogar, despacha órdenes de compras de clientes y suma productos.
-                        </p>
-                      </div>
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 bg-[#c5a85c] rounded-2xl flex items-center justify-center text-white shadow-md group-hover:bg-[#b59549] transition-all duration-200">
+                      <ShoppingBag size={32} />
                     </div>
-
-                    <span className="text-xs font-bold text-earth-slate flex items-center gap-1 group-hover:translate-x-1 transition mt-4 pt-3 border-t border-natural-border/50">
-                      Entrar a Consola Comercial ➔
-                    </span>
+                    <span className="text-xs sm:text-sm font-bold text-natural-dark select-none mt-1 group-hover:text-[#c5a85c] transition-colors">Ventas</span>
                   </motion.div>
                 </div>
 
-                {/* Additional PWA Banner near the bottom */}
-                <div className="max-w-4xl mx-auto bg-gradient-to-br from-earth-green-dark via-earth-green to-natural-dark rounded-3xl p-8 text-white relative overflow-hidden shadow-lg" id="bottom_pwa_banner">
-                  <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full translate-x-12 -translate-y-12 animate-none" />
-                  
-                  <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                    <div className="space-y-3 text-left">
-                      <div className="inline-flex gap-1.5 items-center bg-white/10 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full border border-white/20">
-                        <Sparkles size={11} />
-                        Apto para Dispositivos Android & iOS
-                      </div>
-                      <h3 className="text-3xl font-bold font-serif leading-tight">Homeli en tu teléfono</h3>
-                      <p className="text-xs text-white/80 leading-relaxed max-w-sm">
-                        Instala esta app en tu pantalla de inicio para recibir un acceso directo de baja latencia con funcionalidad offline, velocidad fluida y experiencia nativa.
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-3 justify-start md:justify-end">
-                      <button
-                        onClick={triggerPWAInstall}
-                        className="py-3 px-6 bg-white hover:bg-natural-bg text-natural-dark font-bold rounded-2xl transition shadow-md text-xs flex items-center justify-center gap-2 cursor-pointer"
-                        id="btn_bottom_pwa_install"
-                      >
-                        <Download size={15} className="text-earth-green" />
-                        Instalar Aplicación Ahora
-                      </button>
-
-                      <button
-                        onClick={() => setShowInstallInstructions(true)}
-                        className="py-3 px-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold rounded-2xl transition text-xs flex items-center justify-center gap-1.5 cursor-pointer"
-                        id="btn_bottom_pwa_manual"
-                      >
-                        Ver Guía Práctica
-                      </button>
-                    </div>
-                  </div>
+                {/* Minimalist, striking call-to-action Instalar App Button with pulse effect */}
+                <div className="pt-8 w-full flex justify-center" id="minimalist_pwa_installer_container">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    animate={{
+                      boxShadow: [
+                        "0 4px 6px -1px rgba(197, 168, 92, 0.2), 0 2px 4px -1px rgba(197, 168, 92, 0.1)",
+                        "0 10px 20px -3px rgba(197, 168, 92, 0.45), 0 4px 8px -2px rgba(197, 168, 92, 0.25)",
+                        "0 4px 6px -1px rgba(197, 168, 92, 0.2), 0 2px 4px -1px rgba(197, 168, 92, 0.1)"
+                      ]
+                    }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 2.0,
+                      ease: "easeInOut"
+                    }}
+                    onClick={triggerPWAInstall}
+                    className="py-3 px-8 bg-[#c5a85c] hover:bg-[#b59549] text-white font-extrabold rounded-xl transition-all duration-300 text-xs flex items-center justify-center gap-2 cursor-pointer border border-[#c19a45]/20 shadow-md transform active:scale-95 uppercase tracking-wider"
+                    id="btn_home_llamativo_install"
+                  >
+                    <Download size={15} />
+                    <span>Instalar App</span>
+                  </motion.button>
                 </div>
               </motion.div>
             ) : (
@@ -545,17 +378,8 @@ export default function App() {
         </main>
       </div>
 
-      {/* Footer Area */}
-      <footer className="bg-white border-t border-slate-100 py-6 px-6 mt-12 text-center text-xs text-slate-400" id="footer_area">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p>© 2026 Homeli Inc. Todos los derechos reservados.</p>
-          <div className="flex gap-4">
-            <a href="#" className="hover:text-indigo-600 transition font-medium">Condiciones</a>
-            <a href="#" className="hover:text-indigo-600 transition font-medium">Privacidad</a>
-            <a href="#" className="hover:text-indigo-600 transition font-medium">Soporte Express</a>
-          </div>
-        </div>
-      </footer>
+      {/* Footer Area - Minimalist Empty Spacer for Mobile Padding */}
+      <div className="py-4" id="footer_area"></div>
 
       {/* Dynamic PWA installation modal for IOS and manual steps */}
       <AnimatePresence>
