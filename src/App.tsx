@@ -35,21 +35,94 @@ import {
   ArrowLeft,
   Smartphone,
   ExternalLink,
-  Laptop
+  Laptop,
+  RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
-  // Shared States initialization
-  const [services, setServices] = useState<ServiceRequest[]>(initialServices);
-  const [products, setProducts] = useState<ProductItem[]>(initialProducts);
-  const [orders, setOrders] = useState<SalesOrder[]>(initialOrders);
-  const [logs, setLogs] = useState<SystemLog[]>(initialLogs);
-  const [profiles, setProfiles] = useState<UserProfile[]>(initialProfiles);
+  // Shared States initialization with localStorage persistence
+  const [services, setServices] = useState<ServiceRequest[]>(() => {
+    try {
+      const persisted = localStorage.getItem('homeli_services');
+      return persisted ? JSON.parse(persisted) : initialServices;
+    } catch {
+      return initialServices;
+    }
+  });
 
-  // Navigational & brand States
-  const [activeSection, setActiveSection] = useState<'home' | 'admin' | 'servicios' | 'ventas'>('home');
+  const [products, setProducts] = useState<ProductItem[]>(() => {
+    try {
+      const persisted = localStorage.getItem('homeli_products');
+      return persisted ? JSON.parse(persisted) : initialProducts;
+    } catch {
+      return initialProducts;
+    }
+  });
+
+  const [orders, setOrders] = useState<SalesOrder[]>(() => {
+    try {
+      const persisted = localStorage.getItem('homeli_orders');
+      return persisted ? JSON.parse(persisted) : initialOrders;
+    } catch {
+      return initialOrders;
+    }
+  });
+
+  const [logs, setLogs] = useState<SystemLog[]>(() => {
+    try {
+      const persisted = localStorage.getItem('homeli_logs');
+      return persisted ? JSON.parse(persisted) : initialLogs;
+    } catch {
+      return initialLogs;
+    }
+  });
+
+  const [profiles, setProfiles] = useState<UserProfile[]>(() => {
+    try {
+      const persisted = localStorage.getItem('homeli_profiles');
+      return persisted ? JSON.parse(persisted) : initialProfiles;
+    } catch {
+      return initialProfiles;
+    }
+  });
+
+  // Navigational & brand States with localStorage persistence
+  const [activeSection, setActiveSection] = useState<'home' | 'admin' | 'servicios' | 'ventas'>(() => {
+    try {
+      const persisted = localStorage.getItem('homeli_active_section');
+      return (persisted as 'home' | 'admin' | 'servicios' | 'ventas') || 'home';
+    } catch {
+      return 'home';
+    }
+  });
+
   const [showSplash, setShowSplash] = useState(false);
+
+  // Sync state changes to localStorage
+  useEffect(() => {
+    localStorage.setItem('homeli_services', JSON.stringify(services));
+  }, [services]);
+
+  useEffect(() => {
+    localStorage.setItem('homeli_products', JSON.stringify(products));
+  }, [products]);
+
+  useEffect(() => {
+    localStorage.setItem('homeli_orders', JSON.stringify(orders));
+  }, [orders]);
+
+  useEffect(() => {
+    localStorage.setItem('homeli_logs', JSON.stringify(logs));
+  }, [logs]);
+
+  useEffect(() => {
+    localStorage.setItem('homeli_profiles', JSON.stringify(profiles));
+  }, [profiles]);
+
+  useEffect(() => {
+    localStorage.setItem('homeli_active_section', activeSection);
+  }, [activeSection]);
 
   // Progressive Web App Installation states
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -115,6 +188,19 @@ export default function App() {
 
   const handleAddProduct = (product: ProductItem) => {
     setProducts(prev => [product, ...prev]);
+    onAddLog(`Producto agregado al inventario: ${product.name} en ${product.category}`, 'info');
+  };
+
+  const handleUpdateProduct = (updated: ProductItem) => {
+    setProducts(prev => prev.map(p => p.id === updated.id ? updated : p));
+    onAddLog(`Producto actualizado en inventario: ${updated.name}`, 'info');
+  };
+
+  const handleDeleteProduct = (id: string) => {
+    const p = products.find(prod => prod.id === id);
+    const pName = p ? p.name : id;
+    setProducts(prev => prev.filter(prod => prod.id !== id));
+    onAddLog(`Producto eliminado del inventario: ${pName}`, 'warning');
   };
 
   const handleUpdateOrderStatus = (id: string, status: OrderStatus) => {
@@ -137,6 +223,19 @@ export default function App() {
       // Prompt not active or on iOS, display our high fidelity instructions guide!
       setShowInstallInstructions(true);
     }
+  };
+
+  // Clear all persisted data/cache in localStorage and reload the application
+  const handleClearCache = () => {
+    localStorage.removeItem('homeli_services');
+    localStorage.removeItem('homeli_products');
+    localStorage.removeItem('homeli_orders');
+    localStorage.removeItem('homeli_logs');
+    localStorage.removeItem('homeli_profiles');
+    localStorage.removeItem('homeli_active_section');
+    
+    // Perform hard reload to ensure all static files and memory is completely cleansed
+    window.location.reload();
   };
 
   return (
@@ -273,8 +372,8 @@ export default function App() {
                   </motion.div>
                 </div>
 
-                {/* Minimalist, striking call-to-action Instalar App Button with pulse effect */}
-                <div className="pt-8 w-full flex justify-center" id="minimalist_pwa_installer_container">
+                {/* Minimalist action buttons: PWA Installation and Clear Cache */}
+                <div className="pt-8 w-full flex flex-col sm:flex-row justify-center items-center gap-4" id="minimalist_pwa_installer_container">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -291,11 +390,22 @@ export default function App() {
                       ease: "easeInOut"
                     }}
                     onClick={triggerPWAInstall}
-                    className="py-3 px-8 bg-[#c5a85c] hover:bg-[#b59549] text-white font-extrabold rounded-xl transition-all duration-300 text-xs flex items-center justify-center gap-2 cursor-pointer border border-[#c19a45]/20 shadow-md transform active:scale-95 uppercase tracking-wider"
+                    className="py-3 px-8 bg-[#c5a85c] hover:bg-[#b59549] text-white font-extrabold rounded-xl transition-all duration-300 text-xs flex items-center justify-center gap-2 cursor-pointer border border-[#c19a45]/20 shadow-md transform active:scale-95 uppercase tracking-wider w-full sm:w-auto"
                     id="btn_home_llamativo_install"
                   >
                     <Download size={15} />
                     <span>Instalar App</span>
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleClearCache}
+                    className="py-3 px-8 bg-white hover:bg-slate-50 text-slate-700 font-extrabold rounded-xl transition-all duration-300 text-xs flex items-center justify-center gap-2 cursor-pointer border border-slate-200 shadow-sm transform active:scale-95 uppercase tracking-wider w-full sm:w-auto"
+                    id="btn_home_clear_cache"
+                  >
+                    <RefreshCw size={14} className="text-[#c5a85c]" />
+                    <span>Borrar Caché</span>
                   </motion.button>
                 </div>
               </motion.div>
@@ -338,11 +448,21 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Sub Panel Router - Temporarily rendered as clean empty white containers by user request */}
+                {/* Sub Panel Router - Dynamically rendered based on active section */}
                 {activeSection === 'admin' && (
-                  <div className="min-h-[50vh] bg-white rounded-2xl border border-natural-border/30 shadow-sm flex items-center justify-center p-8" id="admin_blank_placeholder">
-                    <span className="text-sm font-bold text-natural-muted uppercase tracking-wider">Módulo Admin en Blanco</span>
-                  </div>
+                  <AdminSection 
+                    services={services}
+                    products={products}
+                    orders={orders}
+                    logs={logs}
+                    profiles={profiles}
+                    onAddUser={handleAddUser}
+                    onAddLog={onAddLog}
+                    onClearLogs={handleClearLogs}
+                    onAddProduct={handleAddProduct}
+                    onUpdateProduct={handleUpdateProduct}
+                    onDeleteProduct={handleDeleteProduct}
+                  />
                 )}
 
                 {activeSection === 'servicios' && (

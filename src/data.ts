@@ -74,11 +74,12 @@ export const initialServices: ServiceRequest[] = [
 ];
 
 export const initialProducts: ProductItem[] = [
+  // Original products (preserved for historical compatibility with old orders)
   {
     id: 'PROD-001',
     name: 'Kit de Limpieza Multiusos Homeli-Pro',
     sku: 'HML-KIT-01',
-    category: 'Limpieza',
+    category: 'Productos de limpieza',
     price: 349,
     stock: 85,
     salesCount: 142,
@@ -117,6 +118,142 @@ export const initialProducts: ProductItem[] = [
     salesCount: 215,
     description: 'Set de 24 cabezales intercambiables de acero al cromo vanadio. Ideal para reparaciones electrónicas menores e instalación de accesorios del hogar.',
     imageUrl: 'https://images.unsplash.com/photo-1534224039826-c7a0eda0e6b3?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.0.3'
+  },
+
+  // Zapatos Category (6 items)
+  {
+    id: 'SHO-001',
+    name: 'Tenis Deportivos Urbanos Pro',
+    sku: 'HML-ZAP-01',
+    category: 'Zapatos',
+    price: 899,
+    stock: 24,
+    salesCount: 15,
+    description: 'Calzado ergonómico transpirable con suela de amortiguación reforzada, ideal para caminar o actividades deportivas cotidianas.',
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsPlV5u1UOTpXsbHztz8RAntDJ8LeRMTVFaQ&s'
+  },
+  {
+    id: 'SHO-002',
+    name: 'Tacones Elegantes de Dama Premium',
+    sku: 'HML-ZAP-02',
+    category: 'Zapatos',
+    price: 1249,
+    stock: 12,
+    salesCount: 8,
+    description: 'Zapatos de tacón alto de diseño estilizado con plantilla acolchada especial que garantiza comodidad sin perder la elegancia corporativa.',
+    imageUrl: 'https://http2.mlstatic.com/D_NQ_NP_892119-MLM107536539708_032026-O-zapatos-de-tacon-para-dama.webp'
+  },
+  {
+    id: 'SHO-003',
+    name: 'Mocasines Oxford en Piel Noble',
+    sku: 'HML-ZAP-03',
+    category: 'Zapatos',
+    price: 950,
+    stock: 18,
+    salesCount: 12,
+    description: 'Mocasines casuales confeccionados en piel de gran calidad con costuras reforzadas a mano y soporte anatómico interno.',
+    imageUrl: 'https://i5.walmartimages.com/asr/a7f7be61-d437-47e6-9055-38bbf88221a5.3ffac1d7b8ab258d67177a5f64909dd1.jpeg?odnHeight=612&odnWidth=612&odnBg=FFFFFF'
+  },
+  {
+    id: 'SHO-004',
+    name: 'Botas de Trabajo Robustas Protect',
+    sku: 'HML-ZAP-04',
+    category: 'Zapatos',
+    price: 1499,
+    stock: 15,
+    salesCount: 6,
+    description: 'Botas industriales de alta resistencia con puntera protectora reforzada e impermeabilidad garantizada para todo tipo de terreno.',
+    imageUrl: 'https://i5.walmartimages.com/asr/27da81b6-9b11-40f3-8676-e79c776d1cac.b9d1842f0abc1b5ef370ebf33851477e.jpeg?odnHeight=612&odnWidth=612&odnBg=FFFFFF'
+  },
+  {
+    id: 'SHO-005',
+    name: 'Zapatillas Casuales de Lona Retro',
+    sku: 'HML-ZAP-05',
+    category: 'Zapatos',
+    price: 599,
+    stock: 45,
+    salesCount: 34,
+    description: 'Clásicos tenis de lona transpirable con suela vulcanizada de alta durabilidad para un estilo fresco y un andar ultraligero.',
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSuZfJOXBwKruDyOvaXo11a4qhIEnjr-6K-gw&s'
+  },
+  {
+    id: 'SHO-006',
+    name: 'Mocasines Modernos Soft-Fit Flex',
+    sku: 'HML-ZAP-06',
+    category: 'Zapatos',
+    price: 799,
+    stock: 22,
+    salesCount: 19,
+    description: 'Zapatos cómodos de vestir con diseño elástico de fácil calzado, ideales para jornadas extensas de pie.',
+    imageUrl: 'https://img.kwcdn.com/product/Fancyalgo/VirtualModelMatting/0f0fa935ea6bcae5e5f6a25f5f87cf7c.jpg?imageMogr2/auto-orient%7CimageView2/2/w/800/q/70/format/webp'
+  },
+
+  // Productos de limpieza Category (6 items)
+  {
+    id: 'CLN-001',
+    name: 'Detergente Líquido Persil Profesional 5L',
+    sku: 'HML-LIM-01',
+    category: 'Productos de limpieza',
+    price: 289,
+    stock: 35,
+    salesCount: 52,
+    description: 'Detergente premium alemán súper concentrado para lavado profundo que protege la intensidad del color y remueve manchas desde la primera lavada.',
+    imageUrl: 'https://www.jadyquimica.com/wp-content/uploads/2023/08/Detergente-liquido-persil-color-pina-de-5-1-600x600.jpg'
+  },
+  {
+    id: 'CLN-002',
+    name: 'Suavizante de Telas Concentrado Care',
+    sku: 'HML-LIM-02',
+    category: 'Productos de limpieza',
+    price: 125,
+    stock: 40,
+    salesCount: 41,
+    description: 'Suavizante intensivo que reduce la estática, facilita el planchado y deja una fragancia de larga duración sumamente fresca.',
+    imageUrl: 'https://images-na.ssl-images-amazon.com/images/I/51cqPQUFOHL._AC_UL375_SR375,375_.jpg'
+  },
+  {
+    id: 'CLN-003',
+    name: 'Windex Limpiador de Vidrios original',
+    sku: 'HML-LIM-03',
+    category: 'Productos de limpieza',
+    price: 89,
+    stock: 55,
+    salesCount: 78,
+    description: 'Limpiador de ventanas con fórmula de brillo reluciente sin dejar rayas ni residuos empañados en vidrios, espejos o vitrinas.',
+    imageUrl: 'https://www.bodegamesones.mx/cdn/shop/files/WINDEXVIDRIOSfrente1353322795Bn.jpg?v=1766439822'
+  },
+  {
+    id: 'CLN-004',
+    name: 'Axion Lavatrastes Líquido Limón',
+    sku: 'HML-LIM-04',
+    category: 'Productos de limpieza',
+    price: 45,
+    stock: 90,
+    salesCount: 120,
+    description: 'Arrancagrasa poderoso con extracto natural de limón que elimina los malos olores y desinfecta profundamente la vajilla.',
+    imageUrl: 'https://www.desechablesmonterrey.com/wp-content/uploads/2014/02/Axion.jpg'
+  },
+  {
+    id: 'CLN-005',
+    name: 'Cloro Desinfectante Multiusos Premium',
+    sku: 'HML-LIM-05',
+    category: 'Productos de limpieza',
+    price: 65,
+    stock: 48,
+    salesCount: 65,
+    description: 'Agente desinfectante concentrado para eliminar el 99.9% de gérmenes domésticos en pisos, baños y áreas comunes.',
+    imageUrl: 'https://ecotropa.mx/cdn/shop/products/BRL_0524fa1b-f52c-48c0-b5d8-5b9713eca802_700x.jpg?v=1667955081'
+  },
+  {
+    id: 'CLN-006',
+    name: 'Fabuloso Multiusos Frescura Lavanda 2L',
+    sku: 'HML-LIM-06',
+    category: 'Productos de limpieza',
+    price: 55,
+    stock: 60,
+    salesCount: 95,
+    description: 'Limpiador líquido aromatizante universal de pisos que neutraliza olores desagradables y brinda un aroma relajante de lavanda.',
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTuB_85xkc8sC17WUP9lqDuIEY-KbX-tOJHqg&s'
   }
 ];
 

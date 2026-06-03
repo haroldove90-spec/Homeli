@@ -249,17 +249,8 @@ export default function VentasSection({
 
   // Sync catalog updates
   useEffect(() => {
-    const mergedList = [...STATIC_STORE_PRODUCTS];
-    products.forEach(p => {
-      if (!mergedList.some(item => item.id === p.id || item.name.toLowerCase() === p.name.toLowerCase())) {
-        let cat = p.category;
-        if (cat === 'Limpieza' || cat === 'Limpieza Integral') {
-          cat = 'Productos de limpieza';
-        }
-        mergedList.push({ ...p, category: cat });
-      }
-    });
-    setStoreCatalog(mergedList);
+    const relevant = products.filter(p => p.category === 'Productos de limpieza' || p.category === 'Zapatos');
+    setStoreCatalog(relevant);
   }, [products]);
 
   // Sync profile fields initially
