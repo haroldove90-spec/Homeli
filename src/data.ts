@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ServiceRequest, ProductItem, SalesOrder, SystemLog, UserProfile } from './types';
+import { ServiceRequest, ProductItem, SalesOrder, SystemLog, UserProfile, CourierProfile } from './types';
 
 export const initialServices: ServiceRequest[] = [
   {
@@ -367,5 +367,63 @@ export const initialProfiles: UserProfile[] = [
     role: 'Servicios',
     status: 'Inactivo',
     lastActive: 'Ayer'
+  }
+];
+
+export const initialCouriers: CourierProfile[] = [
+  {
+    id: 'MSJ-001',
+    name: 'Carlos Velázquez',
+    email: 'carlos.v_reparto@gmail.com',
+    phone: '55-4321-9876',
+    vehicle: 'motocicleta',
+    vehiclePlate: 'MX-943-BB',
+    photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=60',
+    status: 'active',
+    documents: {
+      ine: 'INE_Carlos_Velazquez_Frente.pdf',
+      license: 'Licencia_Motociclista_Vigente.pdf',
+      vehicleDoc: 'Tarjeta_Circulacion_Moto.pdf'
+    },
+    rating: 4.9,
+    completedDeliveries: 42,
+    earnings: 2850,
+    lastActive: 'Hace 5 minutos'
+  },
+  {
+    id: 'MSJ-002',
+    name: 'Sofía Luna',
+    email: 'sofia.luna_delivery@outlook.com',
+    phone: '55-3210-7654',
+    vehicle: 'automóvil',
+    vehiclePlate: 'E-45-AAA',
+    photoUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=60',
+    status: 'pending',
+    documents: {
+      ine: 'INE_Sofia_Luna_2026.pdf',
+      license: 'Licencia_A_Chofer_Sofia.pdf',
+      vehicleDoc: 'Tenencia_Auto_2026.pdf'
+    },
+    rating: 4.5,
+    completedDeliveries: 0,
+    earnings: 0,
+    lastActive: 'Ayer'
+  },
+  {
+    id: 'MSJ-003',
+    name: 'Ramon Martínez',
+    email: 'ramon.repartoshomeli@gmail.com',
+    phone: '55-1209-3487',
+    vehicle: 'bicicleta',
+    photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=60',
+    status: 'pending',
+    documents: {
+      ine: 'INE_Ramon_Mtz_Doc.jpg',
+      license: 'No_Aplica_Bici.pdf'
+    },
+    rating: 4.7,
+    completedDeliveries: 15,
+    earnings: 980,
+    lastActive: 'Hace 3 horas'
   }
 ];

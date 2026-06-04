@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { ServiceRequest, ProductItem, SalesOrder, SystemLog, UserProfile } from '../types';
+import { ServiceRequest, ProductItem, SalesOrder, SystemLog, UserProfile, CourierProfile, DeliveryStatus } from '../types';
 import { 
   Users, 
   Terminal, 
@@ -30,7 +30,12 @@ import {
   PlusCircle,
   Layers3,
   Award,
-  ChevronRight
+  ChevronRight,
+  Calendar,
+  UserCheck,
+  FileText,
+  Check,
+  Bike
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -40,12 +45,15 @@ interface AdminSectionProps {
   orders: SalesOrder[];
   logs: SystemLog[];
   profiles: UserProfile[];
+  couriers: CourierProfile[];
   onAddUser: (user: UserProfile) => void;
   onAddLog: (action: string, severity: 'info' | 'warning' | 'critical') => void;
   onClearLogs: () => void;
   onAddProduct: (product: ProductItem) => void;
   onUpdateProduct: (product: ProductItem) => void;
   onDeleteProduct: (id: string) => void;
+  onUpdateCourier?: (courier: CourierProfile) => void;
+  onUpdateOrderDelivery?: (orderId: string, status: DeliveryStatus, courierId?: string) => void;
   bannerBg?: string;
   bannerTitle?: string;
   bannerTag?: string;
@@ -53,8 +61,8 @@ interface AdminSectionProps {
   bannerOverlayCol?: string;
   bannerOverlayOpacity?: number;
   onUpdateBannerSettings?: (bg: string, title: string, tag: string, desc: string, overlayCol: string, overlayOpacity: number) => void;
-  activeTab?: 'metrics' | 'ecommerce';
-  onChangeTab?: (tab: 'metrics' | 'ecommerce') => void;
+  activeTab?: 'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros';
+  onChangeTab?: (tab: 'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros') => void;
 }
 
 export default function AdminSection({
@@ -63,12 +71,15 @@ export default function AdminSection({
   orders,
   logs,
   profiles,
+  couriers,
   onAddUser,
   onAddLog,
   onClearLogs,
   onAddProduct,
   onUpdateProduct,
   onDeleteProduct,
+  onUpdateCourier,
+  onUpdateOrderDelivery,
   bannerBg = '',
   bannerTitle = 'Catálogo Exclusivo Atelier',
   bannerTag = 'ATELIER BOUTIQUE',
@@ -116,8 +127,8 @@ export default function AdminSection({
     setLocalBannerOverlayOpacity(bannerOverlayOpacity);
   }, [bannerOverlayOpacity]);
 
-  // Navigation tabs: 'metrics' | 'ecommerce' (with 'operational' deactivated as per request)
-  const [localActiveTab, setLocalActiveTab] = useState<'metrics' | 'ecommerce'>('metrics');
+  // Navigation tabs: 'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros'
+  const [localActiveTab, setLocalActiveTab] = useState<'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros'>('metrics');
   const activeTab = propActiveTab || localActiveTab;
   const setActiveTab = propOnChangeTab || setLocalActiveTab;
 
@@ -161,6 +172,13 @@ export default function AdminSection({
   // Selector for uploading files vs writing link
   const [prodImageUploadType, setProdImageUploadType] = useState<'url' | 'upload'>('url');
   const [bannerImageUploadType, setBannerImageUploadType] = useState<'url' | 'upload'>('url');
+
+  // Delivery logistics and courier admin states
+  const [selectedAgendaDay, setSelectedAgendaDay] = useState<string>('all');
+  const [deliverySearch, setDeliverySearch] = useState('');
+  const [selectedCourierAdmin, setSelectedCourierAdmin] = useState<CourierProfile | null>(null);
+  const [editPlate, setEditPlate] = useState('');
+  const [editPhone, setEditPhone] = useState('');
 
   const handleSaveBannerSettings = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1280,6 +1298,516 @@ export default function AdminSection({
               </span>
               <span>Servidor Local Homeli Base</span>
             </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ================================== TAB 3: ENTREGAS Y AGENDA ================================== */}
+      {activeTab === 'entrega_agenda' && (
+        <motion.div
+          key="agenda_tab"
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-6"
+          id="admin_deliveries_agenda_wrapper"
+        >
+          {/* Header Description card */}
+          <div className="bg-white border border-slate-200 rounded-3xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shadow-xs">
+            <div>
+              <p className="text-[10px] font-mono font-black text-[#c5a85c] uppercase tracking-wider">Logística de Despacho</p>
+              <h3 className="text-lg font-serif font-black text-slate-800">Planificador & Agenda de Envíos</h3>
+              <p className="text-xs text-slate-500 mt-1">Supervisa y agenda los envíos de e-commerce. Asigna un pedido a un chofer específico o lánzalo a la bolsa pública de reparto.</p>
+            </div>
+            
+            {/* Quick stats mini badges */}
+            <div className="flex gap-2">
+              <span className="px-3 py-1.5 bg-yellow-50 text-amber-800 text-[11px] font-black rounded-lg border border-yellow-200">
+                📦 {orders.filter(o => o.deliveryStatus === 'launched').length} Lanzados
+              </span>
+              <span className="px-3 py-1.5 bg-indigo-50 text-indigo-800 text-[11px] font-black rounded-lg border border-indigo-200">
+                🛵 {orders.filter(o => ['accepted', 'collected', 'in_transit', 'with_customer'].includes(o.deliveryStatus || '')).length} En ruta
+              </span>
+            </div>
+          </div>
+
+          {/* SINC-AGENDA: VISUAL 7-DAY CALENDAR GRID */}
+          <div className="bg-white border border-slate-200 rounded-3xl p-5 space-y-3 shadow-xs">
+            <div className="flex justify-between items-center border-b border-slate-50 pb-2">
+              <h4 className="text-xs font-black uppercase text-slate-500 tracking-wider">📅 Agenda de Envíos Programados (Sincronizado)</h4>
+              <span className="text-[10px] text-slate-400 font-bold">Filtra por día de entrega</span>
+            </div>
+
+            <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+              {/* Option: Todos */}
+              <button
+                onClick={() => setSelectedAgendaDay('all')}
+                className={`p-3 rounded-2xl border text-center transition flex flex-col justify-between items-center cursor-pointer ${
+                  selectedAgendaDay === 'all' 
+                    ? 'border-[#c5a85c] bg-amber-50/20 text-[#a38439] font-black' 
+                    : 'border-slate-150 bg-white text-slate-650 font-bold hover:bg-slate-50'
+                }`}
+              >
+                <span className="text-xs">Todos</span>
+                <span className="text-lg pt-1 font-black">📅</span>
+                <span className="text-[9px] mt-1 bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-black">
+                  {orders.length}
+                </span>
+              </button>
+
+              {/* 7 Days calendar render */}
+              {[
+                { dateStr: '2026-06-04', dayName: 'Jue', dayNum: '04', fullLabel: 'Hoy Jueves 4' },
+                { dateStr: '2026-06-05', dayName: 'Vie', dayNum: '05', fullLabel: 'Mañana Viernes 5' },
+                { dateStr: '2026-06-06', dayName: 'Sáb', dayNum: '06', fullLabel: 'Sábado 6' },
+                { dateStr: '2026-06-07', dayName: 'Dom', dayNum: '07', fullLabel: 'Domingo 7' },
+                { dateStr: '2026-06-08', dayName: 'Lun', dayNum: '08', fullLabel: 'Lunes 8' },
+                { dateStr: '2026-06-09', dayName: 'Mar', dayNum: '09', fullLabel: 'Martes 9' },
+                { dateStr: '2026-06-10', dayName: 'Mié', dayNum: '10', fullLabel: 'Miércoles 10' },
+              ].map((day) => {
+                // Count orders for this scheduled day
+                // Match order dynamic dateStr with deliveryDate
+                const orderCount = orders.filter(o => o.deliveryDate === day.dateStr).length;
+
+                return (
+                  <button
+                    key={day.dateStr}
+                    onClick={() => setSelectedAgendaDay(day.dateStr)}
+                    className={`p-3 rounded-2xl border text-center transition flex flex-col justify-between items-center cursor-pointer ${
+                      selectedAgendaDay === day.dateStr 
+                        ? 'border-[#c5a85c] bg-amber-50/20 text-[#a38439] font-black' 
+                        : 'border-slate-150 bg-white text-slate-650 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span className="text-[10px] uppercase font-bold text-slate-400">{day.dayName}</span>
+                    <span className="text-base pt-0.5 font-bold text-slate-850">{day.dayNum}</span>
+                    <span className={`text-[8px] mt-1.5 px-1 py-0.5 rounded font-black ${
+                      orderCount > 0 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-400'
+                    }`}>
+                      {orderCount} envíos
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ACTIVE DISPATCH LIST TABLE */}
+          <div className="bg-white border border-slate-200 rounded-3xl p-5 space-y-4 shadow-xs">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-50 pb-3">
+              <div>
+                <h4 className="text-sm font-black text-slate-800 uppercase tracking-tight">Despacho de Pedidos Activos</h4>
+                <p className="text-xs text-slate-400 font-semibold pt-0.5">
+                  Mostrando envíos para: <strong className="text-slate-700">{selectedAgendaDay === 'all' ? 'Historial Completo' : `Día: ${selectedAgendaDay}`}</strong>
+                </p>
+              </div>
+
+              {/* Search filter input */}
+              <div className="relative w-full sm:w-64">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <Search size={14} />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Buscar por cliente u orden..."
+                  value={deliverySearch}
+                  onChange={e => setDeliverySearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-800 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Render table or cards */}
+            {orders.filter(o => {
+              const matchedSearch = o.customerName.toLowerCase().includes(deliverySearch.toLowerCase()) || o.id.toLowerCase().includes(deliverySearch.toLowerCase());
+              const matchedDay = selectedAgendaDay === 'all' || o.deliveryDate === selectedAgendaDay;
+              return matchedSearch && matchedDay;
+            }).length === 0 ? (
+              <div className="p-8 text-center border border-dashed border-slate-200 rounded-2xl text-slate-450 text-xs">
+                <p className="font-bold text-slate-600">Ningún pedido programado para esta selección.</p>
+                <p className="text-[11px] text-slate-400 pt-1">
+                  Cambia de día o crea una nueva compra en el Checkout asignando una fecha especial.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {orders
+                  .filter(o => {
+                    const matchedSearch = o.customerName.toLowerCase().includes(deliverySearch.toLowerCase()) || o.id.toLowerCase().includes(deliverySearch.toLowerCase());
+                    const matchedDay = selectedAgendaDay === 'all' || o.deliveryDate === selectedAgendaDay;
+                    return matchedSearch && matchedDay;
+                  })
+                  .map((order) => {
+                    // Find assigned courier if any
+                    const assignedCourier = couriers.find(c => c.id === order.deliveryCourierId);
+
+                    return (
+                      <div 
+                        key={order.id} 
+                        className={`p-4 rounded-2xl border transition hover:shadow-xs space-y-4 bg-white ${
+                          order.deliveryStatus === 'delivered' ? 'border-green-100 bg-green-50/5' : 
+                          order.deliveryStatus === 'launched' ? 'border-amber-200 bg-amber-50/5 animate-pulse' :
+                          'border-slate-200'
+                        }`}
+                      >
+                        {/* Title Row */}
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 font-mono">ID: {order.id}</span>
+                            <h5 className="text-sm font-extrabold text-slate-800 pt-0.5">{order.customerName}</h5>
+                            <p className="text-[10px] text-slate-400 font-medium">Llegada: {order.deliveryDate ? `Programado (${order.deliveryDate})` : 'Día siguiente (Sincronizado)'}</p>
+                          </div>
+
+                          <div className="text-right">
+                            <span className={`px-2 py-0.5 rounded text-[9.5px] font-black uppercase tracking-wide inline-block ${
+                              order.deliveryStatus === 'delivered' ? 'bg-green-100 text-green-800' :
+                              order.deliveryStatus === 'launched' ? 'bg-amber-100 text-amber-800 animate-pulse' :
+                              order.deliveryCourierId ? 'bg-indigo-100 text-indigo-900 border border-indigo-250' : 'bg-slate-100 text-slate-600'
+                            }`}>
+                              {order.deliveryStatus === 'delivered' ? '✓ Entregado' :
+                               order.deliveryStatus === 'launched' ? '🌎 Público' :
+                               order.deliveryCourierId ? 'Asignado' : 'Sin Despegar'}
+                            </span>
+                            <p className="text-[10px] font-black text-[#c5a85c] pt-1">${order.total.toLocaleString()} MXN</p>
+                          </div>
+                        </div>
+
+                        {/* Order Items description */}
+                        <div className="p-2.5 bg-slate-50 rounded-xl text-[11px] text-slate-650 flex flex-col gap-1 font-semibold">
+                          <p className="text-[9px] font-black uppercase text-slate-400">Canasta de Compra</p>
+                          <p className="truncate text-slate-700">{order.productNames.join(', ')}</p>
+                        </div>
+
+                        {/* Assignment Details */}
+                        <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-2 text-xs">
+                          <div className="flex justify-between items-center leading-none">
+                            <span className="text-[10px] font-extrabold text-slate-400 uppercase">Vehículo & Repartidor</span>
+                            <span className="text-[10px] text-[#c5a85c] font-black">
+                              {order.deliveryStatus ? order.deliveryStatus.toUpperCase() : 'NO DESPACHADO'}
+                            </span>
+                          </div>
+
+                          {assignedCourier ? (
+                            <div className="flex items-center gap-2 pt-1">
+                              <img 
+                                src={assignedCourier.photoUrl} 
+                                alt={assignedCourier.name} 
+                                className="w-8 h-8 rounded-full object-cover border border-slate-200"
+                                referrerPolicy="no-referrer"
+                              />
+                              <div>
+                                <p className="font-extrabold text-slate-805 leading-none">{assignedCourier.name}</p>
+                                <p className="text-[9.5px] text-slate-405 font-mono capitalize mt-1">Cel: {assignedCourier.phone}</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-[11px] text-slate-500 italic pt-1">Ningún repartidor se ha hecho cargo de esta entrega.</p>
+                          )}
+                        </div>
+
+                        {/* Logistics Actions (Asignar, Lanzar, Overrule) */}
+                        <div className="space-y-2 pt-1 border-t border-slate-100">
+                          
+                          {/* 1. ASSIGN Dropdown selection */}
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-black text-slate-400 uppercase block tracking-wider">Asignar Repartidor Específico</label>
+                            
+                            <select
+                              value={order.deliveryCourierId || ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val && onUpdateOrderDelivery) {
+                                  onUpdateOrderDelivery(order.id, 'assigned', val);
+                                  onAddLog(`Se asignó manualmente el pedido ${order.id} al repartidor ${couriers.find(c => c.id === val)?.name}`, 'info');
+                                  showToast('Repartidor asignado correctamente', 'success');
+                                }
+                              }}
+                              className="w-full text-xs font-bold p-2 border border-slate-200 rounded-lg outline-none bg-white text-slate-808"
+                            >
+                              <option value="">-- Seleccionar de la flotilla autorizada --</option>
+                              {couriers.filter(c => c.status === 'active').map(c => (
+                                <option key={c.id} value={c.id}>{c.name} ({c.vehicle.toUpperCase()})</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* 2. LAUNCH / LANZAR Button & OVERRULES */}
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                if (onUpdateOrderDelivery) {
+                                  onUpdateOrderDelivery(order.id, 'launched', '');
+                                  onAddLog(`Se liberó el pedido ${order.id} para reparto público`, 'warning');
+                                  showToast('¡Pedido lanzado a la bolsa pública de reparto éxitosamente!', 'info');
+                                }
+                              }}
+                              className="flex-1 py-1.5 border border-[#c19a45]/30 hover:bg-[#c5a85c]/10 text-[#a38439] text-[10px] font-black uppercase rounded-lg transition text-center cursor-pointer shadow-2xs"
+                            >
+                              🚀 Lanzar Pedido al Aire
+                            </button>
+
+                            {/* Overrule Step changer dropdown */}
+                            <select
+                              value={order.deliveryStatus || ''}
+                              onChange={(e) => {
+                                const statusVal = e.target.value as any;
+                                if (statusVal && onUpdateOrderDelivery) {
+                                  onUpdateOrderDelivery(order.id, statusVal, order.deliveryCourierId);
+                                  showToast(`Estatus modificado manualmente: ${statusVal}`, 'info');
+                                }
+                              }}
+                              className="w-24 text-[10px] uppercase font-black bg-slate-50 border border-slate-200 text-slate-650 px-2 rounded-lg outline-none cursor-pointer"
+                            >
+                              <option value="">Estatus...</option>
+                              <option value="launched">launched</option>
+                              <option value="accepted">accepted</option>
+                              <option value="collected">collected</option>
+                              <option value="in_transit">in_transit</option>
+                              <option value="with_customer">with_customer</option>
+                              <option value="delivered">delivered</option>
+                            </select>
+                          </div>
+
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+
+      {/* ================================== TAB 4: GESTION DE MENSAJEROS ================================== */}
+      {activeTab === 'entrega_mensajeros' && (
+        <motion.div
+          key="couriers_management_tab"
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+          id="admin_couriers_wrapper"
+        >
+          {/* LEFT AREA: REPARTIDORES LIST (2/3 width on desktop) */}
+          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-5 space-y-4 shadow-xs text-left">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-50 pb-3">
+              <div>
+                <h3 className="text-base font-serif font-black text-slate-800">Flotilla de Reparto Atelier</h3>
+                <p className="text-xs text-slate-500 mt-1">Supervisa solicitudes, valida expedientes con identificaciones, edita placas o teléfonos, y autoriza choferes.</p>
+              </div>
+
+              <div className="text-right">
+                <span className="px-2.5 py-1 bg-amber-50 text-[#a38439] rounded-lg font-black text-xs border border-[#c5a85c]/30">
+                  👥 Flota: {couriers.length} choferes
+                </span>
+              </div>
+            </div>
+
+            {/* Couriers Grid rendering */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {couriers.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => {
+                    setSelectedCourierAdmin(c);
+                    setEditPlate(c.vehiclePlate || '');
+                    setEditPhone(c.phone || '');
+                  }}
+                  className={`w-full p-4 rounded-2xl border text-left flex justify-between items-start transition cursor-pointer hover:bg-slate-50 ${
+                    selectedCourierAdmin?.id === c.id ? 'border-[#c5a85c] bg-[#c5a85c]/5 shadow-xs' : 'border-slate-150 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <img 
+                        src={c.photoUrl} 
+                        alt={c.name} 
+                        className="w-12 h-12 rounded-xl object-cover border border-slate-200"
+                        referrerPolicy="no-referrer"
+                      />
+                      <span className={`absolute bottom-[-2px] right-[-2px] w-3 h-3 border-2 border-white rounded-full ${
+                        c.status === 'active' ? 'bg-green-500' : 'bg-yellow-500 animate-pulse'
+                      }`} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-slate-800 leading-tight">{c.name}</h4>
+                      <p className="text-[10px] text-slate-500 font-mono capitalize pt-0.5">{c.vehicle} • {c.vehiclePlate || 'BICI'}</p>
+                      <p className="text-[9px] text-slate-400 font-bold mt-1">⭐ {c.rating} • {c.completedDeliveries} entregas</p>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase ${
+                      c.status === 'active' ? 'bg-green-50 text-green-700' :
+                      c.status === 'pending' ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700'
+                    }`}>
+                      {c.status === 'active' ? '✓ Activo' :
+                       c.status === 'pending' ? 'En Revisión' : 'Bloqueado'}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* RIGHT AREA: COURIER ANALYSER & DOCUMENT INSPECT DESK */}
+          <div className="bg-white border border-slate-200 rounded-3xl p-5 space-y-4 shadow-xs text-left">
+            <div className="border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-serif font-black text-slate-900 flex items-center gap-1.5">
+                <UserCheck size={16} className="text-[#c5a85c]" />
+                Expediente de Conductor
+              </h3>
+            </div>
+
+            {!selectedCourierAdmin ? (
+              <div className="p-8 text-center text-slate-400 font-bold border border-dashed border-slate-150 rounded-2xl">
+                <span>Selecciona un repartidor a la izquierda para inspeccionar sus documentos oficiales (INE, Licencia) y autorizarlo.</span>
+              </div>
+            ) : (
+              <div className="space-y-4" id="courier_doc_analyser_card">
+                
+                {/* Visual mini card */}
+                <div className="flex items-center gap-3">
+                  <img 
+                    src={selectedCourierAdmin.photoUrl} 
+                    alt={selectedCourierAdmin.name} 
+                    className="w-12 h-12 rounded-full object-cover border border-slate-100 shadow-2xs"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div>
+                    <h4 className="text-sm font-black text-slate-800 leading-none">{selectedCourierAdmin.name}</h4>
+                    <p className="text-[10px] text-slate-400 font-mono mt-1 pt-0.5 capitalize">Flotilla: {selectedCourierAdmin.vehicle}</p>
+                  </div>
+                </div>
+
+                {/* EDIT FIELDS FORM */}
+                <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-3">
+                  <p className="text-[9.5px] font-black uppercase text-slate-400 border-b border-slate-100 pb-1">✏️ Actualizar Datos Vehiculares</p>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-slate-400 block uppercase">Placas</label>
+                      <input 
+                        type="text" 
+                        value={editPlate}
+                        onChange={e => setEditPlate(e.target.value.toUpperCase())}
+                        placeholder="MX-433-AA"
+                        className="w-full px-2 py-1.5 text-xs font-bold border border-slate-200 rounded-lg outline-none bg-white text-slate-800"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-slate-400 block uppercase">Teléfono</label>
+                      <input 
+                        type="text" 
+                        value={editPhone}
+                        onChange={e => setEditPhone(e.target.value)}
+                        placeholder="55-3211-9233"
+                        className="w-full px-2 py-1.5 text-xs font-bold border border-slate-200 rounded-lg outline-none bg-white text-slate-800"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      if (onUpdateCourier) {
+                        const updated = {
+                          ...selectedCourierAdmin,
+                          vehiclePlate: editPlate.trim() || undefined,
+                          phone: editPhone.trim()
+                        };
+                        onUpdateCourier(updated);
+                        setSelectedCourierAdmin(updated);
+                        onAddLog(`Se modificaron teléfonos/placas de mensajero ${selectedCourierAdmin.name} manualmente`, 'warning');
+                        showToast('Datos de chofer guardados con éxito', 'success');
+                      }
+                    }}
+                    className="w-full py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-black uppercase rounded-lg transition cursor-pointer"
+                  >
+                    Guardar Cambios de Chofer
+                  </button>
+                </div>
+
+                {/* DOCUMENT VIEWER INSPECTOR CARD */}
+                <div className="space-y-3">
+                  <p className="text-[10px] font-black uppercase text-slate-400 leading-none pb-1 font-sans">📁 Análisis de Documentos INE y Licencia</p>
+                  
+                  {/* DOCUMENT 1: INE MOCKUP */}
+                  <div className="p-3 border border-slate-200 rounded-xl space-y-2 bg-gradient-to-br from-slate-50 to-slate-100 relative overflow-hidden" id="mexican_ine_mockup">
+                    <div className="flex justify-between items-center text-[10px] font-black border-b border-slate-200 pb-1.5 text-indigo-900 leading-none">
+                      <span className="flex items-center gap-1">🆔 IDENTIFICACIÓN / INE MOCKUP</span>
+                      <span className="text-xs">🛡️</span>
+                    </div>
+
+                    <div className="flex gap-2 text-[9px] font-mono text-slate-600 leading-normal">
+                      <div className="w-14 h-16 bg-slate-200 border border-slate-350 rounded flex items-center justify-center text-xs shrink-0 select-none font-bold">
+                        👤 FOTO
+                      </div>
+                      <div className="space-y-0.5">
+                        <p><strong className="text-slate-800">NOMBRE:</strong> {selectedCourierAdmin.name.toUpperCase()}</p>
+                        <p><strong className="text-slate-700">DOMICILIO:</strong> AV. CENTRAL 430, CDMX</p>
+                        <p className="truncate w-36"><strong className="text-slate-705">INE DOC:</strong> {selectedCourierAdmin.documents.ine}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* DOCUMENT 2: LICENCIA MOCKUP */}
+                  <div className="p-3 border border-slate-200 rounded-xl space-y-2 bg-gradient-to-br from-slate-50 to-slate-100 text-xs text-slate-600" id="mexican_licencia_mockup">
+                    <div className="flex justify-between items-center text-[10px] font-black border-b border-slate-150 pb-1 text-emerald-900 font-mono leading-none">
+                      <span>🪪 LICENCIA DE CONDUCIR</span>
+                      <span>✓ VERIFICADA</span>
+                    </div>
+
+                    <div className="text-[9.5px] leading-relaxed font-mono space-y-1 text-slate-600">
+                      <p><strong className="text-slate-800 uppercase font-bold">TIPO:</strong> Chofer Particular Clase A</p>
+                      <p><strong className="text-slate-800 uppercase font-bold">LIC-NUM:</strong> LN-{selectedCourierAdmin.id.replace('MSJ-', 'MX842')}</p>
+                      <p className="truncate w-44"><strong className="text-slate-800 uppercase font-bold">ARCHIVO:</strong> {selectedCourierAdmin.documents.license}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* APPROVE / REJECT AUTHORIZATION TRIGGER BUTTONS */}
+                <div className="space-y-2 pt-2 border-t border-slate-100">
+                  <div className="flex gap-2">
+                    {selectedCourierAdmin.status !== 'active' ? (
+                      <button
+                        onClick={() => {
+                          if (onUpdateCourier) {
+                            const updated = { ...selectedCourierAdmin, status: 'active' as const };
+                            onUpdateCourier(updated);
+                            setSelectedCourierAdmin(updated);
+                            onAddLog(`El administrador felipe autorizó al mensajero ${selectedCourierAdmin.name} como REPARTIDOR OFICIAL`, 'info');
+                            showToast(`¡Conductor ${selectedCourierAdmin.name} AUTORIZADO! Ahora puede recibir despachos`, 'success');
+                          }
+                        }}
+                        className="flex-1 py-2.5 bg-[#c5a85c] hover:bg-[#b59549] text-white text-xs font-black uppercase tracking-wider rounded-lg transition text-center cursor-pointer shadow-xs"
+                      >
+                        ✓ Autorizar Repartidor
+                      </button>
+                    ) : (
+                      <div className="flex-1 py-2 bg-green-50 text-green-800 text-xs font-black rounded-lg uppercase tracking-wider text-center flex items-center justify-center gap-1">
+                        <span>✓ Repartidor Autorizado</span>
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() => {
+                        if (confirm(`¿Estás seguro de declinar la solicitud de ${selectedCourierAdmin.name}? No podrá ingresar al dashboard de entregas.`)) {
+                          if (onUpdateCourier) {
+                            const updated = { ...selectedCourierAdmin, status: 'rejected' as const };
+                            onUpdateCourier(updated);
+                            setSelectedCourierAdmin(updated);
+                            onAddLog(`Se declinó la solicitud del mensajero ${selectedCourierAdmin.name}`, 'warning');
+                            showToast('Solicitud rechazada', 'danger');
+                          }
+                        }
+                      }}
+                      className="py-2.5 px-3 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold rounded-lg transition cursor-pointer"
+                    >
+                      Declinar
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            )}
           </div>
         </motion.div>
       )}

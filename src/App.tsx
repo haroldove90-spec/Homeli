@@ -9,7 +9,8 @@ import {
   initialProducts, 
   initialOrders, 
   initialLogs, 
-  initialProfiles 
+  initialProfiles,
+  initialCouriers
 } from './data';
 import { 
   ServiceRequest, 
@@ -18,11 +19,14 @@ import {
   SystemLog, 
   UserProfile, 
   ServiceStatus, 
-  OrderStatus 
+  OrderStatus,
+  CourierProfile,
+  DeliveryStatus
 } from './types';
 import AdminSection from './components/AdminSection';
 import ServiciosSection from './components/ServiciosSection';
 import VentasSection from './components/VentasSection';
+import MensajeriaSection from './components/MensajeriaSection';
 import { 
   ShieldAlert, 
   Wrench, 
@@ -37,7 +41,9 @@ import {
   ExternalLink,
   Laptop,
   RefreshCw,
-  Menu
+  Menu,
+  Bike,
+  Calendar
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -91,25 +97,34 @@ export default function App() {
     }
   });
 
+  const [couriers, setCouriers] = useState<CourierProfile[]>(() => {
+    try {
+      const persisted = localStorage.getItem('homeli_couriers');
+      return persisted ? JSON.parse(persisted) : initialCouriers;
+    } catch {
+      return initialCouriers;
+    }
+  });
+
   // Navigational & brand States with localStorage persistence and URL tracking
-  const [activeSection, setActiveSection] = useState<'home' | 'admin' | 'servicios' | 'ventas'>(() => {
+  const [activeSection, setActiveSection] = useState<'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria'>(() => {
     try {
       // Prioritize localStorage so that refreshing the browser maintains the exact current view/session robustly
       const persisted = localStorage.getItem('homeli_active_section');
-      if (persisted && ['home', 'admin', 'servicios', 'ventas'].includes(persisted)) {
-        return persisted as 'home' | 'admin' | 'servicios' | 'ventas';
+      if (persisted && ['home', 'admin', 'servicios', 'ventas', 'mensajeria'].includes(persisted)) {
+        return persisted as 'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria';
       }
 
       // Fall back to URL search parameters or Hash to enable initial direct deep-linking
       const urlParams = new URL(window.location.href);
       const sectionParam = urlParams.searchParams.get('section') || urlParams.searchParams.get('rol');
-      if (sectionParam && ['home', 'admin', 'servicios', 'ventas'].includes(sectionParam)) {
-        return sectionParam as 'home' | 'admin' | 'servicios' | 'ventas';
+      if (sectionParam && ['home', 'admin', 'servicios', 'ventas', 'mensajeria'].includes(sectionParam)) {
+        return sectionParam as 'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria';
       }
 
       const hashParam = urlParams.hash.replace('#', '').toLowerCase();
-      if (hashParam && ['home', 'admin', 'servicios', 'ventas'].includes(hashParam)) {
-        return hashParam as 'home' | 'admin' | 'servicios' | 'ventas';
+      if (hashParam && ['home', 'admin', 'servicios', 'ventas', 'mensajeria'].includes(hashParam)) {
+        return hashParam as 'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria';
       }
 
       return 'home';
@@ -121,10 +136,10 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(false);
 
   // States to control active admin module via header hamburger dropdown with localStorage persistence
-  const [adminActiveTab, setAdminActiveTab] = useState<'metrics' | 'ecommerce'>(() => {
+  const [adminActiveTab, setAdminActiveTab] = useState<'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros'>(() => {
     try {
       const persisted = localStorage.getItem('homeli_admin_active_tab');
-      return (persisted as 'metrics' | 'ecommerce') || 'metrics';
+      return (persisted as 'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros') || 'metrics';
     } catch {
       return 'metrics';
     }
@@ -172,6 +187,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('homeli_profiles', JSON.stringify(profiles));
   }, [profiles]);
+
+  useEffect(() => {
+    localStorage.setItem('homeli_couriers', JSON.stringify(couriers));
+  }, [couriers]);
 
   useEffect(() => {
     localStorage.setItem('homeli_active_section', activeSection);
@@ -296,6 +315,29 @@ export default function App() {
     onAddLog(`Estado de orden comercial ${id} modificado a: ${status.toUpperCase()}`, 'info');
   };
 
+  const handleUpdateCourier = (updated: CourierProfile) => {
+    setCouriers(prev => prev.map(c => c.id === updated.id ? updated : c));
+  };
+
+  const handleUpdateOrderDelivery = (id: string, deliveryStatus: DeliveryStatus, courierId?: string) => {
+    setOrders(prev => prev.map(o => {
+      if (o.id === id) {
+        const u = { ...o, deliveryStatus };
+        if (courierId !== undefined) {
+          u.deliveryCourierId = courierId;
+        }
+        // Link with SalesOrder standard order status
+        if (deliveryStatus === 'delivered') {
+          u.status = 'entregado';
+        } else if (['accepted', 'collected', 'in_transit', 'with_customer'].includes(deliveryStatus)) {
+          u.status = 'enviado';
+        }
+        return u;
+      }
+      return o;
+    }));
+  };
+
   // Trigger Native browser PWA install steps
   const triggerPWAInstall = async () => {
     if (deferredPrompt) {
@@ -320,6 +362,8 @@ export default function App() {
     localStorage.removeItem('homeli_orders');
     localStorage.removeItem('homeli_logs');
     localStorage.removeItem('homeli_profiles');
+    localStorage.removeItem('homeli_couriers');
+    localStorage.removeItem('homeli_admin_active_tab');
     localStorage.removeItem('homeli_active_section');
     localStorage.removeItem('homeli_banner_bg');
     localStorage.removeItem('homeli_banner_title');
@@ -417,6 +461,42 @@ export default function App() {
                           {adminActiveTab === 'ecommerce' && <span className="w-2 h-2 rounded-full bg-[#c5a85c]" />}
                         </button>
 
+                        <button
+                          onClick={() => {
+                            setAdminActiveTab('entrega_agenda');
+                            setShowAdminHamburgerDropdown(false);
+                          }}
+                          className={`w-full text-left px-3 py-3 rounded-xl text-sm font-black transition flex items-center justify-between cursor-pointer ${
+                            adminActiveTab === 'entrega_agenda'
+                              ? 'bg-[#c5a85c]/10 text-[#a38439]'
+                              : 'text-slate-705 hover:bg-slate-50 hover:text-slate-900'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2">
+                            <span className="text-base">📅</span>
+                            <span>Entregas y Agenda</span>
+                          </span>
+                          {adminActiveTab === 'entrega_agenda' && <span className="w-2 h-2 rounded-full bg-[#c5a85c]" />}
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setAdminActiveTab('entrega_mensajeros');
+                            setShowAdminHamburgerDropdown(false);
+                          }}
+                          className={`w-full text-left px-3 py-3 rounded-xl text-sm font-black transition flex items-center justify-between cursor-pointer ${
+                            adminActiveTab === 'entrega_mensajeros'
+                              ? 'bg-[#c5a85c]/10 text-[#a38439]'
+                              : 'text-slate-705 hover:bg-slate-50 hover:text-slate-900'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2">
+                            <span className="text-base">👥</span>
+                            <span>Gestión de Mensajeros</span>
+                          </span>
+                          {adminActiveTab === 'entrega_mensajeros' && <span className="w-2 h-2 rounded-full bg-[#c5a85c]" />}
+                        </button>
+
                         <div className="border-t border-slate-100 my-1 pt-1.5">
                           <button
                             onClick={() => {
@@ -464,6 +544,12 @@ export default function App() {
                     >
                       Ventas
                     </button>
+                    <button 
+                      onClick={() => setActiveSection('mensajeria')}
+                      className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'mensajeria' ? 'bg-amber-600 text-white' : 'text-natural-muted hover:text-natural-dark'}`}
+                    >
+                      Mensajería
+                    </button>
                   </div>
                 </>
               )}
@@ -488,13 +574,13 @@ export default function App() {
                   <img 
                     src="https://cossma.com.mx/homeli.jpg" 
                     alt="Homeli Logo" 
-                    className="w-44 sm:w-72 h-auto object-contain block transition-all duration-300 hover:scale-105"
+                    className="w-32 sm:w-72 h-auto object-contain block transition-all duration-300 hover:scale-105"
                     referrerPolicy="no-referrer"
                   />
                 </div>
 
-                {/* The 3 requested entries: Icon in an elegant solid golden block, label exactly underneath */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 max-w-md w-full px-4 justify-items-center" id="three_roles_access_grid">
+                {/* The 4 requested entries: Icon in an elegant solid golden block, label exactly underneath */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-2xl w-full px-4 justify-items-center" id="three_roles_access_grid">
                   {/* Category 1: Admin */}
                   <motion.div
                     whileHover={{ scale: 1.05 }}
@@ -529,7 +615,7 @@ export default function App() {
                     <span className="text-xs sm:text-sm font-bold text-natural-dark select-none mt-1 group-hover:text-[#c5a85c] transition-colors">Servicios</span>
                   </motion.div>
 
-                  {/* Category 3: Ventas (col-span-2 on mobile, centered; standard on desktop/tablet) */}
+                  {/* Category 3: Ventas */}
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -537,13 +623,30 @@ export default function App() {
                       setActiveSection('ventas');
                       onAddLog('Acceso autorizado a Consola de E-commerce y Ventas', 'info');
                     }}
-                    className="col-span-2 sm:col-span-1 justify-self-center flex flex-col items-center gap-2 cursor-pointer group"
+                    className="flex flex-col items-center gap-2 cursor-pointer group"
                     id="access_entry_ventas"
                   >
                     <div className="w-24 h-24 sm:w-28 sm:h-28 bg-[#c5a85c] rounded-2xl flex items-center justify-center text-white shadow-md group-hover:bg-[#b59549] transition-all duration-200">
                       <ShoppingBag size={32} />
                     </div>
                     <span className="text-xs sm:text-sm font-bold text-natural-dark select-none mt-1 group-hover:text-[#c5a85c] transition-colors">Ventas</span>
+                  </motion.div>
+
+                  {/* Category 4: Mensajería */}
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      setActiveSection('mensajeria');
+                      onAddLog('Acceso autorizado a Consola de Reparto y Mensajería', 'info');
+                    }}
+                    className="flex flex-col items-center gap-2 cursor-pointer group"
+                    id="access_entry_mensajeria"
+                  >
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 bg-[#c5a85c] rounded-2xl flex items-center justify-center text-white shadow-md group-hover:bg-[#b59549] transition-all duration-200">
+                      <Bike size={32} />
+                    </div>
+                    <span className="text-xs sm:text-sm font-bold text-natural-dark select-none mt-1 group-hover:text-[#c5a85c] transition-colors">Mensajería</span>
                   </motion.div>
                 </div>
 
@@ -606,7 +709,7 @@ export default function App() {
                       </button>
                       <span>/</span>
                       <span className="text-slate-800 capitalize font-bold font-mono">
-                        {activeSection === 'admin' ? 'Administrador' : activeSection === 'servicios' ? 'Servicios' : 'Ventas Ecommerce'}
+                        {activeSection === 'admin' ? 'Administrador' : activeSection === 'servicios' ? 'Servicios' : activeSection === 'mensajeria' ? 'Mensajería' : 'Ventas Ecommerce'}
                       </span>
                     </div>
 
@@ -631,12 +734,15 @@ export default function App() {
                     orders={orders}
                     logs={logs}
                     profiles={profiles}
+                    couriers={couriers}
                     onAddUser={handleAddUser}
                     onAddLog={onAddLog}
                     onClearLogs={handleClearLogs}
                     onAddProduct={handleAddProduct}
                     onUpdateProduct={handleUpdateProduct}
                     onDeleteProduct={handleDeleteProduct}
+                    onUpdateCourier={handleUpdateCourier}
+                    onUpdateOrderDelivery={handleUpdateOrderDelivery}
                     bannerBg={bannerBg}
                     bannerTitle={bannerTitle}
                     bannerTag={bannerTag}
@@ -653,6 +759,18 @@ export default function App() {
                     }}
                     activeTab={adminActiveTab}
                     onChangeTab={setAdminActiveTab}
+                  />
+                )}
+
+                {activeSection === 'mensajeria' && (
+                  <MensajeriaSection 
+                    orders={orders}
+                    couriers={couriers}
+                    onAddCourier={(newCourier) => setCouriers(prev => [newCourier, ...prev])}
+                    onUpdateCourier={handleUpdateCourier}
+                    onUpdateOrderStatus={(id, deliveryStatus) => handleUpdateOrderDelivery(id, deliveryStatus)}
+                    onAddLog={onAddLog}
+                    onNavigateToHome={() => setActiveSection('home')}
                   />
                 )}
 

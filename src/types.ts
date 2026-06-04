@@ -34,6 +34,8 @@ export interface ProductItem {
   active?: boolean;
 }
 
+export type DeliveryStatus = 'unassigned' | 'launched' | 'assigned' | 'accepted' | 'collected' | 'in_transit' | 'with_customer' | 'delivered';
+
 export interface SalesOrder {
   id: string;
   customerName: string;
@@ -43,13 +45,39 @@ export interface SalesOrder {
   status: OrderStatus;
   itemsCount: number;
   productNames: string[];
+  // Delivery fields
+  deliveryDate?: string;
+  deliveryType?: 'next_day' | 'scheduled';
+  deliveryCourierId?: string;
+  deliveryStatus?: DeliveryStatus;
+  deliveryNotes?: string;
+}
+
+export interface CourierProfile {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  vehicle: 'motocicleta' | 'bicicleta' | 'automóvil' | 'van';
+  vehiclePlate?: string;
+  photoUrl?: string;
+  status: 'pending' | 'active' | 'rejected';
+  documents: {
+    ine: string;
+    license: string;
+    vehicleDoc?: string;
+  };
+  rating?: number;
+  completedDeliveries?: number;
+  earnings?: number;
+  lastActive?: string;
 }
 
 export interface SystemLog {
   id: string;
   timestamp: string;
   actor: string;
-  role: 'Administrador' | 'Servicios' | 'Ventas';
+  role: 'Administrador' | 'Servicios' | 'Ventas' | 'Mensajería';
   action: string;
   severity: 'info' | 'warning' | 'critical';
 }
@@ -58,7 +86,7 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
-  role: 'Administrador' | 'Servicios' | 'Ventas';
+  role: 'Administrador' | 'Servicios' | 'Ventas' | 'Mensajería';
   status: 'Activo' | 'Inactivo';
   lastActive: string;
 }
