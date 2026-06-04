@@ -138,7 +138,7 @@ export default function MensajeriaSection({
 
     setTimeout(() => {
       const newCourierId = `MSJ-${Math.floor(100 + Math.random() * 900)}`;
-      const mockPhoto = regImgUrl.trim() || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=60';
+      const mockPhoto = regImgUrl.trim() || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
       const mockIne = regIneTitle ? regIneTitle : `INE_${regName.replace(' ', '_')}.pdf`;
       const mockLic = regLicTitle ? regLicTitle : `LICENCIA_${regName.replace(' ', '_')}.pdf`;
 
@@ -150,7 +150,7 @@ export default function MensajeriaSection({
         vehicle: regVehicle,
         vehiclePlate: regPlate ? regPlate.toUpperCase() : undefined,
         photoUrl: mockPhoto,
-        status: 'pending', // Solicitud queda en revisión hasta que el Admin lo apruebe
+        status: 'active', // Direct authorized access for perfect quick review
         documents: {
           ine: mockIne,
           license: mockLic,
@@ -163,10 +163,11 @@ export default function MensajeriaSection({
       };
 
       onAddCourier(newCourier);
-      onAddLog(`Nuevo mensajero registrado: ${regName} (${regVehicle}) - En espera de aprobación`, 'warning');
+      setCurrentCourier(newCourier); // IMMEDIATELY LOGIN & TRANSITION TO THE PERSONALIZED DASHBOARD!
+      onAddLog(`Se registró y autorizó nuevo mensajero: ${regName} (${regVehicle})`, 'info');
+      showToast(`¡Bienvenido, ${regName}! Panel de control personalizado activo.`, 'success');
       
       setIsRegistering(false);
-      setRegSuccess(true);
       
       // Clear fields
       setRegName('');
@@ -312,7 +313,7 @@ export default function MensajeriaSection({
   };
 
   return (
-    <div className="max-w-md mx-auto bg-[#fafafa] min-h-[85vh] rounded-3xl border border-slate-200 outline-none overflow-hidden flex flex-col shadow-xl font-sans" id="mensajeria_phone_container">
+    <div className="w-full bg-[#f8fafc] min-h-[85vh] flex flex-col font-sans" id="mensajeria_full_width_container">
       {/* Toast Alert overlay */}
       <AnimatePresence>
         {toast && (
@@ -320,312 +321,319 @@ export default function MensajeriaSection({
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2.5 rounded-full shadow-lg text-xs font-bold font-sans flex items-center gap-2 border leading-tight ${
-              toast.type === 'success' ? 'bg-emerald-900 border-emerald-800 text-white' :
-              toast.type === 'warning' ? 'bg-amber-900 border-amber-800 text-white' : 'bg-slate-900 border-slate-800 text-white'
-            }`}
+            className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 px-5 py-3 rounded-full shadow-xl text-xs font-bold flex items-center gap-2 border bg-slate-900 border-slate-800 text-white"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-current animate-ping" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#c5a85c] animate-ping" />
             <span>{toast.message}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* RENDER VIEW 1: COURIER SIGN IN / SELECTION AND REGISTRATION FLOW */}
+      {/* RENDER VIEW 1: COURIER REGISTRATION FLOW (FULL-WIDTH & ULTRA CLEAN) */}
       {!currentCourier ? (
-        <div className="flex-1 p-6 flex flex-col justify-between" id="non_logged_courier_view">
-          <div className="space-y-6">
+        <div className="flex-1 w-full flex flex-col justify-center items-center py-10 px-4 md:py-16 bg-[#f8fafc]" id="non_logged_courier_view">
+          <div className="w-full max-w-2xl bg-white rounded-3xl border border-slate-200 shadow-sm p-6 md:p-12 space-y-8" id="clean_registration_board">
             
             {/* Header branding logo */}
-            <div className="flex flex-col items-center text-center space-y-2 pt-4">
-              <div className="w-14 h-14 bg-[#c5a85c] rounded-2xl flex items-center justify-center text-white shadow-md">
-                <Bike size={28} />
+            <div className="flex flex-col items-center text-center space-y-3">
+              <div className="w-16 h-16 bg-[#c5a85c] rounded-2xl flex items-center justify-center text-white shadow-md">
+                <Bike size={32} />
               </div>
-              <span className="text-[10px] uppercase font-mono font-black text-[#c5a85c] tracking-widest pt-1">Atelier Express Fleet</span>
-              <h1 className="text-xl font-serif font-black text-slate-800 uppercase tracking-tight">Consola de Mensajería</h1>
-              <p className="text-xs text-slate-500 max-w-xs">
-                Accede a tu cuenta de reparto para recolectar pedidos del almacén, activar la navegación en ruta y ganar dinero por cada envío completado.
+              <span className="text-xs uppercase font-mono font-black text-[#c5a85c] tracking-widest pt-1">Atelier Express Fleet</span>
+              <h1 className="text-2xl md:text-3xl font-serif font-black text-slate-800 uppercase tracking-tight">Registro de Repartidor Co-Piloto</h1>
+              <p className="text-sm text-slate-500 max-w-md">
+                Regístrate como repartidor exclusivo de Homeli. Una vez completados tus datos, accederás de manera inmediata al panel de control adaptivo para recolectar tus órdenes en ruta.
               </p>
             </div>
 
-            {/* Toggle views */}
-            <div className="p-1 bg-slate-100 rounded-xl flex">
-              <button
-                onClick={() => { setScreenMode('access'); setRegSuccess(false); }}
-                className={`flex-1 py-2 text-xs font-black rounded-lg transition-all ${screenMode === 'access' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
-              >
-                Ingreso Rápido (Piloto)
-              </button>
-              <button
-                onClick={() => { setScreenMode('register'); setRegSuccess(false); }}
-                className={`flex-1 py-2 text-xs font-black rounded-lg transition-all ${screenMode === 'register' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
-              >
-                Registrarme como Repartidor
-              </button>
-            </div>
-
-            {/* A. FAST LOGIN PORTAL */}
-            {screenMode === 'access' && (
-              <div className="space-y-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            {/* B. REGISTRATION PORTAL FORM */}
+            <form onSubmit={handleRegisterSubmit} className="space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">1. Datos Personales</h3>
+                
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Seleccionar Repartidor de Prueba</label>
-                  <p className="text-[11px] text-slate-500 pb-2">Selecciona un conductor pre-registrado para ingresar directamente y evaluar el dashboard.</p>
-                  
-                  <div className="space-y-2">
-                    {couriers.map((c) => (
-                      <button
-                        key={c.id}
-                        onClick={() => handleFastLogin(c.id)}
-                        className={`w-full p-3 rounded-xl border text-left transition flex items-center justify-between hover:bg-slate-50 cursor-pointer ${
-                          selectedCourierId === c.id ? 'border-[#c5a85c] bg-amber-50/20' : 'border-slate-150 bg-white'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <img 
-                            src={c.photoUrl} 
-                            alt={c.name} 
-                            className="w-10 h-10 rounded-full object-cover border border-slate-200" 
-                            referrerPolicy="no-referrer"
-                          />
-                          <div>
-                            <p className="text-xs font-extrabold text-slate-800 leading-none">{c.name}</p>
-                            <p className="text-[10px] text-slate-500 font-mono pt-1 flex items-center gap-1.5">
-                              <span className="capitalize">{c.vehicle}</span>
-                              {c.vehiclePlate && <span>• {c.vehiclePlate}</span>}
-                            </p>
-                          </div>
-                        </div>
+                  <label className="text-xs font-bold text-slate-700">Nombre Completo *</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="Ej. Carlos Velázquez"
+                    value={regName}
+                    onChange={e => setRegName(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-[#c5a85c]/40 text-sm bg-slate-50/40 hover:bg-slate-50 focus:bg-white transition"
+                  />
+                </div>
 
-                        {/* Status Label badge */}
-                        <div className="text-right">
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
-                            c.status === 'active' ? 'bg-green-50 text-green-700' :
-                            c.status === 'pending' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
-                          }`}>
-                            {c.status === 'active' ? '✓ Autorizado' :
-                             c.status === 'pending' ? 'En Revisión' : 'Rechazado'}
-                          </span>
-                          {c.status === 'active' && <p className="text-[10px] font-bold text-slate-400 mt-0.5">{c.completedDeliveries} entregas</p>}
-                        </div>
-                      </button>
-                    ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700">Correo Electrónico *</label>
+                    <input 
+                      type="email" 
+                      required
+                      placeholder="carlos@correo.com"
+                      value={regEmail}
+                      onChange={e => setRegEmail(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-[#c5a85c]/40 text-sm bg-slate-50/40 hover:bg-slate-50 focus:bg-white transition"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700">Teléfono Móvil *</label>
+                    <input 
+                      type="tel" 
+                      required
+                      placeholder="55-1234-5678"
+                      value={regPhone}
+                      onChange={e => setRegPhone(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-[#c5a85c]/40 text-sm bg-slate-50/40 hover:bg-slate-50 focus:bg-white transition"
+                    />
                   </div>
                 </div>
               </div>
-            )}
 
-            {/* B. REGISTRATION PORTAL FORM */}
-            {screenMode === 'register' && (
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+              <div className="space-y-4 pt-2">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">2. Vehículo de Reparto</h3>
                 
-                {regSuccess ? (
-                  <div className="text-center py-6 space-y-3" id="registration_success_block">
-                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto text-[#c5a85c]">
-                      <ShieldCheck size={26} />
-                    </div>
-                    <h3 className="text-sm font-black text-slate-850 uppercase">Solicitud Enviada con Éxito</h3>
-                    <p className="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">
-                      Hemos recibido tus datos y documentos. El equipo de administración revisará tu solicitud y autorizará tu cuenta. Podrás ingresar una vez que tu estatus cambie a <strong className="text-slate-850">Autorizado</strong>.
-                    </p>
-                    <button 
-                      onClick={() => setScreenMode('access')}
-                      className="px-4 py-2 bg-[#c5a85c] text-white text-xs font-bold rounded-lg cursor-pointer hover:bg-[#b59549] transition"
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700">Tipo de Transporte *</label>
+                    <select 
+                      value={regVehicle}
+                      onChange={e => setRegVehicle(e.target.value as any)}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-[#c5a85c]/40 text-sm bg-white text-slate-800 transition"
                     >
-                      Volver al Ingreso Rápido
+                      <option value="motocicleta">Motocicleta 🏍️</option>
+                      <option value="bicicleta">Bicicleta 🚲</option>
+                      <option value="automóvil">Automóvil 🚗</option>
+                      <option value="van">Van / Camioneta 🚚</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700">Número de Placa (Opcional)</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ej. MX-943-BB"
+                      value={regPlate}
+                      onChange={e => setRegPlate(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-[#c5a85c]/40 text-sm bg-slate-50/40 hover:bg-slate-50 focus:bg-white transition"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-2">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">3. Carga de Documentación</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Doc 1 */}
+                  <div className="p-4 border border-dashed border-slate-200 bg-slate-50/45 rounded-2xl text-center space-y-2 hover:bg-slate-50 transition">
+                    <UploadCloud size={20} className="mx-auto text-slate-400" />
+                    <p className="text-xs font-extrabold text-slate-700">Identificación Oficial (INE)</p>
+                    <span className="text-[11px] text-slate-400 block truncate">
+                      {regIneTitle ? `✓ ${regIneTitle}` : 'JPG, PNG o PDF'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setRegIneTitle(`INE_Frente_${Date.now().toString().slice(-4)}.pdf`)}
+                      className="text-[10px] px-3 py-1.5 bg-white border border-slate-150 rounded-lg text-slate-600 font-bold mx-auto cursor-pointer hover:bg-slate-50 hover:text-slate-850"
+                    >
+                      Adjuntar INE
                     </button>
                   </div>
-                ) : (
-                  <form onSubmit={handleRegisterSubmit} className="space-y-4">
-                    <p className="text-xs font-black text-slate-800 border-b border-slate-100 pb-1.5 uppercase tracking-wider">Formulario de Afiliación</p>
-                    
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Nombre Completo *</label>
-                      <input 
-                        type="text" 
-                        required
-                        placeholder="Ej. Juan Pérez"
-                        value={regName}
-                        onChange={e => setRegName(e.target.value)}
-                        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-[#c5a85c]"
-                      />
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Correo Electrónico *</label>
-                        <input 
-                          type="email" 
-                          required
-                          placeholder="juan@reparto.mx"
-                          value={regEmail}
-                          onChange={e => setRegEmail(e.target.value)}
-                          className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-[#c5a85c]"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Teléfono Celular *</label>
-                        <input 
-                          type="tel" 
-                          required
-                          placeholder="55-1234-5678"
-                          value={regPhone}
-                          onChange={e => setRegPhone(e.target.value)}
-                          className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-[#c5a85c]"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Vehículo de Reparto *</label>
-                        <select 
-                          value={regVehicle}
-                          onChange={e => setRegVehicle(e.target.value as any)}
-                          className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-[#c5a85c] bg-white text-slate-800"
-                        >
-                          <option value="motocicleta">Motocicleta 🏍️</option>
-                          <option value="bicicleta">Bicicleta 🚲</option>
-                          <option value="automóvil">Automóvil 🚗</option>
-                          <option value="van">Van / Camioneta 🚚</option>
-                        </select>
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Placa del Vehículo (Opcional)</label>
-                        <input 
-                          type="text" 
-                          placeholder="P-843-MX"
-                          value={regPlate}
-                          onChange={e => setRegPlate(e.target.value)}
-                          className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-[#c5a85c]"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-3 pt-2">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Documentos Requeridos (Simulado)</label>
-                      
-                      <div className="grid grid-cols-2 gap-2">
-                        {/* Doc 1 */}
-                        <div className="p-2 border border-dashed border-slate-200 rounded-xl text-center space-y-1">
-                          <UploadCloud size={16} className="mx-auto text-slate-400" />
-                          <p className="text-[10px] font-extrabold text-slate-700">Identificación (INE)</p>
-                          <span className="text-[9px] text-slate-400 block truncate">
-                            {regIneTitle ? `✓ ${regIneTitle}` : 'PDF o Imagen'}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setRegIneTitle(`INE_Frente_${Date.now().toString().slice(-4)}.pdf`)}
-                            className="text-[9px] px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-600 block mx-auto font-bold cursor-pointer"
-                          >
-                            Cargar Doc
-                          </button>
-                        </div>
-
-                        {/* Doc 2 */}
-                        <div className="p-2 border border-dashed border-slate-200 rounded-xl text-center space-y-1">
-                          <UploadCloud size={16} className="mx-auto text-slate-400" />
-                          <p className="text-[10px] font-extrabold text-slate-700">Licencia de Conducir</p>
-                          <span className="text-[9px] text-slate-400 block truncate">
-                            {regLicTitle ? `✓ ${regLicTitle}` : 'Vigente'}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setRegLicTitle(`Licencia_Activa_${Date.now().toString().slice(-4)}.pdf`)}
-                            className="text-[9px] px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-600 block mx-auto font-bold cursor-pointer"
-                          >
-                            Cargar Doc
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Foto de Perfil (Avatar URL - Opcional)</label>
-                      <input 
-                        type="text" 
-                        placeholder="https://images.unsplash.com/... o dejar vacío"
-                        value={regImgUrl}
-                        onChange={e => setRegImgUrl(e.target.value)}
-                        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-[#c5a85c]"
-                      />
-                    </div>
-
+                  {/* Doc 2 */}
+                  <div className="p-4 border border-dashed border-slate-200 bg-slate-50/45 rounded-2xl text-center space-y-2 hover:bg-slate-50 transition">
+                    <UploadCloud size={20} className="mx-auto text-slate-400" />
+                    <p className="text-xs font-extrabold text-slate-700">Licencia de Conducir</p>
+                    <span className="text-[11px] text-slate-400 block truncate">
+                      {regLicTitle ? `✓ ${regLicTitle}` : 'Formato Digital o Físico'}
+                    </span>
                     <button
-                      type="submit"
-                      disabled={isRegistering}
-                      className="w-full py-3 bg-[#c5a85c] hover:bg-[#b59549] text-white text-xs uppercase font-black tracking-wider rounded-xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      type="button"
+                      onClick={() => setRegLicTitle(`Licencia_Activa_${Date.now().toString().slice(-4)}.pdf`)}
+                      className="text-[10px] px-3 py-1.5 bg-white border border-slate-150 rounded-lg text-slate-600 font-bold mx-auto cursor-pointer hover:bg-slate-50 hover:text-slate-850"
                     >
-                      {isRegistering ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          <span>Procesando Registro...</span>
-                        </>
-                      ) : (
-                        <span>Enviar Solicitud a Soporte</span>
-                      )}
+                      Adjuntar Licencia
                     </button>
-                  </form>
-                )}
-
+                  </div>
+                </div>
               </div>
-            )}
 
-          </div>
+              <button
+                type="submit"
+                disabled={isRegistering}
+                className="w-full py-3.5 bg-[#c5a85c] hover:bg-[#b59549] text-white text-xs uppercase font-black tracking-wider rounded-xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {isRegistering ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Inscribiendo repartidor...</span>
+                  </>
+                ) : (
+                  <span>Registrarme y Acceder al Dashboard 🚀</span>
+                )}
+              </button>
+            </form>
 
-          {/* Footer Back */}
-          <div className="pt-6 border-t border-slate-100 flex items-center justify-center" id="courier_footer_links">
-            <button
-              onClick={onNavigateToHome}
-              className="text-xs text-slate-500 hover:text-[#c5a85c] font-black transition flex items-center gap-1.5 cursor-pointer"
-            >
-              Regresar al Selector de Roles (Inicio)
-            </button>
+            {/* Footer Back */}
+            <div className="pt-6 border-t border-slate-100 flex items-center justify-center">
+              <button
+                onClick={onNavigateToHome}
+                className="text-xs text-slate-400 hover:text-[#c5a85c] font-black transition flex items-center gap-1.5 cursor-pointer uppercase tracking-wider"
+              >
+                ← Regresar al Selector de Roles (Inicio)
+              </button>
+            </div>
           </div>
         </div>
       ) : (
         /* RENDER VIEW 2: ACTIVE REPARTIDOR DASHBOARD */
-        <div className="flex-1 flex flex-col justify-between" id="active_courier_panel">
+        <div className="flex-1 flex flex-col md:flex-row bg-[#f8fafc]" id="active_courier_panel">
           
-          {/* Header Mobile Style */}
-          <div className="bg-white border-b border-slate-100 px-5 py-4 flex justify-between items-center" id="courier_panel_header">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <img 
-                  src={currentCourier.photoUrl} 
-                  alt={currentCourier.name} 
-                  className="w-11 h-11 rounded-full object-cover border-2 border-[#c5a85c]"
-                  referrerPolicy="no-referrer"
-                />
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full animate-pulse" />
-              </div>
-              <div>
-                <div className="flex items-center gap-1">
-                  <p className="text-xs font-black text-slate-800 leading-none">{currentCourier.name}</p>
-                  <span className="p-0.5 bg-yellow-100 text-yellow-800 rounded font-black text-[8px] flex items-center gap-px">
-                     ⭐ {currentCourier.rating}
-                  </span>
+          {/* A. LATERAL SIDEBAR NAVIGATION FOR DESKTOP AND LARGE TABLETS (md:flex, hidden on mobile) */}
+          <div className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 p-6 justify-between shrink-0 self-stretch" id="courier_desktop_sidebar">
+            <div className="space-y-6">
+              
+              {/* Branding Header */}
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-5">
+                <div className="w-10 h-10 bg-[#c5a85c] rounded-xl flex items-center justify-center text-white shadow-sm shrink-0">
+                  <Bike size={22} />
                 </div>
-                <p className="text-[10px] text-slate-400 capitalize font-mono pt-1">
-                  {currentCourier.vehicle} • <span className="bg-slate-100 px-1 py-0.5 rounded font-black">{currentCourier.vehiclePlate || 'BICI'}</span>
-                </p>
+                <div>
+                  <span className="text-[10px] uppercase font-mono font-black text-[#c5a85c] tracking-widest block leading-none">Express Fleet</span>
+                  <span className="text-sm font-serif font-black text-slate-800 uppercase tracking-tight block mt-1">Homeli Reparto</span>
+                </div>
               </div>
+
+              {/* Profile Card */}
+              <div className="flex flex-col gap-2.5 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="relative shrink-0">
+                    <img 
+                      src={currentCourier.photoUrl} 
+                      alt={currentCourier.name} 
+                      className="w-10 h-10 rounded-full object-cover border-2 border-[#c5a85c]"
+                      referrerPolicy="no-referrer"
+                    />
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full animate-pulse" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-black text-slate-800 truncate leading-none">{currentCourier.name}</p>
+                    <p className="text-[10px] text-slate-400 capitalize font-mono pt-1">ID: {currentCourier.id}</p>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-slate-150 text-[10px] space-y-1 text-slate-500">
+                  <div className="flex items-center justify-between">
+                    <span>Vehículo:</span>
+                    <strong className="text-slate-850 capitalize">{currentCourier.vehicle}</strong>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Placa:</span>
+                    <strong className="bg-[#e2e8f0] px-1 rounded font-mono text-slate-800 uppercase">{currentCourier.vehiclePlate || 'BICI'}</strong>
+                  </div>
+                  <div className="flex items-center justify-between pt-0.5">
+                    <span>Calificación:</span>
+                    <strong className="text-yellow-600 font-sans flex items-center gap-0.5">⭐ {currentCourier.rating}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sidebar Menu Options */}
+              <div className="space-y-1.5 pt-1">
+                <button
+                  onClick={() => setActiveTab('pedidos')}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-xs font-black uppercase tracking-wider ${
+                    activeTab === 'pedidos'
+                      ? 'bg-[#c5a85c] text-white shadow-sm'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
+                  }`}
+                >
+                  <Box size={16} />
+                  <span>Pedidos y Rutas</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('metricas')}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-xs font-black uppercase tracking-wider ${
+                    activeTab === 'metricas'
+                      ? 'bg-[#c5a85c] text-white shadow-sm'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-955'
+                  }`}
+                >
+                  <TrendingUp size={16} />
+                  <span>Mis Métricas</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('perfil')}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-xs font-black uppercase tracking-wider ${
+                    activeTab === 'perfil'
+                      ? 'bg-[#c5a85c] text-white shadow-sm'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-955'
+                  }`}
+                >
+                  <User size={16} />
+                  <span>Mi Perfil</span>
+                </button>
+              </div>
+
             </div>
 
-            {/* Log out */}
+            {/* Logout Sidebar Back */}
             <button
               onClick={() => {
-                setCurrentCourier(null); 
+                setCurrentCourier(null);
                 showToast('Sesión de reparto cerrada con éxito', 'info');
               }}
-              className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg transition"
-              title="Cerrar Sesión"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs font-black uppercase text-red-650 text-red-600 bg-red-50 hover:bg-red-100 transition-all cursor-pointer"
             >
-              <LogOut size={16} />
+              <LogOut size={15} />
+              <span>Cerrar Sesión</span>
             </button>
           </div>
 
-          {/* DASHBOARD TABS ENGINE */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4" id="courier_dashboard_body">
+          {/* B. MAIN PORTAL WINDOW FOR CONTENT AND MOBILE HEADER/BOTTOM NAVIGATION */}
+          <div className="flex-1 flex flex-col justify-between overflow-hidden" id="courier_main_portal_viewport">
+            
+            {/* Header Mobile Style (shown on mobile, hidden on widescreen) */}
+            <div className="md:hidden bg-white border-b border-slate-100 px-5 py-4 flex justify-between items-center" id="courier_panel_header">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <img 
+                    src={currentCourier.photoUrl} 
+                    alt={currentCourier.name} 
+                    className="w-11 h-11 rounded-full object-cover border-2 border-[#c5a85c]"
+                    referrerPolicy="no-referrer"
+                  />
+                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full animate-pulse" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1">
+                    <p className="text-xs font-black text-slate-800 leading-none">{currentCourier.name}</p>
+                    <span className="p-0.5 bg-[#fef08a] text-yellow-800 rounded font-black text-[8px] flex items-center gap-px">
+                       ⭐ {currentCourier.rating}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 capitalize font-mono pt-1">
+                    {currentCourier.vehicle} • <span className="bg-slate-100 px-1 py-0.5 rounded font-black">{currentCourier.vehiclePlate || 'BICI'}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Log out mobile button */}
+              <button
+                onClick={() => {
+                  setCurrentCourier(null); 
+                  showToast('Sesión de reparto cerrada con éxito', 'info');
+                }}
+                className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg transition"
+                title="Cerrar Sesión"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
+
+            {/* DASHBOARD TABS ENGINE */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4" id="courier_dashboard_body">
             
             {/* TAB A: PEDIDOS (PENDIENTES + SEMAFORO ACTIVO) */}
             {activeTab === 'pedidos' && (
@@ -1034,8 +1042,8 @@ export default function MensajeriaSection({
 
           </div>
 
-          {/* DASHBOARD BOTTOM PHONE NAVIGATION FOOTER */}
-          <div className="bg-white border-t border-slate-150 px-2 py-2 flex justify-around items-center" id="courier_phone_navbar">
+          {/* DASHBOARD BOTTOM PHONE NAVIGATION FOOTER (md:hidden) */}
+          <div className="md:hidden bg-white border-t border-slate-150 px-2 py-2 flex justify-around items-center shrink-0" id="courier_phone_navbar">
             
             <button
               onClick={() => setActiveTab('pedidos')}
@@ -1067,6 +1075,8 @@ export default function MensajeriaSection({
               <span className="text-[9px] font-black uppercase">Mi Perfil</span>
             </button>
             
+          </div>
+          
           </div>
 
         </div>
