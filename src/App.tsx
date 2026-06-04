@@ -21,7 +21,8 @@ import {
   ServiceStatus, 
   OrderStatus,
   CourierProfile,
-  DeliveryStatus
+  DeliveryStatus,
+  AppNotification
 } from './types';
 import AdminSection from './components/AdminSection';
 import ServiciosSection from './components/ServiciosSection';
@@ -43,12 +44,93 @@ import {
   RefreshCw,
   Menu,
   Bike,
-  Calendar
+  Calendar,
+  Bell,
+  BellRing,
+  Trash2,
+  Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
   // Shared States initialization with localStorage persistence
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
+    try {
+      const persisted = localStorage.getItem('homeli_notifications');
+      if (persisted) return JSON.parse(persisted);
+    } catch {}
+    return [
+      {
+        id: 'NOT-1',
+        title: '🌟 Sistema Inicializado',
+        message: 'Bienvenido al ecosistema Homeli de Gestión Unificada y Logística.',
+        timestamp: new Date().toISOString(),
+        role: 'Todos',
+        read: false,
+        type: 'sistema'
+      },
+      {
+        id: 'NOT-2',
+        title: '📈 Reporte de E-Commerce',
+        message: 'Hay nuevos pedidos listos para asignación en el módulo de entregas.',
+        timestamp: new Date().toISOString(),
+        role: 'Administrador',
+        read: false,
+        type: 'compra'
+      },
+      {
+        id: 'NOT-3',
+        title: '🚴 Repartidor Carlos Ramos',
+        message: 'El repartidor Carlos Ramos está activo y listo para entregas rápidas.',
+        timestamp: new Date().toISOString(),
+        role: 'Mensajería',
+        read: false,
+        type: 'registro'
+      }
+    ];
+  });
+
+  const [activePopup, setActivePopup] = useState<AppNotification | null>(null);
+  const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
+
+  // Helper to add notifications dynamically with interactive alerts
+  const handleAddNotification = (
+    title: string,
+    message: string,
+    role: AppNotification['role'],
+    type: AppNotification['type'] = 'sistema',
+    targetId?: string
+  ) => {
+    const newNotif: AppNotification = {
+      id: `NOT-${Math.floor(1000 + Math.random() * 9000)}`,
+      title,
+      message,
+      timestamp: new Date().toISOString(),
+      role,
+      read: false,
+      targetId,
+      type
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+    setActivePopup(newNotif); // Triggers real-time popup overlay!
+  };
+
+  const handleDeleteNotification = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  const handleMarkNotificationAsRead = (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  };
+
+  const handleClearNotifications = (role?: AppNotification['role']) => {
+    if (role) {
+      setNotifications(prev => prev.filter(n => n.role !== role));
+    } else {
+      setNotifications([]);
+    }
+  };
+
   const [services, setServices] = useState<ServiceRequest[]>(() => {
     try {
       const persisted = localStorage.getItem('homeli_services');
@@ -193,6 +275,10 @@ export default function App() {
   }, [couriers]);
 
   useEffect(() => {
+    localStorage.setItem('homeli_notifications', JSON.stringify(notifications));
+  }, [notifications]);
+
+  useEffect(() => {
     localStorage.setItem('homeli_active_section', activeSection);
     try {
       const url = new URL(window.location.href);
@@ -320,6 +406,7 @@ export default function App() {
   };
 
   const handleUpdateOrderDelivery = (id: string, deliveryStatus: DeliveryStatus, courierId?: string) => {
+    let affectedOrder: SalesOrder | undefined;
     setOrders(prev => prev.map(o => {
       if (o.id === id) {
         const u = { ...o, deliveryStatus };
@@ -332,10 +419,101 @@ export default function App() {
         } else if (['accepted', 'collected', 'in_transit', 'with_customer'].includes(deliveryStatus)) {
           u.status = 'enviado';
         }
+        affectedOrder = u;
         return u;
       }
       return o;
     }));
+
+    // Trigger Notifications & logs based on the transition!
+    setTimeout(() => {
+      if (affectedOrder) {
+        const targetCourier = couriers.find(c => c.id === (courierId || affectedOrder?.deliveryCourierId));
+        const name = targetCourier ? targetCourier.name : 'Mensajero Homeli';
+        
+        switch (deliveryStatus) {
+          case 'assigned':
+            handleAddNotification(
+              '🚴 Pedido Listo en Despacho',
+              `El pedido ${id} ha sido asignado al repartidor ${name}. Esperando aceptación.`,
+              'Mensajería',
+              'asignacion',
+              id
+            );
+            break;
+          case 'launched':
+            handleAddNotification(
+              '🚀 Pedido en Bolsa Pública',
+              `El pedido ${id} se liberó y está disponible para que cualquier mensajero lo acepte.`,
+              'Mensajería',
+              'asignacion',
+              id
+            );
+            break;
+          case 'accepted':
+            handleAddNotification(
+              '👍 Entrega Aceptada',
+              `El repartidor ${name} ha ACEPTADO entregar el pedido ${id}. Procediendo a recolectar productos.`,
+              'Administrador',
+              'mensajeria',
+              id
+            );
+            break;
+          case 'collected':
+            handleAddNotification(
+              '🛍️ Productos Recolectados',
+              `El repartidor ${name} recolectó con éxito los productos de la orden ${id} en almacén.`,
+              'Administrador',
+              'mensajeria',
+              id
+            );
+            break;
+          case 'in_transit':
+            handleAddNotification(
+              '🚀 Pedido en Camino',
+              `¡Buenas noticias! Tu pedido ${id} está en camino de entrega a las manos de ${affectedOrder?.customerName}.`,
+              'Cliente',
+              'mensajeria',
+              id
+            );
+            break;
+          case 'with_customer':
+            handleAddNotification(
+              '📍 Mensajero en Domicilio',
+              `El repartidor ${name} se encuentra en el domicilio de ${affectedOrder?.customerName} listo para efectuar la entrega de ${id}.`,
+              'Cliente',
+              'mensajeria',
+              id
+            );
+            break;
+          case 'delivered':
+            // Trigger BOTH Admin and Client confirmations!
+            handleAddNotification(
+              '🎉 ¡Pedido Entregado con Éxito!',
+              `¡Felicidades! Se ha confirmado la entrega del pedido ${id} por el mensajero ${name}. El cliente recibió y firmó.`,
+              'Administrador',
+              'entrega',
+              id
+            );
+            handleAddNotification(
+              '📦 Confirmación de Entrega',
+              `¡Tu pedido ${id} ha sido entregado exitosamente por nuestro repartidor ${name}! Gracias por elegir Atelier Boutique.`,
+              'Cliente',
+              'entrega',
+              id
+            );
+            // Increment courier metrics in our parent state safely
+            if (targetCourier) {
+              setCouriers(prev => prev.map(c => c.id === targetCourier.id ? {
+                ...c,
+                completedDeliveries: (c.completedDeliveries || 0) + 1,
+                earnings: (c.earnings || 0) + 120
+              } : c));
+            }
+            break;
+        }
+      }
+    }, 100);
   };
 
   // Trigger Native browser PWA install steps
@@ -363,6 +541,7 @@ export default function App() {
     localStorage.removeItem('homeli_logs');
     localStorage.removeItem('homeli_profiles');
     localStorage.removeItem('homeli_couriers');
+    localStorage.removeItem('homeli_notifications');
     localStorage.removeItem('homeli_admin_active_tab');
     localStorage.removeItem('homeli_active_section');
     localStorage.removeItem('homeli_banner_bg');
@@ -553,12 +732,29 @@ export default function App() {
                   </div>
                 </>
               )}
+
+              {/* Universal Bell Notification Button inside Master Header */}
+              <button
+                onClick={() => setIsNotificationPanelOpen(true)}
+                className="relative p-2.5 hover:bg-slate-50 border border-slate-205 bg-white rounded-xl shadow-xs transition cursor-pointer text-slate-750 hover:text-[#c5a85c] focus:outline-none"
+                id="master_header_bell_btn"
+                title={`${notifications.filter(n => !n.read).length} Notificaciones sin leer`}
+              >
+                <Bell size={18} className={notifications.filter(n => !n.read).length > 0 ? "text-[#c5a85c]" : "text-slate-600"} />
+                
+                {notifications.filter(n => !n.read).length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5.5 h-5.5 bg-red-500 text-white font-extrabold text-[9px] rounded-full flex items-center justify-center animate-pulse border border-white">
+                    {notifications.filter(n => !n.read).length}
+                  </span>
+                )}
+              </button>
+
             </div>
           </header>
         )}
 
         {/* Dynamic Page Views Body */}
-        <main className="flex-1 p-6 max-w-7xl w-full mx-auto" id="main_layout_body">
+        <main className={activeSection === 'mensajeria' ? 'flex-1 w-full bg-[#f8fafc]' : 'flex-1 p-6 max-w-7xl w-full mx-auto'} id="main_layout_body">
           <AnimatePresence mode="wait">
             {activeSection === 'home' ? (
               <motion.div
@@ -771,6 +967,8 @@ export default function App() {
                     onUpdateOrderStatus={(id, deliveryStatus) => handleUpdateOrderDelivery(id, deliveryStatus)}
                     onAddLog={onAddLog}
                     onNavigateToHome={() => setActiveSection('home')}
+                    notifications={notifications}
+                    onOpenNotifications={() => setIsNotificationPanelOpen(true)}
                   />
                 )}
 
@@ -787,7 +985,16 @@ export default function App() {
                     onAddProduct={handleAddProduct}
                     onUpdateOrderStatus={handleUpdateOrderStatus}
                     onAddLog={onAddLog}
-                    onAddOrder={(order) => setOrders(prev => [order, ...prev])}
+                    onAddOrder={(order) => {
+                      setOrders(prev => [order, ...prev]);
+                      handleAddNotification(
+                        '🛒 Nuevo Pedido Recibido',
+                        `¡Pedido ${order.id} registrado por $${order.total.toLocaleString()} MXN! Listo para ser gestionado y asignado en administración.`,
+                        'Administrador',
+                        'compra',
+                        order.id
+                      );
+                    }}
                     onNavigateToHome={() => setActiveSection('home')}
                     bannerBg={bannerBg}
                     bannerTitle={bannerTitle}
@@ -795,6 +1002,8 @@ export default function App() {
                     bannerDesc={bannerDesc}
                     bannerOverlayCol={bannerOverlayCol}
                     bannerOverlayOpacity={bannerOverlayOpacity}
+                    notifications={notifications}
+                    onOpenNotifications={() => setIsNotificationPanelOpen(true)}
                   />
                 )}
               </motion.div>
@@ -907,6 +1116,247 @@ export default function App() {
                   className="px-5 py-2 bg-slate-900 hover:bg-slate-850 text-white font-bold rounded-xl text-xs transition"
                 >
                   Entendido
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Dynamic Slide-Over Notification Drawer (Campanita Panel) */}
+      <AnimatePresence>
+        {isNotificationPanelOpen && (
+          <div className="fixed inset-0 z-50 overflow-hidden" id="notification_drawer_overlay">
+            <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setIsNotificationPanelOpen(false)} />
+
+            <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
+              <motion.div
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="w-screen max-w-md bg-white shadow-2xl flex flex-col h-full border-l border-slate-200"
+                id="notification_drawer_content"
+              >
+                {/* Drawer Header */}
+                <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-xl bg-[#c5a85c] flex items-center justify-center text-white shadow-sm">
+                      <BellRing size={20} className="animate-swing" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 leading-snug">Centro de Notificaciones</h3>
+                      <p className="text-xs text-[#c5a85c] font-black uppercase tracking-wider mt-0.5 animate-pulse">Sincronización en Directo</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsNotificationPanelOpen(false)}
+                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition text-base outline-none font-bold"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Notifications Actions */}
+                <div className="p-4 bg-slate-105 bg-slate-100/50 border-b border-slate-150 flex items-center justify-between text-xs sm:text-sm">
+                  <span className="text-slate-600 font-bold">
+                    {notifications.filter(n => !n.read).length} No leídos
+                  </span>
+                  <button
+                    onClick={() => handleClearNotifications()}
+                    className="text-xs font-black text-red-600 hover:text-red-700 uppercase tracking-widest flex items-center gap-1 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition"
+                  >
+                    <Trash2 size={13} />
+                    <span>Limpiar Todo</span>
+                  </button>
+                </div>
+
+                {/* Notifications List Body */}
+                <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-[#f8fafc]">
+                  {notifications.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-4">
+                      <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 text-2xl">
+                        📭
+                      </div>
+                      <div>
+                        <p className="text-sm font-extrabold text-slate-700">Sin notificaciones</p>
+                        <p className="text-xs text-slate-500 max-w-[240px] mt-1.5">
+                          Todos los flujos cliente-admin-mensajero en tiempo real se desplegarán aquí de forma inmediata.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    notifications.map(notif => {
+                      let typeLabel = "Sistema";
+                      let typeColor = "bg-slate-100 text-slate-800 border-slate-200";
+                      let emoji = "🔔";
+
+                      switch (notif.type) {
+                        case 'compra':
+                          typeLabel = "Venta";
+                          typeColor = "bg-green-50 text-green-700 border-green-200";
+                          emoji = "🛍️";
+                          break;
+                        case 'asignacion':
+                          typeLabel = "Admin / Asignación";
+                          typeColor = "bg-yellow-50 text-yellow-700 border-yellow-200";
+                          emoji = "📋";
+                          break;
+                        case 'mensajeria':
+                          typeLabel = "Mensajería Status";
+                          typeColor = "bg-blue-50 text-blue-700 border-blue-200";
+                          emoji = "🚴";
+                          break;
+                        case 'registro':
+                          typeLabel = "Registro Nuevo";
+                          typeColor = "bg-purple-50 text-purple-700 border-purple-200";
+                          emoji = "👤";
+                          break;
+                        case 'entrega':
+                          typeLabel = "Entrega Exitosa";
+                          typeColor = "bg-emerald-50 text-emerald-800 border-emerald-200";
+                          emoji = "✅";
+                          break;
+                      }
+
+                      return (
+                        <div
+                          key={notif.id}
+                          className={`p-4 rounded-2xl border-2 transition-all flex flex-col justify-between ${
+                            notif.read ? 'bg-white border-slate-100 opacity-80' : 'bg-white border-[#c5a85c]/35 shadow-sm ring-1 ring-[#c5a85c]/10'
+                          }`}
+                          id={`notification_card_${notif.id}`}
+                        >
+                          <div className="flex gap-3">
+                            <div className="text-xl pt-0.5 shrink-0 select-none">
+                              {emoji}
+                            </div>
+                            <div className="space-y-1 w-full min-w-0 text-left">
+                              <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                                <span className={`text-[9px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-md border ${typeColor}`}>
+                                  {typeLabel}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-mono">
+                                  {new Date(notif.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                </span>
+                              </div>
+
+                              <h4 className="text-sm font-black text-slate-800 leading-snug">{notif.title}</h4>
+                              <p className="text-xs text-slate-600 leading-relaxed break-words pt-1">{notif.message}</p>
+                            </div>
+                          </div>
+
+                          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                            <div className="text-[10px] text-slate-500 font-mono">
+                              Destino: <strong className="text-slate-700 uppercase text-[10px]">{notif.role}</strong>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 shrink-0 animate-fadeIn">
+                              {!notif.read && (
+                                <button
+                                  onClick={() => handleMarkNotificationAsRead(notif.id)}
+                                  className="p-1 px-2.5 bg-[#c5a85c]/15 hover:bg-[#c5a85c]/25 text-[#a38439] hover:text-[#8e702c] rounded-lg transition text-[10px] font-black uppercase tracking-wider"
+                                >
+                                  Leído
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleDeleteNotification(notif.id)}
+                                className="p-1.5 bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-700 rounded-lg transition"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Drawer Footer help */}
+                <div className="p-5 border-t border-slate-150 bg-slate-50 text-center">
+                  <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
+                     Flujo Homeli sincronizado. Las órdenes creadas en <strong>Ventas</strong> actualizan inmediatamente a <strong>Admin</strong> y <strong>Mensajería</strong>.
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Central Notification Intercepting Big Popup window overlay */}
+      <AnimatePresence>
+        {activePopup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 h-full w-full" id="central_notification_popup_overlay">
+            <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-md" onClick={() => setActivePopup(null)} />
+
+            <motion.div
+              initial={{ scale: 0.9, y: 30, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, y: 30, opacity: 0 }}
+              className="relative w-full max-w-md bg-white rounded-3xl border-4 border-[#c5a85c] p-6 shadow-2xl text-left space-y-6 overflow-hidden z-50"
+              id="central_notification_popup_modal"
+            >
+              <div className="absolute top-0 right-0 h-2 bg-[#c5a85c] animate-pulse w-full" />
+              
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#c19a45] to-[#ebd39d] flex items-center justify-center text-white shrink-0 text-2xl shadow-md">
+                  {activePopup.type === 'compra' ? '🛒' : activePopup.type === 'asignacion' ? '📋' : activePopup.type === 'mensajeria' ? '🚴' : activePopup.type === 'registro' ? '👤' : activePopup.type === 'entrega' ? '✨' : '🔔'}
+                </div>
+
+                <div className="space-y-1 w-full min-w-0">
+                  <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded font-black text-[9px] uppercase tracking-wider block w-max leading-none">
+                     Notificación en Tiempo Real
+                  </span>
+                  <h3 className="text-base sm:text-lg font-serif font-black text-slate-900 leading-snug">
+                    {activePopup.title}
+                  </h3>
+                  <p className="text-[11px] text-slate-400 font-mono leading-none pt-1">
+                    {new Date(activePopup.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-slate-50 border border-slate-150 rounded-2xl text-left">
+                <p className="text-xs sm:text-sm text-slate-700 font-bold leading-relaxed">
+                  {activePopup.message}
+                </p>
+              </div>
+
+              {/* Roles Involved Metadata Grid */}
+              <div className="grid grid-cols-2 gap-3 text-xs border-y border-slate-100 py-3.5 text-left">
+                <div>
+                  <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-widest">Rol Sincronizado</span>
+                  <strong className="text-[#a38439] uppercase text-xs">{activePopup.role}</strong>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-widest">Canal</span>
+                  <strong className="text-slate-700 uppercase text-xs">{activePopup.type || 'Sistema'}</strong>
+                </div>
+              </div>
+
+              {/* Popup Action Buttons */}
+              <div className="flex gap-2 pt-1 font-bold">
+                <button
+                  onClick={() => {
+                    handleMarkNotificationAsRead(activePopup.id);
+                    setActivePopup(null);
+                  }}
+                  className="flex-1 py-3 bg-[#c5a85c] hover:bg-[#b59549] text-white rounded-xl transition duration-150 text-xs text-center uppercase tracking-wider font-extrabold shadow-sm hover:shadow-md cursor-pointer border border-[#c19a45]/20"
+                >
+                  Confirmar y Cerrar
+                </button>
+                <button
+                  onClick={() => {
+                    handleMarkNotificationAsRead(activePopup.id);
+                    setActivePopup(null);
+                    setIsNotificationPanelOpen(true);
+                  }}
+                  className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl transition duration-150 text-xs text-center uppercase tracking-wider font-extrabold cursor-pointer border border-slate-200 font-black"
+                >
+                  Ver Todo
                 </button>
               </div>
             </motion.div>

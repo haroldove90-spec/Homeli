@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { ProductItem, SalesOrder, OrderStatus } from '../types';
+import { ProductItem, SalesOrder, OrderStatus, AppNotification } from '../types';
 import { 
   Package, 
   ShoppingBag, 
@@ -31,7 +31,9 @@ import {
   Sliders,
   Sparkles,
   RefreshCw,
-  Home
+  Home,
+  Bell,
+  BellRing
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -49,6 +51,8 @@ interface VentasSectionProps {
   bannerDesc?: string;
   bannerOverlayCol?: string;
   bannerOverlayOpacity?: number;
+  notifications?: AppNotification[];
+  onOpenNotifications?: () => void;
 }
 
 // Exact 12 products with corresponding category classification
@@ -203,7 +207,9 @@ export default function VentasSection({
   bannerTag = 'ATELIER BOUTIQUE',
   bannerDesc = 'Descubre nuestras dos exclusivas divisiones diseñadas meticulosamente para brindar confort personal y sanidad impecable en tu hogar.',
   bannerOverlayCol = '#0f172a',
-  bannerOverlayOpacity = 60
+  bannerOverlayOpacity = 60,
+  notifications = [],
+  onOpenNotifications
 }: VentasSectionProps) {
   // Views inside e-commerce: 'shop', 'cart_orders', 'manager'
   const [activeViewMode, setActiveViewMode] = useState<'shop' | 'cart_orders' | 'manager'>(() => {
@@ -498,8 +504,30 @@ export default function VentasSection({
           </button>
         </nav>
 
-        {/* Right column: User profile Avatar Dropdown (QUITA SELECTOR DE ROLES, AHI QUIERO EL ICONO DEL USUARIO) */}
-        <div className="relative" id="user_dropdown_container">
+        {/* Right column: Notification Bell + User profile Avatar Dropdown */}
+        <div className="flex items-center gap-3" id="right_header_controls">
+          
+          {/* Campanita de Notificaciones para Cliente */}
+          <button
+            onClick={() => {
+              if (onOpenNotifications) {
+                onOpenNotifications();
+              }
+            }}
+            className="relative p-2.5 hover:bg-slate-50 border border-slate-250 bg-white rounded-xl shadow-xs transition cursor-pointer text-slate-750 hover:text-[#c5a85c] focus:outline-none"
+            id="client_header_bell_btn"
+            title={`${notifications ? notifications.filter(n => !n.read && (n.role === 'Cliente' || n.role === 'Todos')).length : 0} Notificaciones`}
+          >
+            <Bell size={18} className={notifications && notifications.filter(n => !n.read && (n.role === 'Cliente' || n.role === 'Todos')).length > 0 ? "text-[#c5a85c]" : "text-slate-600"} />
+            
+            {notifications && notifications.filter(n => !n.read && (n.role === 'Cliente' || n.role === 'Todos')).length > 0 && (
+              <span className="absolute -top-1 -right-1 w-5.5 h-5.5 bg-red-500 text-white font-extrabold text-[9px] rounded-full flex items-center justify-center animate-pulse border border-white">
+                {notifications.filter(n => !n.read && (n.role === 'Cliente' || n.role === 'Todos')).length}
+              </span>
+            )}
+          </button>
+
+          <div className="relative" id="user_dropdown_container">
           <button
             onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
             className="flex items-center gap-3 px-4 py-2 border-2 border-[#c5a85c] hover:border-[#b59549] rounded-xl bg-[#c5a85c]/5 hover:bg-[#c5a85c]/10 shadow-sm transition duration-150 text-left cursor-pointer"
@@ -627,7 +655,8 @@ export default function VentasSection({
             )}
           </AnimatePresence>
         </div>
-      </header>
+      </div>
+    </header>
 
       {/* Hero Banner for Category awareness when browsing */}
       {activeViewMode === 'shop' && (

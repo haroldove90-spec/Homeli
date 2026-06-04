@@ -3,7 +3,8 @@ import {
   CourierProfile, 
   SalesOrder, 
   DeliveryStatus, 
-  SystemLog 
+  SystemLog,
+  AppNotification
 } from '../types';
 import { 
   Bike, 
@@ -27,7 +28,10 @@ import {
   Camera,
   LogOut,
   Sparkles,
-  Phone
+  Phone,
+  Home,
+  Bell,
+  BellRing
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -39,6 +43,8 @@ interface MensajeriaSectionProps {
   onUpdateOrderStatus: (orderId: string, deliveryStatus: DeliveryStatus) => void;
   onAddLog: (action: string, severity?: 'info' | 'warning' | 'critical') => void;
   onNavigateToHome: () => void;
+  notifications?: AppNotification[];
+  onOpenNotifications?: () => void;
 }
 
 export default function MensajeriaSection({
@@ -48,7 +54,9 @@ export default function MensajeriaSection({
   onUpdateCourier,
   onUpdateOrderStatus,
   onAddLog,
-  onNavigateToHome
+  onNavigateToHome,
+  notifications = [],
+  onOpenNotifications
 }: MensajeriaSectionProps) {
   // Session handling state
   const [currentCourier, setCurrentCourier] = useState<CourierProfile | null>(() => {
@@ -486,10 +494,10 @@ export default function MensajeriaSection({
         </div>
       ) : (
         /* RENDER VIEW 2: ACTIVE REPARTIDOR DASHBOARD */
-        <div className="flex-1 flex flex-col md:flex-row bg-[#f8fafc]" id="active_courier_panel">
+        <div className="flex-1 flex flex-col lg:flex-row bg-[#f8fafc]" id="active_courier_panel">
           
-          {/* A. LATERAL SIDEBAR NAVIGATION FOR DESKTOP AND LARGE TABLETS (md:flex, hidden on mobile) */}
-          <div className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 p-6 justify-between shrink-0 self-stretch" id="courier_desktop_sidebar">
+          {/* A. LATERAL SIDEBAR NAVIGATION FOR DESKTOP AND LARGE TABLETS (lg:flex, hidden on tablet/mobile) */}
+          <div className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 p-6 justify-between shrink-0 self-stretch" id="courier_desktop_sidebar">
             <div className="space-y-6">
               
               {/* Branding Header */}
@@ -541,10 +549,10 @@ export default function MensajeriaSection({
               <div className="space-y-1.5 pt-1">
                 <button
                   onClick={() => setActiveTab('pedidos')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-xs font-black uppercase tracking-wider ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-black uppercase tracking-wider ${
                     activeTab === 'pedidos'
                       ? 'bg-[#c5a85c] text-white shadow-sm'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
+                      : 'text-slate-650 hover:bg-slate-50 hover:text-slate-950'
                   }`}
                 >
                   <Box size={16} />
@@ -553,10 +561,10 @@ export default function MensajeriaSection({
 
                 <button
                   onClick={() => setActiveTab('metricas')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-xs font-black uppercase tracking-wider ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-black uppercase tracking-wider ${
                     activeTab === 'metricas'
                       ? 'bg-[#c5a85c] text-white shadow-sm'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-955'
+                      : 'text-slate-655 hover:bg-slate-50 hover:text-slate-955'
                   }`}
                 >
                   <TrendingUp size={16} />
@@ -565,14 +573,42 @@ export default function MensajeriaSection({
 
                 <button
                   onClick={() => setActiveTab('perfil')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-xs font-black uppercase tracking-wider ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-black uppercase tracking-wider ${
                     activeTab === 'perfil'
                       ? 'bg-[#c5a85c] text-white shadow-sm'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-955'
+                      : 'text-slate-655 hover:bg-slate-50 hover:text-slate-955'
                   }`}
                 >
                   <User size={16} />
                   <span>Mi Perfil</span>
+                </button>
+
+                {/* BOTON NOTIFICACIONES / CAMPANITA EN SIDEBAR */}
+                <button
+                  onClick={() => {
+                    if (onOpenNotifications) onOpenNotifications();
+                  }}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-sm font-black uppercase tracking-wider text-slate-655 hover:bg-slate-50 hover:text-slate-950 cursor-pointer"
+                  title="Módulo de Notificaciones Directas"
+                >
+                  <span className="flex items-center gap-3">
+                    <Bell size={16} className={notifications.filter(n => !n.read && (n.role === 'Mensajería' || n.role === 'Todos')).length > 0 ? "text-[#c5a85c]" : "text-slate-500"} />
+                    <span>Notificaciones</span>
+                  </span>
+                  {notifications.filter(n => !n.read && (n.role === 'Mensajería' || n.role === 'Todos')).length > 0 && (
+                    <span className="bg-red-500 text-white font-mono text-[10px] px-2 py-0.5 rounded-full font-black animate-pulse">
+                      {notifications.filter(n => !n.read && (n.role === 'Mensajería' || n.role === 'Todos')).length}
+                    </span>
+                  )}
+                </button>
+
+                {/* RETORNO AL SELECTOR DE ROLES */}
+                <button
+                  onClick={onNavigateToHome}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-black uppercase tracking-wider text-slate-655 hover:bg-slate-55 hover:text-slate-900 cursor-pointer border-t border-slate-100 pt-3 mt-2"
+                >
+                  <Home size={16} className="text-[#c5a85c]" />
+                  <span>Selector de Roles</span>
                 </button>
               </div>
 
@@ -594,8 +630,8 @@ export default function MensajeriaSection({
           {/* B. MAIN PORTAL WINDOW FOR CONTENT AND MOBILE HEADER/BOTTOM NAVIGATION */}
           <div className="flex-1 flex flex-col justify-between overflow-hidden" id="courier_main_portal_viewport">
             
-            {/* Header Mobile Style (shown on mobile, hidden on widescreen) */}
-            <div className="md:hidden bg-white border-b border-slate-100 px-5 py-4 flex justify-between items-center" id="courier_panel_header">
+            {/* Header Mobile Style (shown on mobile, hidden on widescreen - lg:hidden) */}
+            <div className="lg:hidden bg-white border-b border-slate-100 px-5 py-4 flex justify-between items-center" id="courier_panel_header">
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <img 
@@ -608,28 +644,58 @@ export default function MensajeriaSection({
                 </div>
                 <div>
                   <div className="flex items-center gap-1">
-                    <p className="text-xs font-black text-slate-800 leading-none">{currentCourier.name}</p>
-                    <span className="p-0.5 bg-[#fef08a] text-yellow-800 rounded font-black text-[8px] flex items-center gap-px">
+                    <p className="text-xs sm:text-sm font-black text-slate-800 leading-none">{currentCourier.name}</p>
+                    <span className="p-0.5 bg-[#fef08a] text-yellow-850 rounded font-black text-[9px] flex items-center gap-px">
                        ⭐ {currentCourier.rating}
                     </span>
                   </div>
-                  <p className="text-[10px] text-slate-400 capitalize font-mono pt-1">
+                  <p className="text-[10px] text-slate-450 uppercase font-mono pt-1">
                     {currentCourier.vehicle} • <span className="bg-slate-100 px-1 py-0.5 rounded font-black">{currentCourier.vehiclePlate || 'BICI'}</span>
                   </p>
                 </div>
               </div>
 
-              {/* Log out mobile button */}
-              <button
-                onClick={() => {
-                  setCurrentCourier(null); 
-                  showToast('Sesión de reparto cerrada con éxito', 'info');
-                }}
-                className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg transition"
-                title="Cerrar Sesión"
-              >
-                <LogOut size={16} />
-              </button>
+              {/* Mobile Toolbar: Bell + Home + Logout */}
+              <div className="flex items-center gap-2.5" id="courier_mobile_header_tools">
+                {/* Bell Icon with Badge */}
+                <button
+                  onClick={() => {
+                    if (onOpenNotifications) {
+                      onOpenNotifications();
+                    }
+                  }}
+                  className="relative p-2.5 hover:bg-slate-50 text-slate-600 hover:text-[#c5a85c] rounded-xl transition cursor-pointer"
+                  title="Ver Notificaciones"
+                >
+                  <Bell size={18} className={notifications.filter(n => !n.read && (n.role === 'Mensajería' || n.role === 'Todos')).length > 0 ? "text-[#c5a85c]" : "text-slate-600"} />
+                  {notifications.filter(n => !n.read && (n.role === 'Mensajería' || n.role === 'Todos')).length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-550 bg-red-500 text-white font-black text-[9px] rounded-full flex items-center justify-center animate-pulse border border-white">
+                      {notifications.filter(n => !n.read && (n.role === 'Mensajería' || n.role === 'Todos')).length}
+                    </span>
+                  )}
+                </button>
+
+                {/* Home navigation breadcrumb shortcut */}
+                <button
+                  onClick={onNavigateToHome}
+                  className="p-2.5 hover:bg-slate-50 text-slate-600 hover:text-[#c5a85c] rounded-xl transition cursor-pointer"
+                  title="Cambiar Rol / Volver al Selector"
+                >
+                  <Home size={18} />
+                </button>
+
+                {/* Log out mobile button */}
+                <button
+                  onClick={() => {
+                    setCurrentCourier(null); 
+                    showToast('Sesión de reparto cerrada con éxito', 'info');
+                  }}
+                  className="p-2.5 bg-red-50 hover:bg-red-100 text-red-650 text-red-600 rounded-xl transition cursor-pointer"
+                  title="Cerrar Sesión de Reparto"
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
             </div>
 
             {/* DASHBOARD TABS ENGINE */}
@@ -1042,8 +1108,8 @@ export default function MensajeriaSection({
 
           </div>
 
-          {/* DASHBOARD BOTTOM PHONE NAVIGATION FOOTER (md:hidden) */}
-          <div className="md:hidden bg-white border-t border-slate-150 px-2 py-2 flex justify-around items-center shrink-0" id="courier_phone_navbar">
+          {/* DASHBOARD BOTTOM PHONE NAVIGATION FOOTER (lg:hidden) */}
+          <div className="lg:hidden bg-white border-t border-slate-150 px-2 py-2 flex justify-around items-center shrink-0" id="courier_phone_navbar">
             
             <button
               onClick={() => setActiveTab('pedidos')}

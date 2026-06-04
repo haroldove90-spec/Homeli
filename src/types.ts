@@ -90,3 +90,15 @@ export interface UserProfile {
   status: 'Activo' | 'Inactivo';
   lastActive: string;
 }
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  role: 'Administrador' | 'Servicios' | 'Ventas' | 'Mensajería' | 'Cliente' | 'Todos';
+  read: boolean;
+  targetId?: string;
+  type?: 'compra' | 'asignacion' | 'mensajeria' | 'registro' | 'entrega' | 'sistema';
+}
+
