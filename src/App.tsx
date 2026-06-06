@@ -145,10 +145,10 @@ export default function App() {
       const persisted = localStorage.getItem('homeli_products');
       const parsed = persisted ? JSON.parse(persisted) : initialProducts;
       return Array.isArray(parsed) 
-        ? parsed.filter((p: ProductItem) => p.category === 'Productos de limpieza' || p.category === 'Zapatos')
-        : initialProducts.filter((p: ProductItem) => p.category === 'Productos de limpieza' || p.category === 'Zapatos');
+        ? parsed.filter((p: ProductItem) => p.category === 'Productos de limpieza' || p.category === 'Zapatos' || p.category === 'Servicios')
+        : initialProducts.filter((p: ProductItem) => p.category === 'Productos de limpieza' || p.category === 'Zapatos' || p.category === 'Servicios');
     } catch {
-      return initialProducts.filter((p: ProductItem) => p.category === 'Productos de limpieza' || p.category === 'Zapatos');
+      return initialProducts.filter((p: ProductItem) => p.category === 'Productos de limpieza' || p.category === 'Zapatos' || p.category === 'Servicios');
     }
   });
 
@@ -372,11 +372,55 @@ export default function App() {
 
   const handleAddService = (service: ServiceRequest) => {
     setServices(prev => [service, ...prev]);
+    handleAddNotification(
+      'Nuevo Servicio de Limpieza',
+      `El cliente ${service.clientName} ha solicitado: ${service.serviceType}. Costo: $${service.price} MXN.`,
+      'Administrador',
+      'sistema',
+      service.id
+    );
+    handleAddNotification(
+      'Nueva Tarea de Limpieza',
+      `Se agendó la limpieza de ${service.serviceType} para ${service.clientName}. Dirección: ${service.address}.`,
+      'Servicios',
+      'sistema',
+      service.id
+    );
   };
 
   const handleUpdateServiceStatus = (id: string, status: ServiceStatus) => {
     setServices(prev => prev.map(s => s.id === id ? { ...s, status } : s));
     onAddLog(`Estado del servicio ${id} modificado a: ${status.toUpperCase()}`, 'info');
+
+    // Retrieve service metadata from current state for rich notification context
+    const currentService = services.find(s => s.id === id);
+    if (currentService) {
+      const statusLabels = {
+        programado: 'Programado',
+        en_progreso: 'En Ruta',
+        completado: 'Completado',
+        cancelado: 'Cancelado'
+      };
+      const label = statusLabels[status] || status;
+      
+      // Alert the Cliente!
+      handleAddNotification(
+        `Servicio ${label}`,
+        `Tu solicitud de limpieza para [${currentService.serviceType}] se encuentra ahora: ${label.toUpperCase()}.`,
+        'Cliente',
+        status === 'completado' ? 'entrega' : 'sistema',
+        id
+      );
+      
+      // Alert the Administrador!
+      handleAddNotification(
+        `Servicio Actualizado (${id})`,
+        `El especialista cambió la orden del cliente ${currentService.clientName} a: ${label.toUpperCase()}.`,
+        'Administrador',
+        status === 'completado' ? 'entrega' : 'sistema',
+        id
+      );
+    }
   };
 
   const handleAddProduct = (product: ProductItem) => {
@@ -973,9 +1017,13 @@ export default function App() {
                 )}
 
                 {activeSection === 'servicios' && (
-                  <div className="min-h-[50vh] bg-white rounded-2xl border border-natural-border/30 shadow-sm flex items-center justify-center p-8" id="servicios_blank_placeholder">
-                    <span className="text-sm font-bold text-natural-muted uppercase tracking-wider">Módulo Servicios en Blanco</span>
-                  </div>
+                  <ServiciosSection 
+                    services={services}
+                    onAddService={handleAddService}
+                    onUpdateServiceStatus={handleUpdateServiceStatus}
+                    onAddLog={onAddLog}
+                    products={products}
+                  />
                 )}
 
                 {activeSection === 'ventas' && (

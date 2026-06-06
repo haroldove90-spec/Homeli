@@ -1,6 +1,8 @@
 {
   "name": "Homeli",
   "description": "Dashboard para la plataforma Homeli con secciones para Administrador, Servicios y Ventas Ecommerce, incluyendo instalación PWA.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": [
+    "camera"
+  ],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

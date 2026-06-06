@@ -151,7 +151,7 @@ export default function AdminSection({
 
   // E-commerce catalogue state filters
   const [productSearch, setProductSearch] = useState('');
-  const [catalogCategoryFilter, setCatalogCategoryFilter] = useState<'todos' | 'Productos de limpieza' | 'Zapatos'>('todos');
+  const [catalogCategoryFilter, setCatalogCategoryFilter] = useState<'todos' | 'Productos de limpieza' | 'Zapatos' | 'Servicios'>('todos');
 
   // Product modal controllers
   const [showProductModal, setShowProductModal] = useState(false);
@@ -163,7 +163,7 @@ export default function AdminSection({
   const [pSku, setPSku] = useState('');
   const [pPrice, setPPrice] = useState(0);
   const [pStock, setPStock] = useState(0);
-  const [pCategory, setPCategory] = useState<'Productos de limpieza' | 'Zapatos'>('Productos de limpieza');
+  const [pCategory, setPCategory] = useState<'Productos de limpieza' | 'Zapatos' | 'Servicios'>('Productos de limpieza');
   const [pDesc, setPDesc] = useState('');
   const [pImgUrl, setPImgUrl] = useState('');
   const [pSalesCount, setPSalesCount] = useState(0);
@@ -271,7 +271,7 @@ export default function AdminSection({
 
   // SKU self generator helper
   const handleGenerateSku = () => {
-    const prefix = pCategory === 'Zapatos' ? 'HML-ZAP' : 'HML-LIM';
+    const prefix = pCategory === 'Zapatos' ? 'HML-ZAP' : pCategory === 'Servicios' ? 'HML-SRV' : 'HML-LIM';
     const randomNum = Math.floor(10 + Math.random() * 90);
     setPSku(`${prefix}-${randomNum}`);
   };
@@ -299,7 +299,7 @@ export default function AdminSection({
     setPSku(prod.sku);
     setPPrice(prod.price);
     setPStock(prod.stock);
-    setPCategory(prod.category === 'Zapatos' ? 'Zapatos' : 'Productos de limpieza');
+    setPCategory(prod.category === 'Zapatos' ? 'Zapatos' : prod.category === 'Servicios' ? 'Servicios' : 'Productos de limpieza');
     setPDesc(prod.description);
     setPImgUrl(prod.imageUrl || '');
     setPSalesCount(prod.salesCount || 0);
@@ -317,6 +317,8 @@ export default function AdminSection({
 
     const imgFallback = pImgUrl.trim() || (pCategory === 'Zapatos' 
       ? 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsPlV5u1UOTpXsbHztz8RAntDJ8LeRMTVFaQ&s'
+      : pCategory === 'Servicios'
+      ? 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&auto=format&fit=crop&q=60'
       : 'https://ecotropa.mx/cdn/shop/products/BRL_0524fa1b-f52c-48c0-b5d8-5b9713eca802_700x.jpg?v=1667955081');
 
     const formattedProduct: ProductItem = {
@@ -609,7 +611,7 @@ export default function AdminSection({
                       <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                         <div 
                           className={`h-full rounded-full transition-all duration-500 ${
-                            p.category === 'Zapatos' ? 'bg-[#c5a85c]' : 'bg-emerald-600'
+                            p.category === 'Zapatos' ? 'bg-[#c5a85c]' : p.category === 'Servicios' ? 'bg-indigo-600' : 'bg-emerald-600'
                           }`}
                           style={{ width: `${widthPercent}%` }}
                         />
@@ -932,7 +934,7 @@ export default function AdminSection({
             <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
               {/* Category Filter Chips */}
               <div className="flex flex-wrap gap-2 self-start animate-fade-in">
-                {(['todos', 'Productos de limpieza', 'Zapatos'] as const).map(cat => (
+                {(['todos', 'Productos de limpieza', 'Zapatos', 'Servicios'] as const).map(cat => (
                   <button
                     key={cat}
                     onClick={() => setCatalogCategoryFilter(cat)}
@@ -942,7 +944,7 @@ export default function AdminSection({
                         : 'bg-white border-slate-200 text-slate-655 hover:text-slate-900'
                     }`}
                   >
-                    {cat === 'todos' ? '🌐 Todos los Productos' : cat === 'Zapatos' ? '👠 Zapatos' : '🧴 Limpieza'}
+                    {cat === 'todos' ? '🌐 Todos los Productos' : cat === 'Zapatos' ? '👠 Zapatos' : cat === 'Servicios' ? '✨ Servicios de Limpieza' : '🧴 Limpieza'}
                   </button>
                 ))}
               </div>
@@ -1005,7 +1007,7 @@ export default function AdminSection({
                         <td className="p-4 text-center">
                           <div className="flex flex-col items-center gap-1.5">
                             <span className={`inline-block px-2.5 py-1 rounded-md text-xs font-black uppercase tracking-wider ${
-                              p.category === 'Zapatos' ? 'bg-[#c5a85c]/10 text-[#a38439]' : 'bg-emerald-50 text-emerald-800'
+                              p.category === 'Zapatos' ? 'bg-[#c5a85c]/10 text-[#a38439]' : p.category === 'Servicios' ? 'bg-indigo-50 text-indigo-800' : 'bg-emerald-50 text-emerald-800'
                             }`}>
                               {p.category}
                             </span>
@@ -1855,17 +1857,18 @@ export default function AdminSection({
                   </div>
 
                   <div>
-                    <label className="block text-xs font-black uppercase text-slate-500 tracking-wider mb-1">Categoría del E-commerce</label>
+                    <label className="block text-xs font-black uppercase text-slate-500 tracking-wider mb-1">Categoría del E-commerce / Servicios</label>
                     <select
                       value={pCategory}
                       onChange={(e) => {
-                        const val = e.target.value as 'Productos de limpieza' | 'Zapatos';
+                        const val = e.target.value as 'Productos de limpieza' | 'Zapatos' | 'Servicios';
                         setPCategory(val);
                       }}
                       className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm sm:text-base font-bold bg-white text-slate-805 bg-slate-50 focus:border-[#c5a85c] focus:outline-none"
                     >
                       <option value="Productos de limpieza">🧴 Productos de limpieza</option>
                       <option value="Zapatos">👠 Zapatos (Calzado)</option>
+                      <option value="Servicios">✨ Servicios de Limpieza (Sincronizado)</option>
                     </select>
                   </div>
                 </div>

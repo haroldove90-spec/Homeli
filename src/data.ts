@@ -254,6 +254,80 @@ export const initialProducts: ProductItem[] = [
     salesCount: 95,
     description: 'Limpiador líquido aromatizante universal de pisos que neutraliza olores desagradables y brinda un aroma relajante de lavanda.',
     imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTuB_85xkc8sC17WUP9lqDuIEY-KbX-tOJHqg&s'
+  },
+  
+  // Servicios category (6 items from the user's requested lists)
+  {
+    id: 'SRV-001',
+    name: 'ZAPATOS',
+    sku: 'HML-SRV-01',
+    category: 'Servicios',
+    price: 350,
+    stock: 100,
+    salesCount: 14,
+    description: 'Limpieza y restauración profunda para calzado fino, deportivos, gamuza o cuero con sellado de protección Homeli.',
+    imageUrl: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&auto=format&fit=crop&q=60',
+    active: true
+  },
+  {
+    id: 'SRV-002',
+    name: 'ROPAS',
+    sku: 'HML-SRV-02',
+    category: 'Servicios',
+    price: 450,
+    stock: 100,
+    salesCount: 22,
+    description: 'Lavado, planchado y sanitizado higiénico para todo tipo de prendas delicadas, vestidos de fiesta e indumentaria de atelier.',
+    imageUrl: 'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=400&auto=format&fit=crop&q=60',
+    active: true
+  },
+  {
+    id: 'SRV-003',
+    name: 'FULL HOME CLEANING',
+    sku: 'HML-SRV-03',
+    category: 'Servicios',
+    price: 1850,
+    stock: 100,
+    salesCount: 31,
+    description: 'Limpieza integral premium a detalle de todas las habitaciones, sala de estar, cristales y aromatización profunda del hogar.',
+    imageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&auto=format&fit=crop&q=60',
+    active: true
+  },
+  {
+    id: 'SRV-004',
+    name: 'LIMPIEZA DE BAÑO',
+    sku: 'HML-SRV-04',
+    category: 'Servicios',
+    price: 600,
+    stock: 100,
+    salesCount: 18,
+    description: 'Desincrustación profunda de azulejos, desinfección total de retretes, canceles de vidrio y pulido de grifería fina.',
+    imageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&auto=format&fit=crop&q=60',
+    active: true
+  },
+  {
+    id: 'SRV-005',
+    name: 'LIMPIEZA DE COCINAR',
+    sku: 'HML-SRV-05',
+    category: 'Servicios',
+    price: 850,
+    stock: 100,
+    salesCount: 9,
+    description: 'Remoción de grasa y Cochambre a detalle en estufa, campanas, hornos, tarjas y encimeras de granito con insumos no abrasivos.',
+    imageUrl: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=400&auto=format&fit=crop&q=60',
+    active: true
+  },
+  {
+    id: 'SRV-006',
+    name: 'TAPETES Y SOFA',
+    sku: 'HML-SRV-06',
+    category: 'Servicios',
+    price: 1200,
+    stock: 100,
+    salesCount: 42,
+    description: 'Lavado por inyección y succión con sistema de secado rápido para alfombras, sillones, sofás y cojinería fina.',
+    imageUrl: 'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=400&auto=format&fit=crop&q=60',
+    active: true
   }
 ];
 

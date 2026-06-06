@@ -9,7 +9,7 @@ export interface ServiceRequest {
   id: string;
   clientName: string;
   clientEmail: string;
-  serviceType: 'Limpieza Integral' | 'Mantenimiento Fontanería' | 'Electricidad General' | 'Pintura y Retoques' | 'Soporte Climatización' | 'Jardinería Paisajismo';
+  serviceType: 'Limpieza Integral' | 'Mantenimiento Fontanería' | 'Electricidad General' | 'Pintura y Retoques' | 'Soporte Climatización' | 'Jardinería Paisajismo' | string;
   date: string;
   address: string;
   price: number;
@@ -17,6 +17,8 @@ export interface ServiceRequest {
   assignedStaff: string;
   priority: 'Baja' | 'Media' | 'Alta';
   notes?: string;
+  uploadedPhoto?: string;
+  selectedItems?: string[];
 }
 
 export type OrderStatus = 'procesando' | 'enviado' | 'entregado' | 'cancelado';
