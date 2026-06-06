@@ -43,8 +43,8 @@ export default function ServiciosSection({
   onAddLog,
   products = []
 }: ServiciosSectionProps) {
-  // Navigation tabs: 'cliente' (mockup form) vs 'control' (operator panel) vs 'perfil' (client profile tracking)
-  const [currentView, setCurrentView] = useState<'cliente' | 'control' | 'perfil'>('cliente');
+  // Navigation tabs: 'cliente' (mockup form) vs 'perfil' (client profile tracking)
+  const [currentView, setCurrentView] = useState<'cliente' | 'perfil'>('cliente');
 
   // Filters for client profile view
   const [profileEmailFilter, setProfileEmailFilter] = useState('');
@@ -283,16 +283,6 @@ export default function ServiciosSection({
             }`}
           >
             📋 Solicitar Limpieza (Cliente)
-          </button>
-          <button
-            onClick={() => { stopWebcam(); setCurrentView('control'); }}
-            className={`px-3 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
-              currentView === 'control' 
-                ? 'bg-[#c5a85c] text-white shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            ⚙️ Control de Operación (Técnico)
           </button>
           <button
             onClick={() => { stopWebcam(); setCurrentView('perfil'); }}
