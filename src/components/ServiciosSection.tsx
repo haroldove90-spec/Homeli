@@ -43,8 +43,12 @@ export default function ServiciosSection({
   onAddLog,
   products = []
 }: ServiciosSectionProps) {
-  // Navigation tabs: 'cliente' (mockup form) vs 'control' (operator panel)
-  const [currentView, setCurrentView] = useState<'cliente' | 'control'>('cliente');
+  // Navigation tabs: 'cliente' (mockup form) vs 'control' (operator panel) vs 'perfil' (client profile tracking)
+  const [currentView, setCurrentView] = useState<'cliente' | 'control' | 'perfil'>('cliente');
+
+  // Filters for client profile view
+  const [profileEmailFilter, setProfileEmailFilter] = useState('');
+  const [profileStatusFilter, setProfileStatusFilter] = useState<'todos' | 'pendientes' | 'completados'>('todos');
 
   // Filters for Technician Board
   const [statusFilter, setStatusFilter] = useState<'todos' | ServiceStatus>('todos');
@@ -269,10 +273,10 @@ export default function ServiciosSection({
         </div>
 
         {/* View togglers with segmented animation */}
-        <div className="bg-slate-100 p-1 rounded-xl flex border border-slate-200 shrink-0">
+        <div className="bg-slate-100 p-1 rounded-xl flex flex-wrap gap-1 border border-slate-200 shrink-0">
           <button
             onClick={() => { stopWebcam(); setCurrentView('cliente'); }}
-            className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+            className={`px-3 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
               currentView === 'cliente' 
                 ? 'bg-purple-600 text-white shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
@@ -282,13 +286,23 @@ export default function ServiciosSection({
           </button>
           <button
             onClick={() => { stopWebcam(); setCurrentView('control'); }}
-            className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+            className={`px-3 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
               currentView === 'control' 
                 ? 'bg-[#c5a85c] text-white shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             ⚙️ Control de Operación (Técnico)
+          </button>
+          <button
+            onClick={() => { stopWebcam(); setCurrentView('perfil'); }}
+            className={`px-3 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+              currentView === 'perfil' 
+                ? 'bg-slate-900 text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            👤 Mi Perfil de Servicios
           </button>
         </div>
       </div>
@@ -821,6 +835,220 @@ export default function ServiciosSection({
                 )}
               </AnimatePresence>
             </div>
+          </motion.div>
+        )}
+
+        {currentView === 'perfil' && (
+          <motion.div
+            key="client_profile_tab"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            className="space-y-6 text-left"
+          >
+            {/* SEARCH PORTLET BOX */}
+            <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
+              <div className="border-b border-slate-100 pb-3">
+                <h3 className="text-lg font-serif font-black text-slate-800">Mi Historial de Servicios</h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Ingrese el correo electrónico con el que agendó su limpieza para ver el estatus de sus servicios en tiempo real.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <input
+                    type="email"
+                    value={profileEmailFilter}
+                    onChange={(e) => setProfileEmailFilter(e.target.value)}
+                    placeholder="Ingrese su correo electrónico (ej. cliente@ejemplo.com)"
+                    className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:border-purple-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-purple-600 transition font-medium"
+                  />
+                  <div className="absolute left-3.5 top-3.5 text-slate-400">
+                    📧
+                  </div>
+                </div>
+
+                {profileEmailFilter && (
+                  <button
+                    onClick={() => setProfileEmailFilter('')}
+                    className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-650 font-bold text-xs rounded-xl transition cursor-pointer"
+                  >
+                    Limpiar Filtro
+                  </button>
+                )}
+              </div>
+
+              {/* Quick Suggestion Chips for Simulation convenience */}
+              <div className="pt-2 text-xs text-slate-500">
+                <span className="font-bold text-slate-600">Simulación interactiva (Selección rápida de correos registrados): </span>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {services.length === 0 ? (
+                    <span className="italic text-slate-400 text-[11px]">No hay solicitudes creadas aún. Cree una en la sección "Solicitar Limpieza" para verla reflejada aquí.</span>
+                  ) : (
+                    Array.from(new Set(services.map(s => s.clientEmail))).slice(0, 4).map(email => (
+                      <button
+                        key={email}
+                        onClick={() => setProfileEmailFilter(email)}
+                        className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-[10px] rounded-lg border border-purple-200/40 transition cursor-pointer"
+                        type="button"
+                      >
+                        📬 {email}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* RESULTS CONTENT AREA */}
+            {!profileEmailFilter.trim() ? (
+              <div className="bg-[#fcfaf2]/50 border border-[#c5a85c]/10 rounded-2xl p-8 text-center space-y-2">
+                <span className="text-3xl">🔑</span>
+                <h4 className="text-sm font-black uppercase text-slate-700 tracking-wider">Esperando Correo de Consulta</h4>
+                <p className="text-slate-500 text-xs max-w-md mx-auto">
+                  Ingrese su correo electrónico arriba o presione uno de los correos sugeridos de su historial para desplegar su estado de reservaciones de forma segura.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Secondary status filter tabs */}
+                <div className="flex gap-2 bg-slate-100 p-1 rounded-xl self-start w-fit border border-slate-200">
+                  <button
+                    onClick={() => setProfileStatusFilter('todos')}
+                    className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg transition cursor-pointer ${profileStatusFilter === 'todos' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-905'}`}
+                  >
+                    Todos
+                  </button>
+                  <button
+                    onClick={() => setProfileStatusFilter('pendientes')}
+                    className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg transition cursor-pointer ${profileStatusFilter === 'pendientes' ? 'bg-purple-600 text-white' : 'text-slate-600 hover:text-slate-905'}`}
+                  >
+                    En Progreso
+                  </button>
+                  <button
+                    onClick={() => setProfileStatusFilter('completados')}
+                    className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg transition cursor-pointer ${profileStatusFilter === 'completados' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-905'}`}
+                  >
+                    Finalizados
+                  </button>
+                </div>
+
+                {/* Filter matches list */}
+                {services.filter(s => {
+                  const emailMatched = s.clientEmail.toLowerCase().trim() === profileEmailFilter.toLowerCase().trim();
+                  if (!emailMatched) return false;
+                  if (profileStatusFilter === 'pendientes') {
+                    return s.status === 'programado' || s.status === 'en_progreso';
+                  }
+                  if (profileStatusFilter === 'completados') {
+                    return s.status === 'completado' || s.status === 'cancelado';
+                  }
+                  return true;
+                }).length === 0 ? (
+                  <div className="bg-white border border-slate-200 rounded-3xl p-8 text-center">
+                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-2">Ningún registro coincide con sus filtros actuales de correo/estado</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {services.filter(s => {
+                      const emailMatched = s.clientEmail.toLowerCase().trim() === profileEmailFilter.toLowerCase().trim();
+                      if (!emailMatched) return false;
+                      if (profileStatusFilter === 'pendientes') {
+                        return s.status === 'programado' || s.status === 'en_progreso';
+                      }
+                      if (profileStatusFilter === 'completados') {
+                        return s.status === 'completado' || s.status === 'cancelado';
+                      }
+                      return true;
+                    }).map(s => (
+                      <div
+                        key={s.id}
+                        className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-slate-350 transition duration-200 space-y-4 shadow-xs text-left"
+                      >
+                        <div className="flex justify-between items-start gap-2 border-b border-slate-100 pb-2.5">
+                          <div>
+                            <span className="text-[10px] font-mono font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                              {s.id}
+                            </span>
+                            <h4 className="font-serif font-black text-slate-800 text-sm mt-2">{s.clientName}</h4>
+                          </div>
+
+                          <div className="text-right">
+                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-lg border ${
+                              s.status === 'programado' ? 'bg-sky-50 text-sky-700 border-sky-100' :
+                              s.status === 'en_progreso' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                              s.status === 'completado' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                              'bg-rose-50 text-rose-700 border-rose-100'
+                            }`}>
+                              {s.status === 'programado' ? 'Programado' : s.status === 'en_progreso' ? 'En Ruta' : s.status === 'completado' ? 'Completado' : 'Cancelado'}
+                            </span>
+                            <span className="text-xs font-black block mt-1.5 text-slate-900 font-mono">
+                              ${s.price} MXN
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Breakdown */}
+                        <div className="text-xs space-y-2 leading-relaxed">
+                          <div>
+                            <p className="text-[9px] font-black uppercase text-slate-400">Servicios Contratados</p>
+                            <p className="font-bold text-purple-700">{s.serviceType}</p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-black uppercase text-slate-400">Lugar de Intervención</p>
+                            <p className="font-semibold text-slate-700">{s.address}</p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-black uppercase text-slate-400">Fecha y Hora Pactada</p>
+                            <p className="font-semibold text-slate-700">📅 {new Date(s.date).toLocaleDateString()} • {new Date(s.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                          </div>
+                        </div>
+
+                        {/* Tracking timeline */}
+                        <div className="pt-2 border-t border-slate-50">
+                          <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider mb-2">Línea de Progreso Operativo</p>
+                          <div className="relative pl-4 border-l border-slate-200 ml-1 space-y-3">
+                            <div className="relative">
+                              <span className="absolute -left-[21px] top-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white shadow-xs" />
+                              <p className="text-[10px] font-black text-slate-800">Solicitud Recibida</p>
+                              <p className="text-[9px] text-slate-400">Su reservación ha ingresado a nuestra central con Éxito.</p>
+                            </div>
+                            <div className="relative">
+                              <span className={`absolute -left-[21px] top-0.5 w-2.5 h-2.5 rounded-full ${s.assignedStaff ? 'bg-emerald-500' : 'bg-slate-300'} border-2 border-white shadow-xs`} />
+                              <p className="text-[10px] font-black text-slate-800">Personal Asignado</p>
+                              <p className="text-[9px] text-slate-400">
+                                {s.assignedStaff ? `Asignado a: ${s.assignedStaff}` : 'Coordinando especialista del taller.'}
+                              </p>
+                            </div>
+                            <div className="relative">
+                              <span className={`absolute -left-[21px] top-0.5 w-2.5 h-2.5 rounded-full ${s.status === 'completado' ? 'bg-emerald-500' : s.status === 'en_progreso' ? 'bg-indigo-500' : 'bg-slate-300'} border-2 border-white shadow-xs`} />
+                              <p className="text-[10px] font-black text-slate-800">Ejecución Física</p>
+                              <p className="text-[9px] text-slate-400">
+                                {s.status === 'programado' ? 'Esperando llegada del técnico el día programado.' :
+                                 s.status === 'en_progreso' ? '🚚 Técnico va en camino o realizando mantenimiento.' :
+                                 s.status === 'completado' ? '✅ Servicio completado de forma impecable.' :
+                                 '🚫 Servicio cancelado.'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Client Evidence preview thumbnail */}
+                        {s.uploadedPhoto && (
+                          <div className="pt-2 border-t border-slate-150 flex items-center justify-between">
+                            <span className="text-[9px] font-black uppercase text-slate-400 font-sans">Evidencias Adjuntas:</span>
+                            <div className="relative group w-14 h-10 rounded-lg overflow-hidden border border-slate-200">
+                              <img src={s.uploadedPhoto} className="w-full h-full object-cover" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

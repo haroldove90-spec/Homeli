@@ -218,10 +218,10 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(false);
 
   // States to control active admin module via header hamburger dropdown with localStorage persistence
-  const [adminActiveTab, setAdminActiveTab] = useState<'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros'>(() => {
+  const [adminActiveTab, setAdminActiveTab] = useState<'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros' | 'servicios_control'>(() => {
     try {
       const persisted = localStorage.getItem('homeli_admin_active_tab');
-      return (persisted as 'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros') || 'metrics';
+      return (persisted as any) || 'metrics';
     } catch {
       return 'metrics';
     }
@@ -720,6 +720,24 @@ export default function App() {
                           {adminActiveTab === 'entrega_mensajeros' && <span className="w-2 h-2 rounded-full bg-[#c5a85c]" />}
                         </button>
 
+                        <button
+                          onClick={() => {
+                            setAdminActiveTab('servicios_control');
+                            setShowAdminHamburgerDropdown(false);
+                          }}
+                          className={`w-full text-left px-3 py-3 rounded-xl text-sm font-black transition flex items-center justify-between cursor-pointer ${
+                            adminActiveTab === 'servicios_control'
+                              ? 'bg-[#c5a85c]/10 text-[#a38439]'
+                              : 'text-slate-705 hover:bg-slate-50 hover:text-slate-900'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2">
+                            <span className="text-base">✨</span>
+                            <span>Control de Servicios</span>
+                          </span>
+                          {adminActiveTab === 'servicios_control' && <span className="w-2 h-2 rounded-full bg-[#c5a85c]" />}
+                        </button>
+
                         <div className="border-t border-slate-100 my-1 pt-1.5">
                           <button
                             onClick={() => {
@@ -999,6 +1017,7 @@ export default function App() {
                     }}
                     activeTab={adminActiveTab}
                     onChangeTab={setAdminActiveTab}
+                    onUpdateServiceStatus={handleUpdateServiceStatus}
                   />
                 )}
 

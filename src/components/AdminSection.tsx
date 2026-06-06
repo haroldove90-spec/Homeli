@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { ServiceRequest, ProductItem, SalesOrder, SystemLog, UserProfile, CourierProfile, DeliveryStatus } from '../types';
+import { ServiceRequest, ServiceStatus, ProductItem, SalesOrder, SystemLog, UserProfile, CourierProfile, DeliveryStatus } from '../types';
 import { 
   Users, 
   Terminal, 
@@ -61,8 +61,9 @@ interface AdminSectionProps {
   bannerOverlayCol?: string;
   bannerOverlayOpacity?: number;
   onUpdateBannerSettings?: (bg: string, title: string, tag: string, desc: string, overlayCol: string, overlayOpacity: number) => void;
-  activeTab?: 'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros';
-  onChangeTab?: (tab: 'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros') => void;
+  activeTab?: 'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros' | 'servicios_control';
+  onChangeTab?: (tab: 'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros' | 'servicios_control') => void;
+  onUpdateServiceStatus?: (id: string, status: ServiceStatus) => void;
 }
 
 export default function AdminSection({
@@ -88,7 +89,8 @@ export default function AdminSection({
   bannerOverlayOpacity = 60,
   onUpdateBannerSettings,
   activeTab: propActiveTab,
-  onChangeTab: propOnChangeTab
+  onChangeTab: propOnChangeTab,
+  onUpdateServiceStatus
 }: AdminSectionProps) {
   // Sync state to handle parent changes in real time
   const [localBannerBg, setLocalBannerBg] = useState(bannerBg);
@@ -97,6 +99,12 @@ export default function AdminSection({
   const [localBannerDesc, setLocalBannerDesc] = useState(bannerDesc);
   const [localBannerOverlayCol, setLocalBannerOverlayCol] = useState(bannerOverlayCol);
   const [localBannerOverlayOpacity, setLocalBannerOverlayOpacity] = useState(bannerOverlayOpacity);
+
+  // States for services control tab
+  const [adminServiceSearch, setAdminServiceSearch] = useState('');
+  const [adminServiceStatusFilter, setAdminServiceStatusFilter] = useState<'todos' | ServiceStatus>('todos');
+  const [adminServicePriorityFilter, setAdminServicePriorityFilter] = useState<'todos' | 'Baja' | 'Media' | 'Alta'>('todos');
+  const [selectedPreviewImage, setSelectedPreviewImage] = useState<string | null>(null);
 
   useEffect(() => {
     setLocalBannerBg(bannerBg);
@@ -127,8 +135,8 @@ export default function AdminSection({
     setLocalBannerOverlayOpacity(bannerOverlayOpacity);
   }, [bannerOverlayOpacity]);
 
-  // Navigation tabs: 'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros'
-  const [localActiveTab, setLocalActiveTab] = useState<'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros'>('metrics');
+  // Navigation tabs: 'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros' | 'servicios_control'
+  const [localActiveTab, setLocalActiveTab] = useState<'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros' | 'servicios_control'>('metrics');
   const activeTab = propActiveTab || localActiveTab;
   const setActiveTab = propOnChangeTab || setLocalActiveTab;
 
@@ -1814,7 +1822,389 @@ export default function AdminSection({
         </motion.div>
       )}
 
-      {/* ================================== MODAL: AGREGAR O EDITAR PRODUCTO EN EL CATALOGO (E-commerce Manager) ================================== */}
+      {/* ================================== TAB 5: CONTROL DE SERVICIOS Y SOLICITUDES DE LIMPIEZA ================================== */}
+      {activeTab === 'servicios_control' && (
+        <motion.div
+          key="servicios_control_tab"
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-6 text-left"
+          id="admin_servicios_control_wrapper"
+        >
+          {/* Service Statistics Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
+              <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Total Solicitudes</p>
+              <h4 className="text-xl font-bold text-slate-900 font-serif mt-1">{services.length}</h4>
+            </div>
+            <div className="bg-sky-50/50 p-4 rounded-xl border border-sky-100">
+              <p className="text-[9px] font-black uppercase text-sky-600 tracking-wider">Programadas</p>
+              <h4 className="text-xl font-bold text-sky-700 font-serif mt-1">
+                {services.filter(s => s.status === 'programado').length}
+              </h4>
+            </div>
+            <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100">
+              <p className="text-[9px] font-black uppercase text-amber-600 tracking-wider">En Ruta/Progreso</p>
+              <h4 className="text-xl font-bold text-amber-700 font-serif mt-1">
+                {services.filter(s => s.status === 'en_progreso').length}
+              </h4>
+            </div>
+            <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
+              <p className="text-[9px] font-black uppercase text-emerald-600 tracking-wider">Completadas</p>
+              <h4 className="text-xl font-bold text-emerald-700 font-serif mt-1">
+                {services.filter(s => s.status === 'completado').length}
+              </h4>
+            </div>
+            <div className="bg-rose-50/50 p-4 rounded-xl border border-rose-100">
+              <p className="text-[9px] font-black uppercase text-rose-600 tracking-wider">Canceladas</p>
+              <h4 className="text-xl font-bold text-rose-700 font-serif mt-1">
+                {services.filter(s => s.status === 'cancelado').length}
+              </h4>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* LEFT AREA: SOLICITUDES DE LIMPIEZA RECIBIDAS (2/3 width on large) */}
+            <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-5 space-y-4 shadow-sm">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-3">
+                <div>
+                  <h3 className="text-lg font-serif font-black text-slate-800">Solicitudes de Limpieza Recibidas</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Consulta la lista de solicitudes enviadas por clientes y cambia su estado de operación en tiempo real.</p>
+                </div>
+              </div>
+
+              {/* Filters Panel inside Services requests */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Filtrar por Especialidad / Cliente</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={adminServiceSearch}
+                      onChange={(e) => setAdminServiceSearch(e.target.value)}
+                      placeholder="Nombre, correo o ID..."
+                      className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-[#c5a85c]"
+                    />
+                    <Search size={12} className="absolute left-2.5 top-2.5 text-slate-400" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Filtrar por Estado</label>
+                  <select
+                    value={adminServiceStatusFilter}
+                    onChange={(e) => setAdminServiceStatusFilter(e.target.value as any)}
+                    className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-bold bg-white text-slate-800 cursor-pointer"
+                  >
+                    <option value="todos">🌐 Todos los Estados</option>
+                    <option value="programado">📅 Programado</option>
+                    <option value="en_progreso">🚚 En Ruta</option>
+                    <option value="completado">✅ Completado</option>
+                    <option value="cancelado">❌ Cancelado</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Prioridad</label>
+                  <select
+                    value={adminServicePriorityFilter}
+                    onChange={(e) => setAdminServicePriorityFilter(e.target.value as any)}
+                    className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-bold bg-white text-slate-800 cursor-pointer"
+                  >
+                    <option value="todos">🌐 Todas las Prioridades</option>
+                    <option value="Baja">🔵 Baja</option>
+                    <option value="Media">🟡 Media</option>
+                    <option value="Alta">🔴 Alta</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Solicitudes list */}
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                {services.filter(req => {
+                  const mSearch = req.clientName.toLowerCase().includes(adminServiceSearch.toLowerCase()) ||
+                    req.clientEmail.toLowerCase().includes(adminServiceSearch.toLowerCase()) ||
+                    req.id.toLowerCase().includes(adminServiceSearch.toLowerCase()) ||
+                    req.serviceType.toLowerCase().includes(adminServiceSearch.toLowerCase());
+                  const mStatus = adminServiceStatusFilter === 'todos' || req.status === adminServiceStatusFilter;
+                  const mPriority = adminServicePriorityFilter === 'todos' || req.priority === adminServicePriorityFilter;
+                  return mSearch && mStatus && mPriority;
+                }).length === 0 ? (
+                  <div className="text-center py-10 border border-dashed border-slate-200 rounded-2xl">
+                    <span className="text-xl">🤷‍♂️</span>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">No se encontraron solicitudes con los filtros aplicados</p>
+                  </div>
+                ) : (
+                  services.filter(req => {
+                    const mSearch = req.clientName.toLowerCase().includes(adminServiceSearch.toLowerCase()) ||
+                      req.clientEmail.toLowerCase().includes(adminServiceSearch.toLowerCase()) ||
+                      req.id.toLowerCase().includes(adminServiceSearch.toLowerCase()) ||
+                      req.serviceType.toLowerCase().includes(adminServiceSearch.toLowerCase());
+                    const mStatus = adminServiceStatusFilter === 'todos' || req.status === adminServiceStatusFilter;
+                    const mPriority = adminServicePriorityFilter === 'todos' || req.priority === adminServicePriorityFilter;
+                    return mSearch && mStatus && mPriority;
+                  }).map(req => (
+                    <div 
+                      key={req.id}
+                      className="p-4 border border-slate-200 rounded-2xl bg-white hover:border-slate-300 transition-all space-y-3 shadow-xs"
+                    >
+                      <div className="flex flex-wrap justify-between items-start gap-2">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-black uppercase text-slate-450 tracking-wider font-mono bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200">
+                              {req.id}
+                            </span>
+                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-lg border ${
+                              req.priority === 'Alta' ? 'bg-red-50 text-red-700 border-red-100' :
+                              req.priority === 'Media' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                              'bg-blue-50 text-blue-700 border-blue-100'
+                            }`}>
+                              Prioridad {req.priority}
+                            </span>
+                          </div>
+                          <h4 className="font-serif font-black text-slate-800 text-sm sm:text-base mt-2">
+                            {req.clientName}
+                          </h4>
+                          <p className="text-xs text-slate-500 font-medium">
+                            📩 {req.clientEmail} • 📅 {new Date(req.date).toLocaleDateString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                        
+                        <div className="text-right">
+                          <span className="text-sm sm:text-base font-black text-slate-900 block font-mono">
+                            ${req.price} MXN
+                          </span>
+                          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-lg mt-1 inline-block border ${
+                            req.status === 'programado' ? 'bg-sky-50 text-sky-700 border-sky-100' :
+                            req.status === 'en_progreso' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                            req.status === 'completado' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                            'bg-rose-50 text-rose-700 border-rose-100'
+                          }`}>
+                            {req.status === 'programado' ? 'PROG.' : req.status === 'en_progreso' ? 'EN RUTA' : req.status === 'completado' ? 'COMPLETADO' : 'CANCELADO'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Details specs */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <div>
+                          <p className="font-black text-slate-450 uppercase text-[9px] mb-0.5">Surtido de Servicios Solicitados</p>
+                          <span className="font-bold text-slate-850 text-purple-700">{req.serviceType}</span>
+                        </div>
+                        <div>
+                          <p className="font-black text-slate-450 uppercase text-[9px] mb-0.5">Dirección de Limpieza</p>
+                          <span className="font-bold text-slate-700">{req.address}</span>
+                        </div>
+                      </div>
+
+                      {req.notes && (
+                        <div>
+                          <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-0.5">Instrucciones Especiales</p>
+                          <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100 leading-relaxed font-mono">
+                            "{req.notes}"
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Display image with referring policy */}
+                      {req.uploadedPhoto && (
+                        <div>
+                          <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1">Foto Adjuntada (Evidencia/Antes)</p>
+                          <div 
+                            className="relative group w-36 h-24 rounded-xl overflow-hidden border border-slate-200 cursor-pointer shadow-xs" 
+                            onClick={() => setSelectedPreviewImage(req.uploadedPhoto || null)}
+                          >
+                            <img 
+                              src={req.uploadedPhoto} 
+                              alt="Evidencia del servicio" 
+                              className="w-full h-full object-cover transition duration-300 group-hover:scale-110" 
+                              referrerPolicy="no-referrer" 
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-[10px] font-black">
+                              🔍 AMPLIAR FOTO
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Action operators */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-slate-100">
+                        {/* Assign staff */}
+                        <div className="flex items-center gap-2">
+                          <label className="text-[10px] font-black uppercase text-slate-450">Técnico Asignado:</label>
+                          <input 
+                            type="text" 
+                            defaultValue={req.assignedStaff || 'Por Asignar (Coordinador)'} 
+                            placeholder="Escribir técnico..."
+                            onBlur={(e) => {
+                              req.assignedStaff = e.target.value;
+                              onAddLog(`Personal asignado a solicitud ${req.id}: ${e.target.value}`, 'info');
+                              showToast(`Asignación guardada para ${req.id}`, 'info');
+                            }}
+                            className="px-2.5 py-1 text-xs font-bold border border-slate-250 bg-white rounded-lg focus:border-[#c5a85c] text-slate-800 w-44"
+                          />
+                        </div>
+
+                        {/* Status dropdown */}
+                        <div className="flex items-center gap-2">
+                          <label className="text-[10px] font-black uppercase text-slate-450">Actualizar Estado:</label>
+                          <select
+                            value={req.status}
+                            onChange={(e) => {
+                              const newSt = e.target.value as ServiceStatus;
+                              onUpdateServiceStatus?.(req.id, newSt);
+                            }}
+                            className="px-2.5 py-1 text-xs font-bold border border-slate-250 bg-white text-slate-800 rounded-lg focus:outline-none cursor-pointer"
+                          >
+                            <option value="programado">📅 Programado</option>
+                            <option value="en_progreso">🚚 En Ruta</option>
+                            <option value="completado">✅ Completado (Entregado)</option>
+                            <option value="cancelado">❌ Cancelado</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* RIGHT AREA: CATALOGO MAESTRO DE SERVICIOS */}
+            <div className="bg-white border border-slate-200 rounded-3xl p-5 space-y-4 shadow-sm flex flex-col">
+              <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row justify-between items-start gap-2">
+                <div>
+                  <h3 className="text-lg font-serif font-black text-slate-800 flex items-center gap-1.5">
+                    <Sparkles size={18} className="text-[#c5a85c]" />
+                    Catálogo de Servicios
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Controla las opciones que el cliente puede agendar.</p>
+                </div>
+                
+                <button
+                  onClick={() => {
+                    handleOpenAddProduct();
+                    setPCategory('Servicios');
+                  }}
+                  className="px-3.5 py-2 bg-gradient-to-r from-slate-900 to-indigo-950 text-white font-black text-xs rounded-xl flex items-center gap-1.5 hover:opacity-95 cursor-pointer shadow-xs"
+                >
+                  <PlusCircle size={13} />
+                  Añadir Servicio
+                </button>
+              </div>
+
+              {/* List of services in master table catalog */}
+              <div className="space-y-3 overflow-y-auto max-h-[64vh] pr-1 flex-1">
+                {products.filter(p => p.category === 'Servicios').length === 0 ? (
+                  <div className="text-center py-6 text-slate-400 text-xs font-bold">
+                    No hay servicios registrados en esta categoría.
+                  </div>
+                ) : (
+                  products.filter(p => p.category === 'Servicios').map(prod => (
+                    <div 
+                      key={prod.id} 
+                      className={`p-3.5 rounded-2xl border transition-all space-y-2 ${
+                        prod.active !== false 
+                          ? 'bg-neutral-bg/60 border-slate-200 hover:border-slate-350' 
+                          : 'bg-slate-50 border-slate-150/80 opacity-75'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start gap-2">
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] font-black font-mono text-slate-400 bg-slate-100 px-1.5 py-0.2 rounded-md">
+                              {prod.sku}
+                            </span>
+                            {prod.active !== false ? (
+                              <span className="px-1.5 py-0.2 bg-emerald-50 border border-emerald-100 text-emerald-600 text-[8px] font-black rounded-lg">
+                                ACTIVO
+                              </span>
+                            ) : (
+                              <span className="px-1.5 py-0.2 bg-rose-50 border border-rose-100 text-rose-600 text-[8px] font-black rounded-lg">
+                                INACTIVO
+                              </span>
+                            )}
+                          </div>
+                          <h4 className="font-bold text-slate-900 text-xs sm:text-sm mt-1.5">{prod.name}</h4>
+                          <p className="text-[10px] text-slate-500 mt-0.5 leading-normal">{prod.description}</p>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <span className="text-xs sm:text-sm font-black text-slate-900 block font-mono">
+                            ${prod.price} MXN
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Operators */}
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                        {/* Toggle active button */}
+                        <button
+                          onClick={() => {
+                            onUpdateProduct({
+                              ...prod,
+                              active: prod.active === false ? true : false
+                            });
+                            onAddLog(`Estado del servicio "${prod.name}" cambiado desde el gestor de servicios`, 'info');
+                            showToast(`Servicio "${prod.name}" ${prod.active === false ? 'Activado' : 'De-activado'}`, 'success');
+                          }}
+                          className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg border transition cursor-pointer ${
+                            prod.active !== false 
+                              ? 'bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100' 
+                              : 'bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100'
+                          }`}
+                        >
+                          {prod.active !== false ? '🚫 Desactivar' : '⚡ Activar'}
+                        </button>
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleOpenEditProduct(prod)}
+                            className="p-1 px-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-650 hover:text-slate-905 transition text-[10px] font-bold rounded-lg cursor-pointer"
+                          >
+                            ✏️ Editar
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProductClick(prod.id, prod.name)}
+                            className="p-1 px-2 bg-red-50 hover:bg-red-100 border border-red-150 text-red-650 transition text-[10px] font-bold rounded-lg cursor-pointer"
+                            title="Eliminar de forma permanente"
+                          >
+                            🗑️ Borrar
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+          </div>
+        </motion.div>
+      )}
+
+      {/* Modal para previsualización de imagen ampliada */}
+      <AnimatePresence>
+        {selectedPreviewImage && (
+          <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-xs z-50 flex items-center justify-center p-4" onClick={() => setSelectedPreviewImage(null)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative max-w-3xl w-full bg-white rounded-2xl overflow-hidden p-2 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button 
+                onClick={() => setSelectedPreviewImage(null)}
+                className="absolute top-4 right-4 bg-slate-900/80 hover:bg-slate-950 text-white rounded-full p-2 z-10 transition cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+              <img src={selectedPreviewImage} alt="Previsualización Ampliada" className="w-full h-auto max-h-[85vh] object-contain rounded-xl" referrerPolicy="no-referrer" />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         {showProductModal && (
           <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
