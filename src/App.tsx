@@ -228,15 +228,15 @@ export default function App() {
   });
   const [showAdminHamburgerDropdown, setShowAdminHamburgerDropdown] = useState(false);
 
-  // Custom Banner States for Atelier Boutique Hero with localStorage Persistence
+  // Custom Banner States for Homeli Boutique Hero with localStorage Persistence
   const [bannerBg, setBannerBg] = useState<string>(() => {
     return localStorage.getItem('homeli_banner_bg') || '';
   });
   const [bannerTitle, setBannerTitle] = useState<string>(() => {
-    return localStorage.getItem('homeli_banner_title') || 'Catálogo Exclusivo Atelier';
+    return localStorage.getItem('homeli_banner_title') || 'Catálogo Exclusivo Homeli';
   });
   const [bannerTag, setBannerTag] = useState<string>(() => {
-    return localStorage.getItem('homeli_banner_tag') || 'ATELIER BOUTIQUE';
+    return localStorage.getItem('homeli_banner_tag') || 'BOUTIQUE';
   });
   const [bannerDesc, setBannerDesc] = useState<string>(() => {
     return localStorage.getItem('homeli_banner_desc') || 'Descubre nuestras dos exclusivas divisiones diseñadas meticulosamente para brindar confort personal y sanidad impecable en tu hogar.';
@@ -541,7 +541,7 @@ export default function App() {
             );
             handleAddNotification(
               '📦 Confirmación de Entrega',
-              `¡Tu pedido ${id} ha sido entregado exitosamente por nuestro repartidor ${name}! Gracias por elegir Atelier Boutique.`,
+              `¡Tu pedido ${id} ha sido entregado exitosamente por nuestro repartidor ${name}! Gracias por elegir nuestra marca.`,
               'Cliente',
               'entrega',
               id

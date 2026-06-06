@@ -347,7 +347,7 @@ export default function MensajeriaSection({
               <div className="w-16 h-16 bg-[#c5a85c] rounded-2xl flex items-center justify-center text-white shadow-md">
                 <Bike size={32} />
               </div>
-              <span className="text-xs uppercase font-mono font-black text-[#c5a85c] tracking-widest pt-1">Atelier Express Fleet</span>
+              <span className="text-xs uppercase font-mono font-black text-[#c5a85c] tracking-widest pt-1">Express Fleet</span>
               <h1 className="text-2xl md:text-3xl font-serif font-black text-slate-800 uppercase tracking-tight">Registro de Repartidor Co-Piloto</h1>
               <p className="text-sm text-slate-500 max-w-md">
                 Regístrate como repartidor exclusivo de Homeli. Una vez completados tus datos, accederás de manera inmediata al panel de control adaptivo para recolectar tus órdenes en ruta.

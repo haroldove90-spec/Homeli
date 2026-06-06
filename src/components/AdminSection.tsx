@@ -82,8 +82,8 @@ export default function AdminSection({
   onUpdateCourier,
   onUpdateOrderDelivery,
   bannerBg = '',
-  bannerTitle = 'Catálogo Exclusivo Atelier',
-  bannerTag = 'ATELIER BOUTIQUE',
+  bannerTitle = 'Catálogo Exclusivo Homeli',
+  bannerTag = 'BOUTIQUE',
   bannerDesc = 'Descubre nuestras dos exclusivas divisiones diseñadas meticulosamente para brindar confort personal y sanidad impecable en tu hogar.',
   bannerOverlayCol = '#0f172a',
   bannerOverlayOpacity = 60,
@@ -199,8 +199,8 @@ export default function AdminSection({
         localBannerOverlayCol,
         localBannerOverlayOpacity
       );
-      onAddLog('Se actualizaron las configuraciones del banner oficial Atelier Boutique', 'info');
-      showToast('¡Configuración del Banner Atelier guardada con éxito!', 'success');
+       onAddLog('Se actualizaron las configuraciones del banner oficial Homeli Boutique', 'info');
+      showToast('¡Configuración del Banner Homeli guardada con éxito!', 'success');
     }
   };
 
@@ -377,7 +377,7 @@ export default function AdminSection({
         <div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
-            <span className="text-[10px] font-mono font-black text-[#c5a85c] uppercase tracking-wider">Atelier Logístico</span>
+            <span className="text-[10px] font-mono font-black text-[#c5a85c] uppercase tracking-wider">Homeli Logístico</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-serif font-black text-slate-800">Centro de Control de Negocio</h2>
           <p className="text-xs text-slate-500 mt-1">Supervisa estadísticas comerciales de despacho, administra e-commerce y configura parámetros estratégicos de marca.</p>
@@ -672,7 +672,7 @@ export default function AdminSection({
       {activeTab === 'ecommerce' && (
         <div className="space-y-6 animate-fade-in" id="admin_ecommerce_tab_wrapper">
           
-          {/* ================================== ATELIER BANNER CUSTOMIZER ================================== */}
+          {/* ================================== HOMELI BANNER CUSTOMIZER ================================== */}
           <motion.div
             key="banner_customizer_card"
             initial={{ opacity: 0, y: 10 }}
@@ -682,7 +682,7 @@ export default function AdminSection({
           >
             <div className="border-b border-slate-100 pb-4">
               <h3 className="font-serif font-black text-slate-800 text-lg sm:text-2xl">Personalización de Cabecera E-commerce</h3>
-              <p className="text-sm text-slate-500">Modifica en tiempo real los textos, colores y la imagen de fondo de la tarjeta Atelier Boutique de la tienda.</p>
+              <p className="text-sm text-slate-500">Modifica en tiempo real los textos, colores y la imagen de fondo de la tarjeta Homeli Boutique de la tienda.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -766,7 +766,7 @@ export default function AdminSection({
                       type="text"
                       value={localBannerTitle}
                       onChange={(e) => setLocalBannerTitle(e.target.value)}
-                      placeholder="Catálogo Exclusivo Atelier"
+                      placeholder="Catálogo Exclusivo Homeli"
                       maxLength={60}
                       className="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-[#c5a85c] text-slate-800"
                     />
@@ -817,7 +817,7 @@ export default function AdminSection({
                     {[
                       { name: 'Noche', hex: '#0f172a', opacity: 70 },
                       { name: 'Pure Noir', hex: '#000000', opacity: 60 },
-                      { name: 'Oro Atelier', hex: '#634d1a', opacity: 50 },
+                      { name: 'Oro Homeli', hex: '#634d1a', opacity: 50 },
                       { name: 'Esmeralda', hex: '#064e3b', opacity: 65 },
                       { name: 'Vino Imperial', hex: '#4c0519', opacity: 60 }
                     ].map(preset => (
@@ -860,8 +860,8 @@ export default function AdminSection({
                     type="button"
                     onClick={() => {
                       setLocalBannerBg('');
-                      setLocalBannerTitle('Catálogo Exclusivo Atelier');
-                      setLocalBannerTag('ATELIER BOUTIQUE');
+                      setLocalBannerTitle('Catálogo Exclusivo Homeli');
+                      setLocalBannerTag('BOUTIQUE');
                       setLocalBannerDesc('Descubre nuestras dos exclusivas divisiones diseñadas meticulosamente para brindar confort personal y sanidad impecable en tu hogar.');
                       setLocalBannerOverlayCol('#0f172a');
                       setLocalBannerOverlayOpacity(60);
@@ -906,7 +906,7 @@ export default function AdminSection({
                       </span>
                     )}
                     <h2 className="text-sm sm:text-base font-serif font-black tracking-tight text-white leading-tight">
-                      {localBannerTitle || 'Catálogo Exclusivo Atelier'}
+                      {localBannerTitle || 'Catálogo Exclusivo Homeli'}
                     </h2>
                     <p className="text-[9px] text-slate-300 leading-relaxed font-semibold">
                       {localBannerDesc || 'Descubre nuestras dos exclusivas divisiones...'}
@@ -1600,7 +1600,7 @@ export default function AdminSection({
           <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-5 space-y-4 shadow-xs text-left">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-50 pb-3">
               <div>
-                <h3 className="text-base font-serif font-black text-slate-800">Flotilla de Reparto Atelier</h3>
+                <h3 className="text-base font-serif font-black text-slate-800">Flotilla de Reparto Homeli</h3>
                 <p className="text-xs text-slate-500 mt-1">Supervisa solicitudes, valida expedientes con identificaciones, edita placas o teléfonos, y autoriza choferes.</p>
               </div>
 

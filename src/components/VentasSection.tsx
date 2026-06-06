@@ -203,8 +203,8 @@ export default function VentasSection({
   onAddOrder,
   onNavigateToHome,
   bannerBg = '',
-  bannerTitle = 'Catálogo Exclusivo Atelier',
-  bannerTag = 'ATELIER BOUTIQUE',
+  bannerTitle = 'Catálogo Exclusivo Homeli',
+  bannerTag = 'BOUTIQUE',
   bannerDesc = 'Descubre nuestras dos exclusivas divisiones diseñadas meticulosamente para brindar confort personal y sanidad impecable en tu hogar.',
   bannerOverlayCol = '#0f172a',
   bannerOverlayOpacity = 60,
@@ -683,12 +683,12 @@ export default function VentasSection({
             <div className="absolute right-0 bottom-0 top-0 w-1/3 bg-radial from-[#c5a85c]/15 to-transparent pointer-events-none" />
             <div className="relative z-10 max-w-xl space-y-2 text-left">
               <span className="px-2.5 py-0.5 bg-[#c5a85c]/25 border border-[#c19a45]/30 rounded-full text-[9px] font-black tracking-widest uppercase inline-block text-[#ebd7a7]">
-                {bannerTag || 'ATELIER BOUTIQUE'}
+                {bannerTag || 'BOUTIQUE'}
               </span>
               <h2 className="text-xl sm:text-2xl font-serif font-black tracking-tight text-white leading-tight">
                 {selectedCategory === 'Zapatos' ? '👠 Colección Calzado de Alta Costura' : 
                  selectedCategory === 'Productos de limpieza' ? '🧴 Línea de Limpieza de Estándar Profesional' :
-                 (bannerTitle || 'Catálogo Exclusivo Atelier')}
+                 (bannerTitle || 'Catálogo Exclusivo Homeli')}
               </h2>
               <p className="text-xs text-slate-300 leading-relaxed font-medium">
                 {selectedCategory === 'Zapatos' ? 'Selección ergonómica transpirable confeccionada con pieles selectas e ingeniería de soporte de alto impacto.' : 
@@ -1067,7 +1067,7 @@ export default function VentasSection({
                 <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-5">
                   <div>
                     <h4 className="text-sm sm:text-base font-serif font-black text-[#c5a85c] uppercase tracking-wider">Módulo de Registro / Cuenta de Cliente</h4>
-                    <p className="text-xs text-slate-400 mt-1">Completa o actualiza tus credenciales del Cliente Oficial para activar el despacho directo y tus beneficios de Atelier.</p>
+                    <p className="text-xs text-slate-400 mt-1">Completa o actualiza tus credenciales del Cliente Oficial para activar el despacho directo y tus beneficios de la marca.</p>
                   </div>
                   
                   {/* Registry Input Fields */}
@@ -1170,7 +1170,7 @@ export default function VentasSection({
                   </div>
 
                   <div className="p-4 bg-slate-50 border border-slate-200/50 rounded-xl space-y-1.5 text-left">
-                    <span className="text-[9px] font-black text-[#c5a85c] uppercase tracking-widest block font-mono">Garantías Atelier de México</span>
+                    <span className="text-[9px] font-black text-[#c5a85c] uppercase tracking-widest block font-mono">Garantías Boutique</span>
                     <h5 className="text-slate-800 font-extrabold text-xs">Entregas en Menos de 48 Horas con Seguro Comercial</h5>
                     <p className="text-[11px] text-slate-500 leading-normal font-medium">Todos tus tenis premium o fórmulas de alta limpieza están cubiertos con reembolsos o cambio de tallas gratuitos dentro de los primeros 15 días.</p>
                   </div>
