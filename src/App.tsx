@@ -816,7 +816,7 @@ export default function App() {
         )}
 
         {/* Dynamic Page Views Body */}
-        <main className={activeSection === 'mensajeria' ? 'flex-1 w-full bg-[#f8fafc]' : 'flex-1 p-6 max-w-7xl w-full mx-auto'} id="main_layout_body">
+        <main className={activeSection === 'mensajeria' ? 'flex-1 w-full bg-[#f8fafc]' : 'flex-1 p-4 sm:p-6 lg:p-8 max-w-[1650px] w-full mx-auto'} id="main_layout_body">
           <AnimatePresence mode="wait">
             {activeSection === 'home' ? (
               <motion.div

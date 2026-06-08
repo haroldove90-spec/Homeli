@@ -27,13 +27,26 @@
 
 /* Global legibility and responsive scale improvements requested by user */
 html {
-  font-size: 16px;
+  font-size: 17px;
   -webkit-text-size-adjust: 100%;
 }
 
-@media (max-width: 768px) {
+/* Tablet & Fullscreen/Desktop version: elegant high legibility scale */
+@media (min-width: 768px) {
   html {
-    font-size: 17px; /* Automatically scales up all rem-based typography and spacing elements */
+    font-size: 18px;
+  }
+}
+
+@media (min-width: 1200px) {
+  html {
+    font-size: 19px;
+  }
+}
+
+@media (min-width: 1600px) {
+  html {
+    font-size: 20px;
   }
 }
 
@@ -48,5 +61,37 @@ body {
 @media (max-width: 640px) {
   button, a, input, select, textarea {
     min-height: 40px; /* Comfortably meets accessibility tap targets */
+  }
+
+  /* Make container spacing snug with phone screens to feel like a mobile native app */
+  #main_layout_body {
+    padding: 10px 8px !important;
+  }
+  
+  /* Give cards organic mobile app outline style */
+  .rounded-3xl, .rounded-2xl {
+    border-radius: 1.25rem !important;
+  }
+
+  /* Compact header on mobile */
+  header {
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  header img {
+    height: 2.25rem !important;
+  }
+}
+
+/* Tablet & Desktop Fullscreen Optimization */
+@media (min-width: 1024px) {
+  /* Give the entire dashboard page elements spacious and grand feeling */
+  .max-w-\[1650px\] {
+    letter-spacing: -0.011em;
+  }
+
+  /* Slightly roomier shadow effects for immersive look in web browsers */
+  .shadow-sm {
+    box-shadow: 0 4px 12px -2px rgba(45, 42, 38, 0.05), 0 2px 6px -1px rgba(45, 42, 38, 0.03) !important;
   }
 }
