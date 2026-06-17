@@ -283,6 +283,23 @@ export default function VentasSection({
   const [simulatedArPhoto, setSimulatedArPhoto] = useState<string | null>(null);
   const arVideoRef = useRef<HTMLVideoElement | null>(null);
 
+  // Surface detection & realistic lighting simulation states
+  const [arLightMode, setArLightMode] = useState<'natural' | 'warm' | 'sunset' | 'fluorescent'>('natural');
+  const [isPlacedOnFloor, setIsPlacedOnFloor] = useState(false);
+  const [isScanningSurface, setIsScanningSurface] = useState(false);
+
+  // Trigger surface scan simulation when customer enters AR mode
+  useEffect(() => {
+    if (arMediaMode === 'ar_camera') {
+      setIsScanningSurface(true);
+      setIsPlacedOnFloor(false);
+      const timer = setTimeout(() => {
+        setIsScanningSurface(false);
+      }, 2500); // 2.5 seconds of high fidelity SLAM environment mapping
+      return () => clearTimeout(timer);
+    }
+  }, [arMediaMode]);
+
   // Auto-rotate 360° effect
   useEffect(() => {
     let intervalId: any;
@@ -355,17 +372,19 @@ export default function VentasSection({
       const isQrDeep = urlParams.searchParams.get('ar_product') === selectedProductDetails.id;
 
       if (isQrDeep) {
-        setArMediaMode('rotate360'); // Spark joy immediately with interactive 360 spinner!
-        setIsAutoRotate(true);
+        setArMediaMode('ar_camera'); // Spark joy immediately with floor AR camera simulation!
+        setIsAutoRotate(false);
       } else {
         setArMediaMode('photo');
         setIsAutoRotate(false);
       }
       setRotateAngle(180);
       setRotatePitch(5);
-      setArScale(1.1);
+      setArScale(1.0); // Reset to 100% scale for realistic size fitting by default
       setArPosition({ x: 0, y: 0 });
       setSimulatedArPhoto(null);
+      setIsPlacedOnFloor(false);
+      setArLightMode('natural');
     } else {
       stopArWebcam();
     }
@@ -2149,34 +2168,74 @@ export default function VentasSection({
                         {isArCameraActive && arStream ? (
                           <video 
                             ref={arVideoRef}
-                            className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-80 z-0"
+                            className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-70 z-0"
                             playsInline
                             muted
                           />
                         ) : (
-                          <div className="absolute inset-0 w-full h-full pointer-events-none bg-cover bg-center opacity-70" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?w=800&auto=format&fit=crop&q=80')` }}>
+                          <div className="absolute inset-0 w-full h-full pointer-events-none bg-cover bg-center opacity-65 transition-opacity duration-500" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?w=800&auto=format&fit=crop&q=80')` }}>
                             {/* Ambient helper tag */}
-                            <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-black/75 backdrop-blur-md text-[8px] font-mono font-black text-[#c5a85c] py-1 px-3.5 rounded-full border border-amber-500/20 shadow-lg block">
-                              CÁMARA DEMO: ENTORNO LIVING
+                            <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-black/85 backdrop-blur-md text-[8px] font-mono font-black text-[#c5a85c] py-1 px-4 rounded-full border border-amber-500/20 shadow-lg block uppercase tracking-widest">
+                              Cámara en vivo • Simulación de Habitación
                             </div>
                           </div>
                         )}
 
                         {/* Top controls & alignment HUD grid indicators */}
                         <div className="flex justify-between items-center text-[8px] font-mono text-slate-300 z-10 pointer-events-none">
-                          <span className="flex items-center gap-1 bg-black/60 px-2 py-0.5 rounded-lg border border-white/10">
-                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                            LIVE_AR_PLACER
+                          <span className="flex items-center gap-1.5 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10">
+                            <span className={`w-1.5 h-1.5 rounded-full ${isScanningSurface ? 'bg-amber-500 animate-ping' : isPlacedOnFloor ? 'bg-emerald-500' : 'bg-red-500 animate-pulse'}`} />
+                            {isScanningSurface ? 'MAPPING_ROOM...' : isPlacedOnFloor ? 'LOCK: SUELO HORIZONTAL' : 'PLACER: MANUAL_STAGE'}
                           </span>
-                          <span className="bg-black/60 px-2 py-0.5 rounded-lg border border-white/10">
-                            LOCK: OK ({Math.round(arScale * 100)}%)
+                          <span className="bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 flex items-center gap-1">
+                            <span>Sizing:</span>
+                            <span className={arScale === 1.0 ? "text-emerald-400 font-extrabold" : "text-amber-500"}>
+                              {arScale === 1.0 ? "100% (ESCALA REAL 1:1)" : `${Math.round(arScale * 100)}%`}
+                            </span>
                           </span>
                         </div>
 
-                        {/* Holographic floor grid guide lines */}
-                        <div className="absolute inset-0 border border-dashed border-white/15 m-2.5 rounded-2xl pointer-events-none flex items-center justify-center">
-                          <div className="w-2 h-2 bg-amber-500 rounded-full animate-ping opacity-65 absolute" />
-                          <div className="w-16 h-16 border border-white/20 rounded-full [transform:rotateX(75deg)] absolute animate-pulse" />
+                        {/* HIGH FIDELITY AR COGNITIVE PHASES */}
+                        {isScanningSurface ? (
+                          /* Phase A: Mapping Room with LiDAR style Point Cloud animation */
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/40 backdrop-blur-xs z-10 pointer-events-none">
+                            <div className="relative w-20 h-20 flex items-center justify-center">
+                              <div className="absolute inset-0 border-4 border-amber-500/20 rounded-full" />
+                              <div className="absolute inset-0 border-4 border-t-amber-500 rounded-full animate-spin" />
+                              <RefreshCw size={24} className="text-amber-500 animate-pulse" />
+                            </div>
+                            <div className="mt-4 text-center space-y-1">
+                              <p className="font-mono text-[10px] font-black uppercase text-amber-500 tracking-widest animate-pulse">Escaneando habitación...</p>
+                              <p className="text-[9px] text-slate-300 max-w-[200px] leading-relaxed font-sans">Apunta al suelo plano de tu habitación para calcular el nivel del calzado.</p>
+                            </div>
+                            {/* Scattered point cloud dots simulating depth sensors */}
+                            <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-amber-500 rounded-full animate-ping" />
+                            <div className="absolute top-1/3 right-1/4 w-1 h-1 bg-amber-500/80 rounded-full. animate-pulse" />
+                            <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-emerald-500/50 rounded-full animate-ping" />
+                            <div className="absolute bottom-1/3 right-1/3 w-1 h-1 bg-amber-400 rounded-full animate-pulse" />
+                            <div className="absolute top-1/2 left-1/5 w-1 h-1 bg-amber-300 rounded-full animate-ping" />
+                          </div>
+                        ) : !isPlacedOnFloor ? (
+                          /* Phase B: Real-time Placement Reticle Hint inviting placement */
+                          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
+                            {/* Futuristic target reticle grid */}
+                            <div className="w-24 h-24 border-2 border-dashed border-amber-500/40 rounded-full flex items-center justify-center animate-pulse">
+                              <div className="w-16 h-16 border border-amber-500/30 rounded-full flex items-center justify-center">
+                                <div className="w-4 h-4 bg-amber-500/25 rounded-full" />
+                              </div>
+                            </div>
+                            <div className="mt-3 bg-black/80 backdrop-blur-md px-3.5 py-2 rounded-xl text-center border border-amber-500/30 max-w-[240px] shadow-2xl">
+                              <p className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">¡Nivel de Suelo Detectado!</p>
+                              <p className="text-[8.5px] text-slate-250 mt-0.5 leading-tight font-sans">Toca el botón dorado de abajo para colocar el calzado de forma virtual sobre tu piso.</p>
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {/* Holographic floor grid guide lines (Only visible when placing or when active) */}
+                        <div className="absolute inset-x-4 bottom-1/4 top-1/3 border border-dashed border-white/10 rounded-2xl pointer-events-none flex items-center justify-center">
+                          <div className="w-1.5 h-1.5 bg-amber-500/80 rounded-full animate-ping absolute" />
+                          <div className={`w-36 h-24 border-2 border-amber-500/25 rounded-full [transform:rotateX(78deg)] absolute transition-all duration-700 ${isPlacedOnFloor ? 'scale-125 border-emerald-500/40 bg-emerald-500/5' : 'scale-90 animate-pulse'}`} />
+                          <div className="w-48 h-32 border border-white/5 rounded-full [transform:rotateX(78deg)] absolute" />
                         </div>
 
                         {/* Floating placeable and scalable product image */}
@@ -2190,52 +2249,167 @@ export default function VentasSection({
                               y: arPosition.y,
                               scale: arScale,
                             }}
-                            className="cursor-grab active:cursor-grabbing z-20 absolute"
+                            className="cursor-grab active:cursor-grabbing z-20 absolute flex flex-col items-center justify-center"
                           >
+                            {/* Immersive realistic shadows casting on floor based on light source selector */}
+                            {isPlacedOnFloor && (
+                              <div 
+                                className="w-32 h-5 rounded-full filter blur-md transition-all duration-500 pointer-events-none absolute -bottom-1"
+                                style={{
+                                  background: arLightMode === 'warm' ? 'rgba(56, 31, 0, 0.7)' : arLightMode === 'sunset' ? 'rgba(84, 25, 0, 0.65)' : arLightMode === 'fluorescent' ? 'rgba(15, 23, 42, 0.6)' : 'rgba(0, 0, 0, 0.75)',
+                                  width: `${128 * arScale}px`,
+                                  opacity: 0.9,
+                                  transform: 'scaleY(0.4) translateY(6px)'
+                                }}
+                              />
+                            )}
+
+                            {/* Shoe item picture representation */}
                             <img 
                               src={selectedProductDetails.imageUrl} 
                               alt={selectedProductDetails.name} 
-                              className="w-32 h-32 object-contain pointer-events-none shadow-2xl scale-110"
+                              className={`w-36 h-36 object-contain pointer-events-none transition-all duration-350 ${!isPlacedOnFloor ? 'opacity-65 animate-pulse border-2 border-dashed border-amber-500/10 rounded-full p-2' : 'opacity-100'}`}
                               style={{
                                 transform: `rotateY(${rotateAngle}deg) rotateX(${rotatePitch}deg)`,
-                                filter: 'drop-shadow(0 20px 15px rgba(0,0,0,0.65))'
+                                filter: arLightMode === 'warm' 
+                                  ? 'brightness(0.92) sepia(0.25) saturate(1.3) hue-rotate(-8deg) drop-shadow(0 15px 10px rgba(0,0,0,0.4))' 
+                                  : arLightMode === 'sunset' 
+                                  ? 'brightness(0.85) sepia(0.4) saturate(1.5) hue-rotate(12deg) contrast(1.1) drop-shadow(0 20px 15px rgba(0,0,0,0.55))' 
+                                  : arLightMode === 'fluorescent' 
+                                  ? 'brightness(1.08) saturate(0.85) hue-rotate(-12deg) drop-shadow(0 12px 10px rgba(0,0,0,0.3))' 
+                                  : 'brightness(1.0) contrast(1.0) saturate(1.05) drop-shadow(0 15px 12px rgba(0,0,0,0.5))'
                               }}
                               referrerPolicy="no-referrer"
                             />
+
+                            {/* Little helper annotation hovering immediately above the element at real scale */}
+                            {isPlacedOnFloor && arScale === 1.0 && (
+                              <span className="absolute -top-7 bg-emerald-500 text-slate-900 text-[7px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-lg block pointer-events-none animate-bounce">
+                                Escala Real Suelo 1:1
+                              </span>
+                            )}
                           </motion.div>
                         </div>
 
+                        {/* Interactive dynamic HUD detailing how materials bounce live light */}
+                        <div className="bg-black/85 backdrop-blur-md p-2 rounded-xl border border-white/10 text-left text-[8px] font-serif text-slate-350 z-10 leading-relaxed space-y-1 my-1">
+                          <p className="font-mono font-black uppercase tracking-widest text-[#c5a85c] text-[7.5px]">Fidelidad del Material:</p>
+                          <p className="text-[7.5px] leading-relaxed font-sans text-slate-305">
+                            {arLightMode === 'natural' && "☀️ Luz de Día (5500K): Destaca costuras de alta precisión, detalles de malla transpirable y texturas en su tono natural puro."}
+                            {arLightMode === 'warm' && "🏠 Luz Cálida (2700K): Simula el reflejo de las luces de tu habitación, suavizando brillos de suela y aportando tonos ocres cálidos."}
+                            {arLightMode === 'sunset' && "🌅 Luz de Atardecer (1800K): Sombras pronunciadas con un brillo dorado tenue que resalta la profundidad tridimensional del calzado."}
+                            {arLightMode === 'fluorescent' && "💡 Luz de Oficina (4000K): Luz blanca de alta fidelidad técnica. Revela la microfibra sintética y los contrastes fríos de los bordes."}
+                          </p>
+                        </div>
+
                         {/* Bottom Controller with scale logic and action triggers */}
-                        <div className="space-y-1.5 z-10 bg-black/65 backdrop-blur-md p-2 rounded-xl border border-white/15">
-                          <div className="flex justify-between items-center text-[8px] font-mono text-slate-350">
-                            <span className="font-bold flex items-center gap-0.5 text-amber-500">
-                              👆 DESP_ARRAS_PRODUCTO
-                            </span>
-                            <span className="font-extrabold text-[#c5a85c] font-mono">{Math.round(arScale * 100)}% SCALE</span>
+                        <div className="space-y-2 z-10 bg-black/90 backdrop-blur-md p-2.5 rounded-xl border border-white/15">
+                          
+                          {/* Anchor Action & Switch Option */}
+                          <div className="flex gap-2">
+                            {!isPlacedOnFloor ? (
+                              <button
+                                type="button"
+                                disabled={isScanningSurface}
+                                onClick={() => {
+                                  setIsPlacedOnFloor(true);
+                                  setArScale(1.0); // Snap directly to standard 100% scale!
+                                  onAddLog(`AR Sandbox: Calzado ${selectedProductDetails.name} colocado en el suelo`, 'info');
+                                }}
+                                className={`w-full py-1.5 rounded-lg text-[9px] font-serif font-black uppercase tracking-wider transition ${isScanningSurface ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-amber-500 to-[#c5a85c] hover:opacity-95 text-slate-900 cursor-pointer shadow-md'}`}
+                              >
+                                {isScanningSurface ? '🔍 Calibrando sensores...' : '⬇️ Fijar en el Suelo (Escala 1:1)'}
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsPlacedOnFloor(false);
+                                  onAddLog(`AR Sandbox: Calzado ${selectedProductDetails.name} desanclado del suelo`, 'info');
+                                }}
+                                className="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-500 rounded-lg text-[9px] font-sans font-black uppercase tracking-wider cursor-pointer border border-slate-700"
+                              >
+                                🔄 Desanclar / Cambiar de Lugar
+                              </button>
+                            )}
                           </div>
 
-                          <div className="flex items-center gap-2">
-                            <span className="text-[8px] font-mono text-slate-450">Escala:</span>
-                            <input 
-                              type="range"
-                              min="0.5"
-                              max="2.0"
-                              step="0.05"
-                              value={arScale}
-                              onChange={(e) => setArScale(Number(e.target.value))}
-                              className="flex-1 accent-amber-500 bg-white/20 h-1 rounded-lg cursor-pointer"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => { setArPosition({ x: 0, y: 0 }); setArScale(1.1); setRotateAngle(180); setRotatePitch(5); }}
-                              className="py-0.5 px-2 bg-white/10 hover:bg-white/20 text-[8px] font-mono rounded-lg border border-white/10 cursor-pointer"
-                            >
-                              Reset
-                            </button>
+                          {/* Sizing Controller (Scale slider & Quick Scale Reset to 1:1) */}
+                          <div className="space-y-1">
+                            <div className="flex justify-between items-center text-[8px] font-mono text-slate-350">
+                              <span className="font-bold flex items-center gap-0.5 text-amber-500">
+                                Ajuste de Tamaño
+                              </span>
+                              <span className="font-extrabold flex items-center gap-1">
+                                {arScale === 1.0 ? (
+                                  <span className="text-emerald-400">📏 Escala Real (100%)</span>
+                                ) : (
+                                  <span>{Math.round(arScale * 100)}% de tamaño</span>
+                                )}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <span className="text-[8px] font-mono text-slate-400">Escala:</span>
+                              <input 
+                                type="range"
+                                min="0.5"
+                                max="1.5"
+                                step="0.05"
+                                value={arScale}
+                                onChange={(e) => setArScale(Number(e.target.value))}
+                                className="flex-1 accent-amber-500 bg-white/20 h-1 rounded-lg cursor-pointer"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setArScale(1.0); // Set back to exactly 100% shoe measurement size!
+                                  onAddLog(`AR Sandbox: Ajustado a Escala Real 100%`, 'info');
+                                }}
+                                className={`py-0.5 px-2 text-[8px] font-sans rounded-md cursor-pointer transition uppercase font-black tracking-wider ${arScale === 1.0 ? 'bg-emerald-500 text-slate-900' : 'bg-white/10 hover:bg-white/20 text-white'}`}
+                              >
+                                Real (100%)
+                              </button>
+                            </div>
                           </div>
 
-                          {/* Snapshot and Switch Camera Options footer */}
-                          <div className="flex gap-1.5 pt-1.5">
+                          {/* Home Ambient Light Selectors */}
+                          <div className="space-y-1 pt-1 border-t border-white/5">
+                            <p className="text-[8px] font-mono text-slate-400">Luz de tu Hogar (Filtro de Material):</p>
+                            <div className="grid grid-cols-4 gap-1 text-[8px] font-black uppercase text-center">
+                              <button
+                                type="button"
+                                onClick={() => setArLightMode('natural')}
+                                className={`py-1 rounded-md transition cursor-pointer ${arLightMode === 'natural' ? 'bg-[#c5a85c] text-slate-950 font-extrabold shadow' : 'bg-slate-800/80 text-slate-400 hover:text-white'}`}
+                              >
+                                ☀️ Día
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setArLightMode('warm')}
+                                className={`py-1 rounded-md transition cursor-pointer ${arLightMode === 'warm' ? 'bg-[#c5a85c] text-slate-950 font-extrabold shadow' : 'bg-slate-800/80 text-slate-400 hover:text-white'}`}
+                              >
+                                🏠 Cálida
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setArLightMode('sunset')}
+                                className={`py-1 rounded-md transition cursor-pointer ${arLightMode === 'sunset' ? 'bg-[#c5a85c] text-slate-950 font-extrabold shadow' : 'bg-slate-800/80 text-slate-400 hover:text-white'}`}
+                              >
+                                🌅 Tarde
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setArLightMode('fluorescent')}
+                                className={`py-1 rounded-md transition cursor-pointer ${arLightMode === 'fluorescent' ? 'bg-[#c5a85c] text-slate-950 font-extrabold shadow' : 'bg-slate-800/80 text-slate-400 hover:text-white'}`}
+                              >
+                                💡 Neón
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Snapshot Action and orientation indicators */}
+                          <div className="flex gap-1.5 pt-1 border-t border-white/5">
                             <button
                               type="button"
                               onClick={() => {
@@ -2243,26 +2417,28 @@ export default function VentasSection({
                                 flash.className = "absolute inset-0 bg-white z-50 animate-flash-intensity";
                                 flash.addEventListener('animationend', () => flash.remove());
                                 document.getElementById('product_details_modal')?.appendChild(flash);
-                                onAddLog(`AR Sandbox: Se grabó captura en el espacio del calzado/producto ${selectedProductDetails.name}`, 'info');
-                                alert(`📸 ¡Felicidades! Se ha capturado una foto del producto colocado en tu espacio. Se ha enviado al servidor Homeli.`);
+                                onAddLog(`AR Sandbox: Se guardó captura en tu piso de: ${selectedProductDetails.name}`, 'info');
+                                alert(`📸 ¡Felicidades! Se ha guardado una fotografía simulada en alta resolución del calzado colocado en tu habitación.`);
                               }}
-                              className="flex-1 py-1 bg-amber-500 hover:bg-amber-600 text-slate-900 text-[9px] font-black uppercase tracking-wider rounded-lg cursor-pointer shadow flex items-center justify-center gap-1 transition"
+                              className="flex-1 py-1.5 bg-amber-500 hover:bg-amber-605 text-slate-900 text-[9px] font-black uppercase tracking-wider rounded-lg cursor-pointer shadow flex items-center justify-center gap-1 transition-all"
                             >
                               <Camera size={11} />
-                              Capturar Foto AR
+                              Guardar Captura en Casa
                             </button>
-                            {navigator.mediaDevices && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  onAddLog(`AR Sandbox: Rotando lentes de cámara`, 'info');
-                                  alert("🔄 Cambiando lente de dispositivo para escaneo de superficies planas...");
-                                }}
-                                className="px-2 py-1 bg-white/10 hover:bg-white/20 text-white text-[9px] font-bold rounded-lg border border-white/5 cursor-pointer transition flex items-center justify-center"
-                              >
-                                <RefreshCw size={10} />
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setArPosition({ x: 0, y: 0 });
+                                setRotateAngle(180);
+                                setRotatePitch(5);
+                                onAddLog(`AR Sandbox: Reinicio de giroscopio y alineación`, 'info');
+                              }}
+                              className="px-2.5 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[9px] font-bold rounded-lg border border-white/5 cursor-pointer transition flex items-center justify-center gap-1"
+                              title="Reiniciar Posición"
+                            >
+                              <RefreshCw size={10} />
+                              Alinear
+                            </button>
                           </div>
                         </div>
 
