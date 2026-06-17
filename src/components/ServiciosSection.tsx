@@ -48,7 +48,7 @@ export default function ServiciosSection({
   businesses = []
 }: ServiciosSectionProps) {
   // Navigation tabs: 'cliente' (mockup form) vs 'perfil' (client profile tracking) vs 'directorio' (all businesses list)
-  const [currentView, setCurrentView] = useState<'cliente' | 'perfil' | 'directorio'>('cliente');
+  const [currentView, setCurrentView] = useState<'cliente' | 'perfil' | 'directorio'>('directorio');
   const [bizSearchQuery, setBizSearchQuery] = useState('');
 
   // Filters for client profile view
@@ -288,26 +288,6 @@ export default function ServiciosSection({
             }`}
           >
             🏢 Directorio de Negocios
-          </button>
-          <button
-            onClick={() => { stopWebcam(); setCurrentView('cliente'); }}
-            className={`px-3 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
-              currentView === 'cliente' 
-                ? 'bg-purple-600 text-white shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            📋 Solicitar Limpieza (Cliente)
-          </button>
-          <button
-            onClick={() => { stopWebcam(); setCurrentView('perfil'); }}
-            className={`px-3 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
-              currentView === 'perfil' 
-                ? 'bg-slate-900 text-white shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            👤 Mi Perfil de Servicios
           </button>
         </div>
       </div>
