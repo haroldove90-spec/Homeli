@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ServiceRequest, ServiceStatus, ProductItem } from '../types';
+import { ServiceRequest, ServiceStatus, ProductItem, BusinessRegistration } from '../types';
 import { 
   Calendar, 
   MapPin, 
@@ -24,7 +24,9 @@ import {
   AlertCircle,
   HelpCircle,
   CheckCircle2,
-  ListFilter
+  ListFilter,
+  Search,
+  Phone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -34,6 +36,7 @@ interface ServiciosSectionProps {
   onUpdateServiceStatus: (id: string, status: ServiceStatus) => void;
   onAddLog: (action: string, severity: 'info' | 'warning' | 'critical') => void;
   products: ProductItem[];
+  businesses?: BusinessRegistration[];
 }
 
 export default function ServiciosSection({
@@ -41,10 +44,12 @@ export default function ServiciosSection({
   onAddService,
   onUpdateServiceStatus,
   onAddLog,
-  products = []
+  products = [],
+  businesses = []
 }: ServiciosSectionProps) {
-  // Navigation tabs: 'cliente' (mockup form) vs 'perfil' (client profile tracking)
-  const [currentView, setCurrentView] = useState<'cliente' | 'perfil'>('cliente');
+  // Navigation tabs: 'cliente' (mockup form) vs 'perfil' (client profile tracking) vs 'directorio' (all businesses list)
+  const [currentView, setCurrentView] = useState<'cliente' | 'perfil' | 'directorio'>('cliente');
+  const [bizSearchQuery, setBizSearchQuery] = useState('');
 
   // Filters for client profile view
   const [profileEmailFilter, setProfileEmailFilter] = useState('');
@@ -274,6 +279,16 @@ export default function ServiciosSection({
 
         {/* View togglers with segmented animation */}
         <div className="bg-slate-100 p-1 rounded-xl flex flex-wrap gap-1 border border-slate-200 shrink-0">
+          <button
+            onClick={() => { stopWebcam(); setCurrentView('directorio'); }}
+            className={`px-3 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+              currentView === 'directorio' 
+                ? 'bg-amber-600 text-white shadow-md'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            🏢 Directorio de Negocios
+          </button>
           <button
             onClick={() => { stopWebcam(); setCurrentView('cliente'); }}
             className={`px-3 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
@@ -1011,6 +1026,162 @@ export default function ServiciosSection({
                   )}
                 </>
               )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* ======================= VIEW 3: BUSINESS DIRECTORY VIEW ======================= */}
+        {currentView === 'directorio' && (
+          <motion.div
+            key="business_directory_tab"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            className="space-y-6 text-left"
+          >
+            {/* Search and Filters Bar */}
+            <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <h3 className="text-lg font-serif font-black text-slate-900 flex items-center gap-2">
+                    🏢 Directorio de Negocios Socios y Patrocinadores
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Explora los negocios autorizados y sus servicios especializados de limpieza residencial, comercial e industrial.
+                  </p>
+                </div>
+
+                <div className="relative w-full md:w-80 shrink-0">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <Search size={15} />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Buscar por negocio, giro o servicios..."
+                    value={bizSearchQuery}
+                    onChange={(e) => setBizSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/25 focus:border-amber-500 font-bold"
+                  />
+                  {bizSearchQuery && (
+                    <button 
+                      onClick={() => setBizSearchQuery('')}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-xs text-slate-400 hover:text-slate-600"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* List Layout of approved businesses - showing ONLY active status negocios to end consumers */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {(() => {
+                const activeAndFiltered = businesses
+                  .filter(b => b.status === 'Activo')
+                  .filter(b => {
+                    const term = bizSearchQuery.toLowerCase();
+                    if (!term) return true;
+                    const matchesName = b.name.toLowerCase().includes(term);
+                    const matchesGiro = b.giro.toLowerCase().includes(term);
+                    const matchesAddress = b.address.toLowerCase().includes(term);
+                    const matchesServices = b.services.some(s => s.name.toLowerCase().includes(term) || (s.description && s.description.toLowerCase().includes(term)));
+                    return matchesName || matchesGiro || matchesAddress || matchesServices;
+                  });
+
+                if (activeAndFiltered.length === 0) {
+                  return (
+                    <div className="col-span-1 md:col-span-2 py-16 bg-white border border-dashed border-slate-200 rounded-3xl text-center space-y-3">
+                      <span className="text-4xl animate-bounce">🏢</span>
+                      <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider">No se encontraron negocios</h4>
+                      <p className="text-slate-500 text-xs max-w-sm mx-auto leading-relaxed">
+                        No hay ningún negocio afiliado activo que coincida con tu búsqueda de "{bizSearchQuery}". Intenta con otros términos o registra tu negocio en Homeli.
+                      </p>
+                    </div>
+                  );
+                }
+
+                return activeAndFiltered.map((biz) => (
+                  <div key={biz.id} className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between hover:shadow-md hover:border-amber-500/45 transition-all duration-200">
+                    <div className="space-y-4">
+                      {/* Brand Hero Metadata Header */}
+                      <div className="flex items-start gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center shadow-xs">
+                          <img 
+                            src={biz.logo || "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=120&auto=format&fit=crop&q=60"} 
+                            alt={biz.name}
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        </div>
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-serif font-black text-slate-900 text-base leading-snug">{biz.name}</h4>
+                            <span className="px-1.5 py-0.2 bg-emerald-50 text-emerald-700 text-[8px] font-black uppercase rounded-md tracking-wider border border-emerald-100">AFILIADO</span>
+                          </div>
+                          <p className="text-xs text-amber-700 font-extrabold">{biz.giro}</p>
+                          <p className="text-[11px] text-slate-450 leading-tight">📍 {biz.address}</p>
+                        </div>
+                      </div>
+
+                      {/* Displaying published catalog services list of this partner */}
+                      <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-200/60 space-y-3">
+                        <div className="flex justify-between items-center pb-1.5 border-b border-slate-200/60 text-[10px] font-black text-slate-400 uppercase tracking-widest font-sans">
+                          <span>Catálogo de Servicios Disponibles</span>
+                          <span className="text-amber-700 font-extrabold font-mono">({biz.services?.length || 0}) ofertas</span>
+                        </div>
+                        {!biz.services || biz.services.length === 0 ? (
+                          <p className="text-[11px] text-slate-400 italic pt-1">Sin servicios descritos por el momento.</p>
+                        ) : (
+                          <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+                            {biz.services.map((srv, sIdx) => (
+                              <div key={sIdx} className="bg-white p-2.5 rounded-xl border border-slate-200/80 hover:border-slate-350 transition-colors flex justify-between gap-3 text-xs leading-normal">
+                                <div className="space-y-0.5 animate-pulse-once">
+                                  <p className="font-extrabold text-slate-800">{srv.name}</p>
+                                  {srv.description && <p className="text-[10px] text-slate-500 font-medium">{srv.description}</p>}
+                                </div>
+                                <span className="text-amber-700 font-black font-mono shrink-0">${srv.price} MXN</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Footer Contact Details and Map location links */}
+                    <div className="pt-4 mt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                      <div className="text-[11px] text-slate-500">
+                        <p className="font-extrabold text-slate-700">Responsable: <span className="font-normal">{biz.ownerName}</span></p>
+                        <p className="font-mono mt-0.5">📞 {biz.telephones || 'Sin número registrado'}</p>
+                      </div>
+
+                      <div className="flex gap-2 shrink-0 font-sans">
+                        {biz.mapLink && (
+                          <a 
+                            href={biz.mapLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex-1 sm:flex-initial py-1.5 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-250 text-xs font-black rounded-lg transition text-center flex items-center justify-center gap-1 cursor-pointer"
+                          >
+                            🗺️ Ver Mapa
+                          </a>
+                        )}
+                        {biz.whatsapp && (
+                          <a 
+                            href={`https://wa.me/${biz.whatsapp.replace(/[^0-9]/g, '')}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex-1 sm:flex-initial py-1.5 px-3 bg-green-500 hover:bg-green-650 text-white text-xs font-black rounded-lg transition text-center flex items-center justify-center gap-1 cursor-pointer shadow-xs hover:shadow-md"
+                          >
+                            💬 Contactar
+                          </a>
+                        )}
+                      </div>
+                    </div>
+
+                  </div>
+                ));
+              })()}
             </div>
           </motion.div>
         )}

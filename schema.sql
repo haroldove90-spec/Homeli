@@ -118,3 +118,39 @@ CREATE TABLE IF NOT EXISTS service_requests_mysql (
 --     'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP...', -- Ejemplo del string Base64 o URL
 --     '["ZAPATOS", "ROPAS"]'::jsonb
 -- );
+
+
+-- ====================================================================
+-- MODULO DE NEGOCIOS Y PATROCINADORES (Sincronizado)
+-- ====================================================================
+
+-- Table: Businesses (Negocios / Patrocinadores)
+CREATE TABLE IF NOT EXISTS businesses (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    logo TEXT,
+    address TEXT NOT NULL,
+    map_link TEXT,
+    telephones VARCHAR(100),
+    whatsapp VARCHAR(100),
+    owner_name VARCHAR(255) NOT NULL,
+    giro VARCHAR(255) NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'Activo' CHECK (status IN ('Activo', 'Suspendido')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: Business Services (Servicios por Negocio)
+CREATE TABLE IF NOT EXISTS business_services (
+    id SERIAL PRIMARY KEY,
+    business_id VARCHAR(50) NOT NULL REFERENCES businesses(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL DEFAULT 0.00 CHECK (price >= 0),
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for negocios optimization
+CREATE INDEX IF NOT EXISTS idx_business_services_biz ON business_services(business_id);
+CREATE INDEX IF NOT EXISTS idx_businesses_status ON businesses(status);
+

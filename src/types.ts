@@ -79,7 +79,7 @@ export interface SystemLog {
   id: string;
   timestamp: string;
   actor: string;
-  role: 'Administrador' | 'Servicios' | 'Ventas' | 'Mensajería';
+  role: 'Administrador' | 'Servicios' | 'Ventas' | 'Mensajería' | 'Negocio';
   action: string;
   severity: 'info' | 'warning' | 'critical';
 }
@@ -88,7 +88,7 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
-  role: 'Administrador' | 'Servicios' | 'Ventas' | 'Mensajería';
+  role: 'Administrador' | 'Servicios' | 'Ventas' | 'Mensajería' | 'Negocio';
   status: 'Activo' | 'Inactivo';
   lastActive: string;
 }
@@ -98,9 +98,31 @@ export interface AppNotification {
   title: string;
   message: string;
   timestamp: string;
-  role: 'Administrador' | 'Servicios' | 'Ventas' | 'Mensajería' | 'Cliente' | 'Todos';
+  role: 'Administrador' | 'Servicios' | 'Ventas' | 'Mensajería' | 'Cliente' | 'Todos' | 'Negocio';
   read: boolean;
   targetId?: string;
-  type?: 'compra' | 'asignacion' | 'mensajeria' | 'registro' | 'entrega' | 'sistema';
+  type?: 'compra' | 'asignacion' | 'mensajeria' | 'registro' | 'entrega' | 'sistema' | 'negocio';
 }
+
+export interface BusinessService {
+  name: string;
+  price: number;
+  description: string;
+}
+
+export interface BusinessRegistration {
+  id: string;
+  name: string;
+  logo: string;
+  address: string;
+  mapLink: string;
+  telephones: string;
+  whatsapp: string;
+  ownerName: string;
+  giro: string;
+  status: 'Activo' | 'Suspendido' | 'Desactivado';
+  services: BusinessService[];
+  createdAt: string;
+}
+
 

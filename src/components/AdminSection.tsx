@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { ServiceRequest, ServiceStatus, ProductItem, SalesOrder, SystemLog, UserProfile, CourierProfile, DeliveryStatus } from '../types';
+import { ServiceRequest, ServiceStatus, ProductItem, SalesOrder, SystemLog, UserProfile, CourierProfile, DeliveryStatus, BusinessRegistration } from '../types';
 import { 
   Users, 
   Terminal, 
@@ -46,6 +46,9 @@ interface AdminSectionProps {
   logs: SystemLog[];
   profiles: UserProfile[];
   couriers: CourierProfile[];
+  businesses: BusinessRegistration[];
+  onUpdateBusiness: (updated: BusinessRegistration) => void;
+  onDeleteBusiness: (id: string) => void;
   onAddUser: (user: UserProfile) => void;
   onAddLog: (action: string, severity: 'info' | 'warning' | 'critical') => void;
   onClearLogs: () => void;
@@ -61,8 +64,8 @@ interface AdminSectionProps {
   bannerOverlayCol?: string;
   bannerOverlayOpacity?: number;
   onUpdateBannerSettings?: (bg: string, title: string, tag: string, desc: string, overlayCol: string, overlayOpacity: number) => void;
-  activeTab?: 'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros' | 'servicios_control';
-  onChangeTab?: (tab: 'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros' | 'servicios_control') => void;
+  activeTab?: 'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros' | 'servicios_control' | 'negocios_control';
+  onChangeTab?: (tab: 'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros' | 'servicios_control' | 'negocios_control') => void;
   onUpdateServiceStatus?: (id: string, status: ServiceStatus) => void;
 }
 
@@ -73,6 +76,9 @@ export default function AdminSection({
   logs,
   profiles,
   couriers,
+  businesses,
+  onUpdateBusiness,
+  onDeleteBusiness,
   onAddUser,
   onAddLog,
   onClearLogs,
@@ -135,8 +141,8 @@ export default function AdminSection({
     setLocalBannerOverlayOpacity(bannerOverlayOpacity);
   }, [bannerOverlayOpacity]);
 
-  // Navigation tabs: 'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros' | 'servicios_control'
-  const [localActiveTab, setLocalActiveTab] = useState<'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros' | 'servicios_control'>('metrics');
+  // Navigation tabs: 'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros' | 'servicios_control' | 'negocios_control'
+  const [localActiveTab, setLocalActiveTab] = useState<'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros' | 'servicios_control' | 'negocios_control'>('metrics');
   const activeTab = propActiveTab || localActiveTab;
   const setActiveTab = propOnChangeTab || setLocalActiveTab;
 
@@ -2179,6 +2185,152 @@ export default function AdminSection({
               </div>
             </div>
 
+          </div>
+        </motion.div>
+      )}
+
+      {/* ================================== TAB 6: GESTIÓN DE NEGOCIOS ================================== */}
+      {activeTab === 'negocios_control' && (
+        <motion.div
+          key="negocios_control_tab"
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white p-6 rounded-3xl border border-slate-205 shadow-sm space-y-6 text-left"
+        >
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <h3 className="font-serif font-black text-slate-800 text-lg sm:text-2xl">Control y Supervisión de Negocios y Patrocinadores</h3>
+              <p className="text-xs sm:text-sm text-slate-500">Visualiza el padrón completo de patrocinadores registrados, supervisa tarifas, y activa o suspende licencias comerciales.</p>
+            </div>
+            <div className="px-3.5 py-1.5 bg-amber-50 border border-amber-200 text-[#a38439] text-xs font-black rounded-xl flex items-center gap-1.5 shadow-2xs">
+              🏢 {businesses.length} Negocios Afiliados
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6">
+            {businesses.length === 0 ? (
+              <div className="text-center py-12 border border-dashed border-slate-200 rounded-2xl">
+                <p className="text-slate-500 font-bold text-sm">No hay patrocinadores o negocios registrados aún.</p>
+                <p className="text-slate-400 text-xs mt-1">Usa la opción de autorregistro disponible desde el selector de roles de la página de inicio.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {businesses.map((biz) => (
+                  <div key={biz.id} className="p-5 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:border-slate-300 transition-all duration-150 shadow-2xs">
+                    
+                    {/* Brand Meta Data Block */}
+                    <div className="flex items-start gap-4 flex-1">
+                      <div className="w-16 h-16 rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden shrink-0 flex items-center justify-center">
+                        <img 
+                          src={biz.logo || "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=120&auto=format&fit=crop&q=60"} 
+                          alt={biz.name}
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="font-bold text-slate-900 text-base">{biz.name}</h4>
+                          <span className="px-2 py-0.5 font-mono text-[9px] font-black uppercase text-slate-400 bg-slate-200 rounded-md">{biz.id}</span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
+                            biz.status === 'Activo' ? 'bg-green-100 text-green-800' : 'bg-rose-100 text-rose-850'
+                          }`}>
+                            ● {biz.status}
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-slate-705 leading-normal"><strong className="text-slate-400 font-bold uppercase text-[9px]">Giro Comercial:</strong> {biz.giro}</p>
+                        <p className="text-xs text-slate-705 leading-normal"><strong className="text-slate-400 font-bold uppercase text-[9px]">Titular:</strong> {biz.ownerName}</p>
+                        <p className="text-xs text-slate-650 flex flex-wrap gap-x-3 gap-y-1 leading-normal pt-1.5 border-t border-slate-200/50">
+                          {biz.telephones && <span>📞 Teléfono: {biz.telephones}</span>}
+                          {biz.whatsapp && <span className="text-green-650 font-extrabold">💬 WhatsApp: {biz.whatsapp}</span>}
+                          {biz.mapLink && (
+                            <a 
+                              href={biz.mapLink} 
+                              target="_blank" 
+                              rel="noreferrer" 
+                              className="text-indigo-600 hover:text-indigo-805 hover:underline flex items-center gap-1 font-mono text-[11px]"
+                            >
+                              📍 Ubicación de Google Maps ↗
+                            </a>
+                          )}
+                        </p>
+                        <p className="text-xs text-slate-500 font-medium pt-1">📍 Dirección Física: {biz.address}</p>
+
+                        {/* Custom sub-container for services preview */}
+                        <div className="mt-3 bg-white p-3 rounded-xl border border-slate-205">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider leading-none pb-1.5 border-b border-slate-100">Servicios Publicados ({biz.services.length})</p>
+                          {biz.services.length === 0 ? (
+                            <p className="text-[11px] text-slate-400 italic pt-1.5">Sin servicios publicados.</p>
+                          ) : (
+                            <div className="pt-2 flex flex-wrap gap-2">
+                              {biz.services.map((srv, sIdx) => (
+                                <div key={sIdx} className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs shrink-0 max-w-[240px]">
+                                  <p className="font-extrabold text-slate-800 truncate">{srv.name}</p>
+                                  <div className="flex justify-between items-center text-[10px] gap-2 pt-0.5">
+                                    <span className="font-bold text-[#a38439]">${srv.price} MXN</span>
+                                    <span className="text-[9px] text-slate-400 font-medium truncate max-w-[120px]" title={srv.description}>{srv.description}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action buttons allowing suspension/deletion */}
+                    <div className="flex md:flex-col items-stretch gap-2 shrink-0 w-full md:w-44 border-t md:border-t-0 border-slate-150 mt-3 md:mt-0 pt-3 md:pt-0">
+                      
+                      {biz.status === 'Activo' ? (
+                        <button
+                          onClick={() => {
+                            onUpdateBusiness({
+                              ...biz,
+                              status: 'Suspendido'
+                            });
+                            onAddLog(`Negocio suspendido/desactivado por Administración: ${biz.name}`, 'warning');
+                            showToast(`El negocio "${biz.name}" ha sido suspendido`, 'danger');
+                          }}
+                          className="flex-1 py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-900 border border-rose-200 text-xs font-black uppercase rounded-xl transition text-center cursor-pointer"
+                        >
+                          🚫 Suspender
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            onUpdateBusiness({
+                              ...biz,
+                              status: 'Activo'
+                            });
+                            onAddLog(`Negocio activado por Administración: ${biz.name}`, 'info');
+                            showToast(`El negocio "${biz.name}" ha sido activado con éxito`, 'success');
+                          }}
+                          className="flex-1 py-1.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 hover:text-emerald-905 border border-emerald-250 text-xs font-black uppercase rounded-xl transition text-center cursor-pointer"
+                        >
+                          ⚡ Activar
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => {
+                          if (confirm(`¿Estás seguro de que deseas eliminar permanentemente a "${biz.name}"? Los usuarios ya no verán sus servicios.`)) {
+                            onDeleteBusiness(biz.id);
+                            onAddLog(`Negocio de forma permanente por Administración: ${biz.name}`, 'critical');
+                            showToast(`El negocio "${biz.name}" fue borrado con éxito`, 'success');
+                          }
+                        }}
+                        className="flex-1 py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-650 hover:text-slate-900 border border-slate-250 text-xs font-black uppercase rounded-xl transition text-center cursor-pointer"
+                      >
+                        🗑️ Eliminar
+                      </button>
+                    </div>
+
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </motion.div>
       )}

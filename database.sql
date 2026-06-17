@@ -14,6 +14,8 @@ DROP TABLE IF EXISTS orders CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS categories CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS business_services CASCADE;
+DROP TABLE IF EXISTS businesses CASCADE;
 
 -- 2. CREATE SCHEMAS
 
@@ -94,9 +96,35 @@ CREATE TABLE audit_logs (
     id VARCHAR(50) PRIMARY KEY,
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     actor VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL CHECK (role IN ('Administrador', 'Servicios', 'Ventas')),
+    role VARCHAR(50) NOT NULL CHECK (role IN ('Administrador', 'Servicios', 'Ventas', 'Negocio')),
     action TEXT NOT NULL,
     severity VARCHAR(30) NOT NULL DEFAULT 'info' CHECK (severity IN ('info', 'warning', 'critical'))
+);
+
+-- Table: Businesses (Negocios / Patrocinadores)
+CREATE TABLE businesses (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    logo TEXT,
+    address TEXT NOT NULL,
+    map_link TEXT,
+    telephones VARCHAR(100),
+    whatsapp VARCHAR(100),
+    owner_name VARCHAR(255) NOT NULL,
+    giro VARCHAR(255) NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'Activo' CHECK (status IN ('Activo', 'Suspendido')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: Business Services (Servicios por Negocio)
+CREATE TABLE business_services (
+    id SERIAL PRIMARY KEY,
+    business_id VARCHAR(50) NOT NULL REFERENCES businesses(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    price DECIMAL(10,2) NOT NULL DEFAULT 0.00 CHECK (price >= 0),
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -107,6 +135,8 @@ CREATE INDEX idx_orders_customer_email ON orders(customer_email);
 CREATE INDEX idx_order_items_order ON order_items(order_id);
 CREATE INDEX idx_services_status ON services(status);
 CREATE INDEX idx_audit_logs_timestamp ON audit_logs(timestamp DESC);
+CREATE INDEX idx_business_services_biz ON business_services(business_id);
+CREATE INDEX idx_businesses_status ON businesses(status);
 
 
 -- 4. INSERT DATA SEEDING (Sincronizado con data.ts)
@@ -174,6 +204,18 @@ INSERT INTO audit_logs (id, timestamp, actor, role, action, severity) VALUES
 ('LOG-001', CURRENT_TIMESTAMP - INTERVAL '1 HOUR', 'Felipe Admin', 'Administrador', 'Activación del modo de reservación express en CDMX', 'info'),
 ('LOG-002', CURRENT_TIMESTAMP - INTERVAL '2 HOURS', 'Ventas Bot', 'Ventas', 'Nueva Orden de Ecommerce ORD-9452 procesada con éxito', 'info'),
 ('LOG-003', CURRENT_TIMESTAMP - INTERVAL '3 HOURS', 'Coordinador Jose', 'Servicios', 'Servicio SRV-102 modificado a estado "En Progreso"', 'info');
+
+-- Businesses & Business Services Seed Data (Cleaners sample)
+INSERT INTO businesses (id, name, logo, address, map_link, telephones, whatsapp, owner_name, giro, status) VALUES
+('BIZ-001', 'Brillo Impecable de México', 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=150&auto=format&fit=crop&q=60', 'Av. Insurgentes Sur 1450, Col. Del Valle, CDMX', 'https://maps.app.goo.gl/XbazWxXmhjRtB4sc9', '55-5678-1234', '55-9876-5432', 'Ing. Alejandro Rosales', 'Servicios de Limpieza Residencial e Industrial', 'Activo'),
+('BIZ-002', 'Limpiezas Express CDMX', 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=150&auto=format&fit=crop&q=60', 'Paseo de la Reforma 250, Col. Juárez, CDMX', 'https://maps.app.goo.gl/XbazWxXmhjRtB4sc9', '55-4321-8765', '55-1234-5678', 'Lic. Clara Salazar', 'Limpieza Especializada y Desinfección', 'Activo');
+
+INSERT INTO business_services (business_id, name, price, description) VALUES
+('BIZ-001', 'Limpieza Express Residencial', 450.00, 'Limpieza rápida de habitaciones principales, sacudido, barrido y trapeado.'),
+('BIZ-001', 'Sanitizado Químico Premium', 850.00, 'Desinfección por termonebulización de áreas comunes, certificado oficial.'),
+('BIZ-001', 'Lavado Mecánico de Alfombras', 1200.00, 'Inyección profunda de agentes quitamanchas en tapetes and sillones.'),
+('BIZ-002', 'Limpieza Profunda de Cocina', 900.00, 'Desengrase a detalle de estufas, campanas, azulejos y encimeras.'),
+('BIZ-002', 'Sanitizado de Salas y Muebles', 1100.00, 'Remoción de ácaros y lavado por succión de sillones de tela o piel.');
 
 COMMIT;
 -- =====================================================================

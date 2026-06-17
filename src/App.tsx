@@ -22,12 +22,14 @@ import {
   OrderStatus,
   CourierProfile,
   DeliveryStatus,
-  AppNotification
+  AppNotification,
+  BusinessRegistration
 } from './types';
 import AdminSection from './components/AdminSection';
 import ServiciosSection from './components/ServiciosSection';
 import VentasSection from './components/VentasSection';
 import MensajeriaSection from './components/MensajeriaSection';
+import { NegociosSection } from './components/NegociosSection';
 import { 
   ShieldAlert, 
   Wrench, 
@@ -48,7 +50,8 @@ import {
   Bell,
   BellRing,
   Trash2,
-  Check
+  Check,
+  Building
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -188,25 +191,69 @@ export default function App() {
     }
   });
 
+  const [businesses, setBusinesses] = useState<BusinessRegistration[]>(() => {
+    try {
+      const persisted = localStorage.getItem('homeli_businesses');
+      if (persisted) return JSON.parse(persisted);
+    } catch {}
+    return [
+      {
+        id: 'BIZ-001',
+        name: 'Brillo Impecable de México',
+        logo: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=150&auto=format&fit=crop&q=60',
+        address: 'Av. Insurgentes Sur 1450, Col. Del Valle, Benito Juárez, CDMX',
+        mapLink: 'https://maps.app.goo.gl/XbazWxXmhjRtB4sc9',
+        telephones: '55-5678-1234',
+        whatsapp: '55-9876-5432',
+        ownerName: 'Ing. Alejandro Rosales',
+        giro: 'Servicios de Limpieza Residencial e Industrial',
+        status: 'Activo',
+        services: [
+          { name: 'Limpieza Express Residencial', price: 450, description: 'Limpieza rápida de habitaciones principales, sacudido, barrido y trapeado.' },
+          { name: 'Sanitizado Químico Premium', price: 850, description: 'Desinfección por termonebulización de áreas comunes, certificado oficial.' },
+          { name: 'Lavado Mecánico de Alfombras', price: 1200, description: 'Inyección profunda de agentes quitamanchas en tapetes y sillones.' }
+        ],
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'BIZ-002',
+        name: 'Limpiezas Express CDMX',
+        logo: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=150&auto=format&fit=crop&q=60',
+        address: 'Paseo de la Reforma 250, Col. Juárez, Cuauhtémoc, CDMX',
+        mapLink: 'https://maps.app.goo.gl/XbazWxXmhjRtB4sc9',
+        telephones: '55-4321-8765',
+        whatsapp: '55-1234-5678',
+        ownerName: 'Lic. Clara Salazar',
+        giro: 'Limpieza Especializada y Desinfección',
+        status: 'Activo',
+        services: [
+          { name: 'Limpieza Profunda de Cocina', price: 900, description: 'Desengrase a detalle de estufas, campanas, azulejos y encimeras.' },
+          { name: 'Sanitizado de Salas y Muebles', price: 1100, description: 'Remoción de ácaros y lavado por succión de sillones de tela o piel.' }
+        ],
+        createdAt: new Date().toISOString()
+      }
+    ];
+  });
+
   // Navigational & brand States with localStorage persistence and URL tracking
-  const [activeSection, setActiveSection] = useState<'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria'>(() => {
+  const [activeSection, setActiveSection] = useState<'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria' | 'negocios'>(() => {
     try {
       // Prioritize localStorage so that refreshing the browser maintains the exact current view/session robustly
       const persisted = localStorage.getItem('homeli_active_section');
-      if (persisted && ['home', 'admin', 'servicios', 'ventas', 'mensajeria'].includes(persisted)) {
-        return persisted as 'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria';
+      if (persisted && ['home', 'admin', 'servicios', 'ventas', 'mensajeria', 'negocios'].includes(persisted)) {
+        return persisted as 'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria' | 'negocios';
       }
 
       // Fall back to URL search parameters or Hash to enable initial direct deep-linking
       const urlParams = new URL(window.location.href);
       const sectionParam = urlParams.searchParams.get('section') || urlParams.searchParams.get('rol');
-      if (sectionParam && ['home', 'admin', 'servicios', 'ventas', 'mensajeria'].includes(sectionParam)) {
-        return sectionParam as 'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria';
+      if (sectionParam && ['home', 'admin', 'servicios', 'ventas', 'mensajeria', 'negocios'].includes(sectionParam)) {
+        return sectionParam as 'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria' | 'negocios';
       }
 
       const hashParam = urlParams.hash.replace('#', '').toLowerCase();
-      if (hashParam && ['home', 'admin', 'servicios', 'ventas', 'mensajeria'].includes(hashParam)) {
-        return hashParam as 'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria';
+      if (hashParam && ['home', 'admin', 'servicios', 'ventas', 'mensajeria', 'negocios'].includes(hashParam)) {
+        return hashParam as 'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria' | 'negocios';
       }
 
       return 'home';
@@ -218,7 +265,7 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(false);
 
   // States to control active admin module via header hamburger dropdown with localStorage persistence
-  const [adminActiveTab, setAdminActiveTab] = useState<'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros' | 'servicios_control'>(() => {
+  const [adminActiveTab, setAdminActiveTab] = useState<'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros' | 'servicios_control' | 'negocios_control'>(() => {
     try {
       const persisted = localStorage.getItem('homeli_admin_active_tab');
       return (persisted as any) || 'metrics';
@@ -288,6 +335,22 @@ export default function App() {
       console.warn("Failed to update URL on section change", e);
     }
   }, [activeSection]);
+
+  useEffect(() => {
+    localStorage.setItem('homeli_businesses', JSON.stringify(businesses));
+  }, [businesses]);
+
+  const handleRegisterBusiness = (newBiz: BusinessRegistration) => {
+    setBusinesses(prev => [newBiz, ...prev]);
+  };
+
+  const handleUpdateBusiness = (updatedBiz: BusinessRegistration) => {
+    setBusinesses(prev => prev.map(b => b.id === updatedBiz.id ? updatedBiz : b));
+  };
+
+  const handleDeleteBusiness = (id: string) => {
+    setBusinesses(prev => prev.filter(b => b.id !== id));
+  };
 
   useEffect(() => {
     localStorage.setItem('homeli_admin_active_tab', adminActiveTab);
@@ -585,6 +648,8 @@ export default function App() {
     localStorage.removeItem('homeli_logs');
     localStorage.removeItem('homeli_profiles');
     localStorage.removeItem('homeli_couriers');
+    localStorage.removeItem('homeli_businesses');
+    localStorage.removeItem('homeli_my_business_id');
     localStorage.removeItem('homeli_notifications');
     localStorage.removeItem('homeli_admin_active_tab');
     localStorage.removeItem('homeli_active_section');
@@ -738,6 +803,24 @@ export default function App() {
                           {adminActiveTab === 'servicios_control' && <span className="w-2 h-2 rounded-full bg-[#c5a85c]" />}
                         </button>
 
+                        <button
+                          onClick={() => {
+                            setAdminActiveTab('negocios_control');
+                            setShowAdminHamburgerDropdown(false);
+                          }}
+                          className={`w-full text-left px-3 py-3 rounded-xl text-sm font-black transition flex items-center justify-between cursor-pointer ${
+                            adminActiveTab === 'negocios_control'
+                              ? 'bg-[#c5a85c]/10 text-[#a38439]'
+                              : 'text-slate-705 hover:bg-slate-50 hover:text-slate-900'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2">
+                            <span className="text-base">🏢</span>
+                            <span>Gestión de Negocios</span>
+                          </span>
+                          {adminActiveTab === 'negocios_control' && <span className="w-2 h-2 rounded-full bg-[#c5a85c]" />}
+                        </button>
+
                         <div className="border-t border-slate-100 my-1 pt-1.5">
                           <button
                             onClick={() => {
@@ -765,7 +848,7 @@ export default function App() {
                     <span>Selector Roles</span>
                   </button>
                   
-                  {/* Shortcuts directly in header */}
+                   {/* Shortcuts directly in header */}
                   <div className="hidden sm:flex rounded-lg bg-natural-bg p-0.5 border border-natural-border" id="navbar_shortcuts">
                     <button 
                       onClick={() => setActiveSection('admin')}
@@ -790,6 +873,12 @@ export default function App() {
                       className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'mensajeria' ? 'bg-amber-600 text-white' : 'text-natural-muted hover:text-natural-dark'}`}
                     >
                       Mensajería
+                    </button>
+                    <button 
+                      onClick={() => setActiveSection('negocios')}
+                      className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'negocios' ? 'bg-[#c5a85c] text-white' : 'text-natural-muted hover:text-natural-dark'}`}
+                    >
+                      Negocios
                     </button>
                   </div>
                 </>
@@ -837,8 +926,8 @@ export default function App() {
                   />
                 </div>
 
-                {/* The 4 requested entries: Icon in an elegant solid golden block, label exactly underneath */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-2xl w-full px-4 justify-items-center" id="three_roles_access_grid">
+                {/* The 5 requested entries: Icon in an elegant solid golden block, label exactly underneath */}
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-6 max-w-4xl w-full px-4 justify-items-center" id="three_roles_access_grid">
                   {/* Category 1: Admin */}
                   <motion.div
                     whileHover={{ scale: 1.05 }}
@@ -906,6 +995,23 @@ export default function App() {
                     </div>
                     <span className="text-xs sm:text-sm font-bold text-natural-dark select-none mt-1 group-hover:text-[#c5a85c] transition-colors">Mensajería</span>
                   </motion.div>
+
+                  {/* Category 5: Negocios */}
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      setActiveSection('negocios');
+                      onAddLog('Acceso autorizado a Panel de Negocios y Patrocinadores', 'info');
+                    }}
+                    className="flex flex-col items-center gap-2 cursor-pointer group"
+                    id="access_entry_negocios"
+                  >
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 bg-[#c5a85c] rounded-2xl flex items-center justify-center text-white shadow-md group-hover:bg-[#b59549] transition-all duration-200">
+                      <Building size={32} />
+                    </div>
+                    <span className="text-xs sm:text-sm font-bold text-natural-dark select-none mt-1 group-hover:text-[#c5a85c] transition-colors">Negocios</span>
+                  </motion.div>
                 </div>
 
                 {/* Minimalist action buttons: PWA Installation and Clear Cache */}
@@ -967,7 +1073,7 @@ export default function App() {
                       </button>
                       <span>/</span>
                       <span className="text-slate-800 capitalize font-bold font-mono">
-                        {activeSection === 'admin' ? 'Administrador' : activeSection === 'servicios' ? 'Servicios' : activeSection === 'mensajeria' ? 'Mensajería' : 'Ventas Ecommerce'}
+                        {activeSection === 'admin' ? 'Administrador' : activeSection === 'servicios' ? 'Servicios' : activeSection === 'mensajeria' ? 'Mensajería' : activeSection === 'negocios' ? 'Socios Negocios' : 'Ventas Ecommerce'}
                       </span>
                     </div>
 
@@ -993,6 +1099,9 @@ export default function App() {
                     logs={logs}
                     profiles={profiles}
                     couriers={couriers}
+                    businesses={businesses}
+                    onUpdateBusiness={handleUpdateBusiness}
+                    onDeleteBusiness={handleDeleteBusiness}
                     onAddUser={handleAddUser}
                     onAddLog={onAddLog}
                     onClearLogs={handleClearLogs}
@@ -1042,6 +1151,17 @@ export default function App() {
                     onUpdateServiceStatus={handleUpdateServiceStatus}
                     onAddLog={onAddLog}
                     products={products}
+                    businesses={businesses}
+                  />
+                )}
+
+                {activeSection === 'negocios' && (
+                  <NegociosSection 
+                    businesses={businesses}
+                    onRegisterBusiness={handleRegisterBusiness}
+                    onUpdateBusiness={handleUpdateBusiness}
+                    onDeleteBusiness={handleDeleteBusiness}
+                    onAddLog={onAddLog}
                   />
                 )}
 
