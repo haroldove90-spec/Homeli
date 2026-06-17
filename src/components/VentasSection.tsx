@@ -352,6 +352,7 @@ export default function VentasSection({
   const [isPlacedOnFloor, setIsPlacedOnFloor] = useState(true);
   const [isScanningSurface, setIsScanningSurface] = useState(false);
   const [arBlendMultiply, setArBlendMultiply] = useState(true);
+  const [arWaitingFeetFocus, setArWaitingFeetFocus] = useState(true);
 
   // Auto-place shoe instantly without unnecessary delay scans
   useEffect(() => {
@@ -359,6 +360,7 @@ export default function VentasSection({
       setIsScanningSurface(false);
       setIsPlacedOnFloor(true);
       setArBlendMultiply(true); // default blend to blend white background images nicely!
+      setArWaitingFeetFocus(true); // Always expect user to focus feet first
     }
   }, [arMediaMode]);
 
@@ -2454,44 +2456,90 @@ export default function VentasSection({
                           </button>
                         </div>
 
-                        {/* Draggable component stage inside viewport */}
-                        <div className="flex-1 flex items-center justify-center relative w-full h-full pointer-events-none">
-                          <motion.div
-                            drag
-                            dragMomentum={false}
-                            dragElastic={0.15}
-                            style={{
-                              x: arPosition.x,
-                              y: arPosition.y,
-                              scale: arScale,
-                            }}
-                            className="cursor-grab active:cursor-grabbing z-20 absolute flex flex-col items-center justify-center pointer-events-auto"
-                          >
-                            {/* Casting shoe drop-shadow on floor */}
-                            <div 
-                              className="w-36 h-6 rounded-full filter blur-md transition-all duration-300 pointer-events-none absolute -bottom-1"
-                              style={{
-                                background: 'rgba(0, 0, 0, 0.62)',
-                                width: `${144 * arScale}px`,
-                                opacity: 0.9,
-                                transform: 'scaleY(0.35) translateY(6px)'
-                              }}
-                            />
+                        {/* Step 1: Instruct user to focus strictly on feet until confirmed */}
+                        {arWaitingFeetFocus ? (
+                          <div className="absolute inset-x-0 bottom-4 top-16 z-30 flex flex-col items-center justify-between p-5 bg-slate-950/45 backdrop-blur-xs text-white animate-fade-in pointer-events-auto rounded-3xl">
+                            {/* Upper instruction prompt */}
+                            <div className="text-center max-w-xs space-y-1.5 bg-black/85 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-2xl">
+                              <div className="inline-flex p-1.5 bg-amber-500/15 text-amber-400 rounded-full animate-bounce">
+                                <Sparkles size={16} />
+                              </div>
+                              <h3 className="text-[11px] font-serif font-black uppercase tracking-wider text-[#c5a85c]">
+                                Paso 1: Enfoca tus Pies
+                              </h3>
+                              <p className="text-[10px] text-slate-200 leading-normal font-sans">
+                                Apunta la cámara de tu celular <b>exclusivamente hacia tus pies o el suelo</b> para calzarte los zapatos virtuales.
+                              </p>
+                            </div>
 
-                            {/* Shoe item actual image representation */}
-                            <img 
-                              src={selectedProductDetails.imageUrl} 
-                              alt={selectedProductDetails.name} 
-                              className="w-48 h-48 md:w-56 md:h-56 object-contain pointer-events-none select-none transition-all duration-300"
+                            {/* Floating footprint alignment guide outlines */}
+                            <div className="flex-1 flex flex-col items-center justify-center relative w-full pointer-events-none">
+                              {/* Horizontal virtual footprint guide circle */}
+                              <div className="w-52 h-24 border-2 border-dashed border-amber-500/55 rounded-full flex flex-col items-center justify-center animate-pulse [transform:rotateX(65deg)] relative">
+                                <div className="absolute inset-2 border border-white/10 rounded-full" />
+                                <span className="text-[9px] font-mono tracking-widest text-[#c5a85c] uppercase -mt-4 font-bold scale-[1.3]">
+                                  COLOCA TUS PIES AQUÍ
+                                </span>
+                              </div>
+                              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[14px] animate-pulse">
+                                👣
+                              </div>
+                            </div>
+
+                            {/* Projection Confirmation Controller Button */}
+                            <div className="w-full max-w-xs bg-black/55 p-2 rounded-2xl border border-white/10 animate-pulse">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setArWaitingFeetFocus(false);
+                                  onAddLog(`AR Sandbox: Calzado proyectado en los pies del cliente`, 'info');
+                                }}
+                                className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-[#c5a85c] text-slate-950 font-black uppercase text-[10px] tracking-widest rounded-xl shadow-xl hover:brightness-110 active:scale-95 transition-all cursor-pointer text-center"
+                              >
+                                ⚡ Ver Zapatos en Mis Pies ⚡
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          /* Draggable component stage inside viewport - active after feet focused */
+                          <div className="flex-1 flex items-center justify-center relative w-full h-full pointer-events-none">
+                            <motion.div
+                              drag
+                              dragMomentum={false}
+                              dragElastic={0.15}
                               style={{
-                                transform: `rotateY(${rotateAngle}deg) rotateX(${rotatePitch}deg)`,
-                                mixBlendMode: arBlendMultiply ? 'multiply' : 'normal',
-                                filter: 'brightness(1.0) contrast(1.0) saturate(1.05) drop-shadow(0 14px 10px rgba(0,0,0,0.45))'
+                                x: arPosition.x,
+                                y: arPosition.y,
+                                scale: arScale,
                               }}
-                              referrerPolicy="no-referrer"
-                            />
-                          </motion.div>
-                        </div>
+                              className="cursor-grab active:cursor-grabbing z-20 absolute flex flex-col items-center justify-center pointer-events-auto"
+                            >
+                              {/* Casting shoe drop-shadow on floor */}
+                              <div 
+                                className="w-36 h-6 rounded-full filter blur-md transition-all duration-300 pointer-events-none absolute -bottom-1"
+                                style={{
+                                  background: 'rgba(0, 0, 0, 0.62)',
+                                  width: `${144 * arScale}px`,
+                                  opacity: 0.9,
+                                  transform: 'scaleY(0.35) translateY(6px)'
+                                }}
+                              />
+
+                              {/* Shoe item actual image representation */}
+                              <img 
+                                src={selectedProductDetails.imageUrl} 
+                                alt={selectedProductDetails.name} 
+                                className="w-48 h-48 md:w-56 md:h-56 object-contain pointer-events-none select-none transition-all duration-300"
+                                style={{
+                                  transform: `rotateY(${rotateAngle}deg) rotateX(${rotatePitch}deg)`,
+                                  mixBlendMode: arBlendMultiply ? 'multiply' : 'normal',
+                                  filter: 'brightness(1.0) contrast(1.0) saturate(1.05) drop-shadow(0 14px 10px rgba(0,0,0,0.45))'
+                                }}
+                                referrerPolicy="no-referrer"
+                              />
+                            </motion.div>
+                          </div>
+                        )}
 
                       </div>
                     )}
@@ -2530,6 +2578,24 @@ export default function VentasSection({
                             <p className="font-serif font-black text-[11px] text-slate-100 uppercase tracking-wide">Escanea con tu Smartphone</p>
                             <p className="text-[10px] text-slate-350 leading-relaxed font-sans">
                               Apunta tu cámara móvil aquí para cargar el modelo del calzado o producto <strong className="text-amber-500 font-extrabold">{selectedProductDetails.name}</strong> en AR directamente en tu recámara o sala.
+                            </p>
+                          </div>
+
+                          {/* Direct CTA Link for cellphones/mobile clients */}
+                          <div className="w-full pt-1.5 max-w-xs">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowQrCodeOverlay(false);
+                                setArMediaMode('ar_camera');
+                                setArWaitingFeetFocus(true);
+                              }}
+                              className="w-full py-2 bg-gradient-to-r from-amber-400 to-[#c5a85c] hover:brightness-105 text-slate-950 text-[10px] font-black uppercase tracking-widest rounded-xl shadow-xl transition transform active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                            >
+                              <span>📱 Probar en Realidad Aumentada</span>
+                            </button>
+                            <p className="text-[8.5px] text-slate-300 mt-2 font-mono uppercase tracking-wide text-center">
+                              Presiona aquí si estás en tu celular para activar la Realidad Aumentada y ver el producto virtual en tus pies.
                             </p>
                           </div>
                         </div>
