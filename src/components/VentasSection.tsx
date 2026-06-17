@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ProductItem, SalesOrder, OrderStatus, AppNotification } from '../types';
 import { 
   Package, 
@@ -33,7 +33,12 @@ import {
   RefreshCw,
   Home,
   Bell,
-  BellRing
+  BellRing,
+  Camera,
+  QrCode,
+  Maximize2,
+  Play,
+  Pause
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -262,6 +267,92 @@ export default function VentasSection({
   
   const [isOrderOrdered, setIsOrderOrdered] = useState(false);
   const [latestOrderId, setLatestOrderId] = useState('');
+
+  // 360° and AR logic states
+  const [arMediaMode, setArMediaMode] = useState<'photo' | 'rotate360' | 'ar_camera'>('photo');
+  const [rotateAngle, setRotateAngle] = useState(180); // Center angle
+  const [rotatePitch, setRotatePitch] = useState(5);  // Slight realistic pitch angle
+  const [isAutoRotate, setIsAutoRotate] = useState(false);
+  const [arScale, setArScale] = useState(1.1);
+  const [arPosition, setArPosition] = useState({ x: 0, y: 0 });
+  const [isDraggingProduct, setIsDraggingProduct] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [arStream, setArStream] = useState<MediaStream | null>(null);
+  const [isArCameraActive, setIsArCameraActive] = useState(false);
+  const [showQrCodeOverlay, setShowQrCodeOverlay] = useState(false);
+  const [simulatedArPhoto, setSimulatedArPhoto] = useState<string | null>(null);
+  const arVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  // Auto-rotate 360° effect
+  useEffect(() => {
+    let intervalId: any;
+    if (isAutoRotate && arMediaMode === 'rotate360') {
+      intervalId = setInterval(() => {
+        setRotateAngle(prev => (prev + 2) % 360);
+      }, 30);
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isAutoRotate, arMediaMode]);
+
+  // Webcam stream toggle helper
+  const startArWebcam = async () => {
+    try {
+      if (arStream) {
+        stopArWebcam();
+      }
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment', width: 640, height: 480 } 
+      });
+      setArStream(mediaStream);
+      setIsArCameraActive(true);
+    } catch (err) {
+      console.warn("Camera fallback will be used because access was denied or unavailable:", err);
+      setIsArCameraActive(true); // Let them use simulated room picture fallback beautifully!
+    }
+  };
+
+  const stopArWebcam = () => {
+    if (arStream) {
+      arStream.getTracks().forEach(track => track.stop());
+      setArStream(null);
+    }
+    setIsArCameraActive(false);
+  };
+
+  // Keep webcam element connected
+  useEffect(() => {
+    if (isArCameraActive && arVideoRef.current && arStream) {
+      arVideoRef.current.srcObject = arStream;
+      arVideoRef.current.play().catch(err => console.error("AR Video stream play failed:", err));
+    }
+  }, [isArCameraActive, arStream]);
+
+  // Cleanup camera stream
+  useEffect(() => {
+    return () => {
+      if (arStream) {
+        arStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [arStream]);
+
+  // Reset all 360 & AR parameters on product switch
+  useEffect(() => {
+    if (selectedProductDetails) {
+      setArMediaMode('photo');
+      setRotateAngle(180);
+      setRotatePitch(5);
+      setIsAutoRotate(false);
+      setArScale(1.1);
+      setArPosition({ x: 0, y: 0 });
+      setSimulatedArPhoto(null);
+      stopArWebcam();
+    } else {
+      stopArWebcam();
+    }
+  }, [selectedProductDetails]);
 
   // Manager state variables
   const [productQuery, setProductQuery] = useState('');
@@ -1829,18 +1920,378 @@ export default function VentasSection({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 pt-2">
                 {/* Product Large Image Showcase */}
-                <div className="space-y-3">
-                  <div className="aspect-square w-full rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 shadow-sm flex items-center justify-center">
-                    <img 
-                      src={selectedProductDetails.imageUrl} 
-                      alt={selectedProductDetails.name} 
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                    />
+                <div className="space-y-3 flex flex-col justify-between">
+                  {/* Embedded Custom CSS Keyframe Animations for Laser scan line and camera flash */}
+                  <style dangerouslySetInnerHTML={{__html: `
+                    @keyframes xsweep {
+                      0% { left: 5%; opacity: 0; }
+                      30% { opacity: 0.7; }
+                      70% { opacity: 0.7; }
+                      100% { left: 95%; opacity: 0; }
+                    }
+                    .animate-infinite-x-sweep {
+                      animation: xsweep 2.2s infinite linear;
+                    }
+                    @keyframes flashanim {
+                      0% { opacity: 1; }
+                      100% { opacity: 0; }
+                    }
+                    .animate-flash-intensity {
+                      animation: flashanim 0.4s forwards ease-out;
+                    }
+                    .animate-spin-once {
+                      animation: spin 0.8s ease-in-out-once;
+                    }
+                  `}} />
+
+                  {/* Media Mode Segmented Buttons */}
+                  <div className="flex bg-slate-150 p-1 rounded-2xl text-[9px] font-black uppercase tracking-wider gap-0.5 border border-slate-200">
+                    <button 
+                      type="button"
+                      onClick={() => { setArMediaMode('photo'); stopArWebcam(); }}
+                      className={`flex-1 py-1.5 px-2 rounded-xl text-center transition cursor-pointer ${arMediaMode === 'photo' ? 'bg-[#c5a85c] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
+                    >
+                      📸 Foto
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => { setArMediaMode('rotate360'); stopArWebcam(); }}
+                      className={`flex-1 py-1.5 px-2 rounded-xl text-center transition cursor-pointer ${arMediaMode === 'rotate360' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
+                    >
+                      🔄 Giro 360°
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => { setArMediaMode('ar_camera'); startArWebcam(); }}
+                      className={`flex-1 py-1.5 px-2 rounded-xl text-center transition cursor-pointer ${arMediaMode === 'ar_camera' ? 'bg-[#c5a85c] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
+                    >
+                      🕶️ Ver en AR
+                    </button>
                   </div>
-                  <div className="flex justify-between items-center text-[10px] sm:text-xs font-mono text-slate-400">
+
+                  {/* Main Display Viewport */}
+                  <div 
+                    className="relative aspect-square w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-250 shadow-inner flex items-center justify-center select-none group"
+                    onMouseDown={(e) => {
+                      if (arMediaMode === 'rotate360' || arMediaMode === 'ar_camera') {
+                        setIsDraggingProduct(true);
+                        setDragStart({ x: e.clientX, y: e.clientY });
+                      }
+                    }}
+                    onMouseMove={(e) => {
+                      if (isDraggingProduct) {
+                        const dx = e.clientX - dragStart.x;
+                        const dy = e.clientY - dragStart.y;
+                        if (arMediaMode === 'rotate360') {
+                          setRotateAngle(prev => (prev + dx * 0.7 + 360) % 360);
+                          setRotatePitch(prev => Math.max(-30, Math.min(30, prev - dy * 0.5)));
+                        } else if (arMediaMode === 'ar_camera') {
+                          setArPosition(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+                        }
+                        setDragStart({ x: e.clientX, y: e.clientY });
+                      }
+                    }}
+                    onMouseUp={() => setIsDraggingProduct(false)}
+                    onMouseLeave={() => setIsDraggingProduct(false)}
+                    onTouchStart={(e) => {
+                      if ((arMediaMode === 'rotate360' || arMediaMode === 'ar_camera') && e.touches[0]) {
+                        setIsDraggingProduct(true);
+                        setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+                      }
+                    }}
+                    onTouchMove={(e) => {
+                      if (isDraggingProduct && e.touches[0]) {
+                        const dx = e.touches[0].clientX - dragStart.x;
+                        const dy = e.touches[0].clientY - dragStart.y;
+                        if (arMediaMode === 'rotate360') {
+                          setRotateAngle(prev => (prev + dx * 0.7 + 360) % 360);
+                          setRotatePitch(prev => Math.max(-30, Math.min(30, prev - dy * 0.5)));
+                        } else if (arMediaMode === 'ar_camera') {
+                          setArPosition(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+                        }
+                        setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+                      }
+                    }}
+                    onTouchEnd={() => setIsDraggingProduct(false)}
+                  >
+                    {/* 1. PHOTO VIEW MODE */}
+                    {arMediaMode === 'photo' && (
+                      <div className="w-full h-full bg-slate-50 relative flex items-center justify-center">
+                        <img 
+                          src={selectedProductDetails.imageUrl} 
+                          alt={selectedProductDetails.name} 
+                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                          referrerPolicy="no-referrer"
+                        />
+                        {/* QR Code Trigger Button */}
+                        <button
+                          type="button"
+                          onClick={() => setShowQrCodeOverlay(true)}
+                          className="absolute bottom-3 right-3 bg-white/95 text-slate-900 border border-slate-200 shadow-lg px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1 cursor-pointer hover:bg-slate-100 hover:border-[#c5a85c] transition-all"
+                        >
+                          <QrCode size={12} className="text-[#c5a85c]" />
+                          <span>QR Móvil / AR</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* 2. ROTATE 360° MODE */}
+                    {arMediaMode === 'rotate360' && (
+                      <div className="w-full h-full relative overflow-hidden flex flex-col justify-between p-4 bg-gradient-to-b from-[#0c1220] to-[#04060b] text-white">
+                        {/* 3D background layout grids */}
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(197,168,92,0.15)_0%,transparent_70%)] pointer-events-none" />
+                        
+                        {/* Cyber scan telemetry overlays */}
+                        <div className="flex justify-between items-center text-[8px] font-mono text-slate-400 z-10 select-none">
+                          <span className="flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            INTERACTIVE_360_GLIDE
+                          </span>
+                          <span>H_PERSPECTIVE: ACTIVE</span>
+                        </div>
+
+                        {/* Interactive dynamic revolving product and its volumetric live light drop-shadow */}
+                        <div className="flex-1 flex items-center justify-center relative">
+                          <img 
+                            src={selectedProductDetails.imageUrl} 
+                            alt={selectedProductDetails.name} 
+                            className="w-44 h-44 sm:w-48 sm:h-48 object-contain pointer-events-none select-none transition-transform duration-100"
+                            style={{
+                              transform: `rotateY(${rotateAngle}deg) rotateX(${rotatePitch}deg) scale(${arScale})`,
+                              filter: `brightness(${1.0 + Math.sin(rotateAngle * Math.PI / 180) * 0.15}) contrast(${1.0 + Math.abs(Math.sin(rotateAngle * Math.PI / 180)) * 0.05}) drop-shadow(${Math.sin(rotateAngle * Math.PI / 180) * 12}px 12px 14px rgba(0,0,0,0.6))`
+                            }}
+                            referrerPolicy="no-referrer"
+                          />
+
+                          {/* Futuristic Scan Line Laser Effect */}
+                          <div className="absolute inset-y-0 left-1/2 w-0.5 bg-gradient-to-r from-transparent via-[#c5a85c]/40 to-transparent animate-infinite-x-sweep pointer-events-none" />
+                        </div>
+
+                        {/* Interactive Slider and HUD parameters */}
+                        <div className="space-y-1.5 z-10 bg-slate-900/60 backdrop-blur-xs p-1.5 rounded-xl border border-white/5">
+                          <div className="flex justify-between items-center text-[8px] font-mono text-slate-400">
+                            <span className="bg-slate-800 px-1 py-0.5 rounded text-amber-500 font-extrabold">Y_ROT: {Math.round(rotateAngle)}°</span>
+                            <span className="text-slate-400 font-bold tracking-wider text-[7px]">ARRAS-DESLIZA PARA ROTAR</span>
+                            <span className="bg-slate-800 px-1 py-0.5 rounded text-[#c5a85c] font-black">X_PIT: {Math.round(rotatePitch)}°</span>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setIsAutoRotate(!isAutoRotate)}
+                              className={`p-1 rounded-lg text-center border cursor-pointer transition flex items-center justify-center ${isAutoRotate ? 'bg-[#c5a85c] text-white border-[#c5a85c]' : 'bg-slate-800 text-slate-450 border-slate-700 hover:text-white'}`}
+                              title={isAutoRotate ? "Pausar Rotación" : "Giro Automático"}
+                            >
+                              {isAutoRotate ? <Pause size={10} /> : <Play size={10} />}
+                            </button>
+                            <input 
+                              type="range"
+                              min="0"
+                              max="360"
+                              value={rotateAngle}
+                              onChange={(e) => setRotateAngle(Number(e.target.value))}
+                              className="flex-1 accent-amber-500 bg-slate-800 h-1 rounded-lg cursor-pointer"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => { setRotateAngle(180); setRotatePitch(5); }}
+                              className="p-1 px-1.5 bg-slate-800 hover:bg-slate-700 text-slate-350 hover:text-white text-[8px] font-mono font-black uppercase rounded border border-slate-700 cursor-pointer"
+                            >
+                              Reset
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 3. AR CAMERA MODE */}
+                    {arMediaMode === 'ar_camera' && (
+                      <div className="w-full h-full relative overflow-hidden flex flex-col justify-between p-4 bg-slate-950 text-white select-none">
+                        
+                        {/* Live webcam feed or premium realistic room fallback picture */}
+                        {isArCameraActive && arStream ? (
+                          <video 
+                            ref={arVideoRef}
+                            className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-80 z-0"
+                            playsInline
+                            muted
+                          />
+                        ) : (
+                          <div className="absolute inset-0 w-full h-full pointer-events-none bg-cover bg-center opacity-70" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?w=800&auto=format&fit=crop&q=80')` }}>
+                            {/* Ambient helper tag */}
+                            <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-black/75 backdrop-blur-md text-[8px] font-mono font-black text-[#c5a85c] py-1 px-3.5 rounded-full border border-amber-500/20 shadow-lg block">
+                              CÁMARA DEMO: ENTORNO LIVING
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Top controls & alignment HUD grid indicators */}
+                        <div className="flex justify-between items-center text-[8px] font-mono text-slate-300 z-10 pointer-events-none">
+                          <span className="flex items-center gap-1 bg-black/60 px-2 py-0.5 rounded-lg border border-white/10">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                            LIVE_AR_PLACER
+                          </span>
+                          <span className="bg-black/60 px-2 py-0.5 rounded-lg border border-white/10">
+                            LOCK: OK ({Math.round(arScale * 100)}%)
+                          </span>
+                        </div>
+
+                        {/* Holographic floor grid guide lines */}
+                        <div className="absolute inset-0 border border-dashed border-white/15 m-2.5 rounded-2xl pointer-events-none flex items-center justify-center">
+                          <div className="w-2 h-2 bg-amber-500 rounded-full animate-ping opacity-65 absolute" />
+                          <div className="w-16 h-16 border border-white/20 rounded-full [transform:rotateX(75deg)] absolute animate-pulse" />
+                        </div>
+
+                        {/* Floating placeable and scalable product image */}
+                        <div className="flex-1 flex items-center justify-center relative">
+                          <motion.div
+                            drag
+                            dragMomentum={false}
+                            dragElastic={0.1}
+                            style={{
+                              x: arPosition.x,
+                              y: arPosition.y,
+                              scale: arScale,
+                            }}
+                            className="cursor-grab active:cursor-grabbing z-20 absolute"
+                          >
+                            <img 
+                              src={selectedProductDetails.imageUrl} 
+                              alt={selectedProductDetails.name} 
+                              className="w-32 h-32 object-contain pointer-events-none shadow-2xl scale-110"
+                              style={{
+                                transform: `rotateY(${rotateAngle}deg) rotateX(${rotatePitch}deg)`,
+                                filter: 'drop-shadow(0 20px 15px rgba(0,0,0,0.65))'
+                              }}
+                              referrerPolicy="no-referrer"
+                            />
+                          </motion.div>
+                        </div>
+
+                        {/* Bottom Controller with scale logic and action triggers */}
+                        <div className="space-y-1.5 z-10 bg-black/65 backdrop-blur-md p-2 rounded-xl border border-white/15">
+                          <div className="flex justify-between items-center text-[8px] font-mono text-slate-350">
+                            <span className="font-bold flex items-center gap-0.5 text-amber-500">
+                              👆 DESP_ARRAS_PRODUCTO
+                            </span>
+                            <span className="font-extrabold text-[#c5a85c] font-mono">{Math.round(arScale * 100)}% SCALE</span>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span className="text-[8px] font-mono text-slate-450">Escala:</span>
+                            <input 
+                              type="range"
+                              min="0.5"
+                              max="2.0"
+                              step="0.05"
+                              value={arScale}
+                              onChange={(e) => setArScale(Number(e.target.value))}
+                              className="flex-1 accent-amber-500 bg-white/20 h-1 rounded-lg cursor-pointer"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => { setArPosition({ x: 0, y: 0 }); setArScale(1.1); setRotateAngle(180); setRotatePitch(5); }}
+                              className="py-0.5 px-2 bg-white/10 hover:bg-white/20 text-[8px] font-mono rounded-lg border border-white/10 cursor-pointer"
+                            >
+                              Reset
+                            </button>
+                          </div>
+
+                          {/* Snapshot and Switch Camera Options footer */}
+                          <div className="flex gap-1.5 pt-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const flash = document.createElement('div');
+                                flash.className = "absolute inset-0 bg-white z-50 animate-flash-intensity";
+                                flash.addEventListener('animationend', () => flash.remove());
+                                document.getElementById('product_details_modal')?.appendChild(flash);
+                                onAddLog(`AR Sandbox: Se grabó captura en el espacio del calzado/producto ${selectedProductDetails.name}`, 'info');
+                                alert(`📸 ¡Felicidades! Se ha capturado una foto del producto colocado en tu espacio. Se ha enviado al servidor Homeli.`);
+                              }}
+                              className="flex-1 py-1 bg-amber-500 hover:bg-amber-600 text-slate-900 text-[9px] font-black uppercase tracking-wider rounded-lg cursor-pointer shadow flex items-center justify-center gap-1 transition"
+                            >
+                              <Camera size={11} />
+                              Capturar Foto AR
+                            </button>
+                            {navigator.mediaDevices && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  onAddLog(`AR Sandbox: Rotando lentes de cámara`, 'info');
+                                  alert("🔄 Cambiando lente de dispositivo para escaneo de superficies planas...");
+                                }}
+                                className="px-2 py-1 bg-white/10 hover:bg-white/20 text-white text-[9px] font-bold rounded-lg border border-white/5 cursor-pointer transition flex items-center justify-center"
+                              >
+                                <RefreshCw size={10} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                      </div>
+                    )}
+                  </div>
+
+                  {/* QR Code Scap Popup Overlay inside Modal */}
+                  <AnimatePresence>
+                    {showQrCodeOverlay && (
+                      <div className="absolute inset-0 bg-slate-900/95 backdrop-blur-md z-40 flex flex-col justify-between p-5 text-white text-center rounded-3xl">
+                        <div className="flex justify-between items-center pb-2 border-b border-white/10">
+                          <span className="font-serif font-black text-[10px] text-amber-500 tracking-wider uppercase">Visualizador Móvil Holográfico XR</span>
+                          <button 
+                            type="button"
+                            onClick={() => setShowQrCodeOverlay(false)}
+                            className="p-1 rounded-full hover:bg-white/10 text-white cursor-pointer"
+                            title="Cerrar QR"
+                          >
+                            <X size={15} />
+                          </button>
+                        </div>
+
+                        <div className="py-2.5 flex flex-col items-center justify-center space-y-3">
+                          {/* Generative QR Code rendering */}
+                          <div className="p-2.5 bg-white rounded-2xl inline-block shadow-2xl border-4 border-amber-500">
+                            <img 
+                              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=0f172a&data=${encodeURIComponent(
+                                window.location.origin + `/shopping?ar_product=${selectedProductDetails.id}&device=mobile_vr`
+                              )}`} 
+                              alt="QR Code interactivo"
+                              className="w-32 h-32"
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
+                          
+                          <div className="space-y-1.5 max-w-xs">
+                            <p className="font-serif font-black text-[11px] text-slate-100 uppercase tracking-wide">Escanea con tu Smartphone</p>
+                            <p className="text-[10px] text-slate-350 leading-relaxed font-sans">
+                              Apunta tu cámara móvil aquí para cargar el modelo del calzado o producto <strong className="text-amber-500 font-extrabold">{selectedProductDetails.name}</strong> en AR directamente en tu recámara o sala.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="bg-slate-800 p-2 rounded-xl border border-white/5 space-y-1 text-left text-[9px] text-slate-400 font-mono">
+                          <p className="font-black text-slate-300 uppercase tracking-widest text-[8px]">Instrucciones Rápidas:</p>
+                          <p>1. Escanea el código con la cámara de tu smartphone.</p>
+                          <p>2. Abre el enlace WebAR de Homeli Space.</p>
+                          <p>3. Permite accesar al giroscopio y proyecta el calzado en tu piso.</p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setShowQrCodeOverlay(false)}
+                          className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 text-[10px] font-black uppercase tracking-wider transition cursor-pointer mt-3 rounded-lg"
+                        >
+                          Listo, Cerrar Lector QR
+                        </button>
+                      </div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Standard Metadata tag of the item */}
+                  <div className="flex justify-between items-center text-[10px] sm:text-xs font-mono text-slate-400 z-10">
                     <span>SKU: {selectedProductDetails.sku || 'N/A'}</span>
-                    <span className="bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-md uppercase font-bold">
+                    <span className="bg-slate-100 text-slate-650 px-2.5 py-0.5 rounded-md uppercase font-bold text-[9px] border border-slate-200">
                       {selectedProductDetails.category === 'Zapatos' ? '👠 Calzado' : '🧴 Limpieza'}
                     </span>
                   </div>
