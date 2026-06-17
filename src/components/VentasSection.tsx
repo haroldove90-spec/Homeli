@@ -338,17 +338,34 @@ export default function VentasSection({
     };
   }, [arStream]);
 
-  // Reset all 360 & AR parameters on product switch
+  // Webcam management based on active media mode
+  useEffect(() => {
+    if (arMediaMode === 'ar_camera') {
+      startArWebcam();
+    } else {
+      stopArWebcam();
+    }
+  }, [arMediaMode]);
+
+  // Reset all 360 & AR parameters on product switch with deep link support
   useEffect(() => {
     if (selectedProductDetails) {
-      setArMediaMode('photo');
+      // Check if this was loaded via QR deep link to preserve and trigger the 360/AR view immediately!
+      const urlParams = new URL(window.location.href);
+      const isQrDeep = urlParams.searchParams.get('ar_product') === selectedProductDetails.id;
+
+      if (isQrDeep) {
+        setArMediaMode('rotate360'); // Spark joy immediately with interactive 360 spinner!
+        setIsAutoRotate(true);
+      } else {
+        setArMediaMode('photo');
+        setIsAutoRotate(false);
+      }
       setRotateAngle(180);
       setRotatePitch(5);
-      setIsAutoRotate(false);
       setArScale(1.1);
       setArPosition({ x: 0, y: 0 });
       setSimulatedArPhoto(null);
-      stopArWebcam();
     } else {
       stopArWebcam();
     }
@@ -1968,21 +1985,21 @@ export default function VentasSection({
                   <div className="flex bg-slate-150 p-1 rounded-2xl text-[9px] font-black uppercase tracking-wider gap-0.5 border border-slate-200">
                     <button 
                       type="button"
-                      onClick={() => { setArMediaMode('photo'); stopArWebcam(); }}
+                      onClick={() => setArMediaMode('photo')}
                       className={`flex-1 py-1.5 px-2 rounded-xl text-center transition cursor-pointer ${arMediaMode === 'photo' ? 'bg-[#c5a85c] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
                     >
                       📸 Foto
                     </button>
                     <button 
                       type="button"
-                      onClick={() => { setArMediaMode('rotate360'); stopArWebcam(); }}
+                      onClick={() => setArMediaMode('rotate360')}
                       className={`flex-1 py-1.5 px-2 rounded-xl text-center transition cursor-pointer ${arMediaMode === 'rotate360' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
                     >
                       🔄 Giro 360°
                     </button>
                     <button 
                       type="button"
-                      onClick={() => { setArMediaMode('ar_camera'); startArWebcam(); }}
+                      onClick={() => setArMediaMode('ar_camera')}
                       className={`flex-1 py-1.5 px-2 rounded-xl text-center transition cursor-pointer ${arMediaMode === 'ar_camera' ? 'bg-[#c5a85c] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
                     >
                       🕶️ Ver en AR
