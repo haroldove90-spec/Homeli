@@ -2030,7 +2030,7 @@ export default function VentasSection({
 
                   {/* Main Display Viewport */}
                   <div 
-                    className={arMediaMode === 'ar_camera' 
+                    className={(arMediaMode === 'ar_camera' || arMediaMode === 'rotate360') 
                       ? "fixed inset-0 w-full h-full z-[100] bg-slate-950 flex flex-col select-none overflow-hidden"
                       : "relative aspect-square w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-250 shadow-inner flex items-center justify-center select-none group"
                     }
@@ -2099,69 +2099,215 @@ export default function VentasSection({
 
                     {/* 2. ROTATE 360° MODE */}
                     {arMediaMode === 'rotate360' && (
-                      <div className="w-full h-full relative overflow-hidden flex flex-col justify-between p-4 bg-gradient-to-b from-[#0c1220] to-[#04060b] text-white">
+                      <div className="w-full h-full absolute inset-0 text-white select-none flex flex-col justify-between animate-fade-in">
                         {/* 3D background layout grids */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-[#0c1220] to-[#04060b]" />
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(197,168,92,0.15)_0%,transparent_70%)] pointer-events-none" />
                         
-                        {/* Cyber scan telemetry overlays */}
-                        <div className="flex justify-between items-center text-[8px] font-mono text-slate-400 z-10 select-none">
-                          <span className="flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            INTERACTIVE_360_GLIDE
-                          </span>
-                          <span>H_PERSPECTIVE: ACTIVE</span>
+                        {/* Top HUD overlay and control selectors */}
+                        <div className="absolute top-0 inset-x-0 p-4 z-30 bg-gradient-to-b from-black/90 to-transparent flex flex-wrap gap-2 justify-between items-center">
+                          {/* Back / Volver button */}
+                          <button 
+                            type="button"
+                            onClick={() => setArMediaMode('photo')}
+                            className="flex items-center gap-1.5 bg-black/60 hover:bg-black/90 text-white border border-white/25 px-3 py-1.5 rounded-xl cursor-pointer text-[10px] font-black uppercase tracking-wider transition-all"
+                          >
+                            <ArrowLeft size={11} className="text-[#c5a85c]" />
+                            <span>Volver</span>
+                          </button>
+
+                          {/* Product details header text */}
+                          <div className="hidden sm:block text-left">
+                            <h4 className="text-[12px] font-serif font-black text-[#c5a85c] leading-none">{selectedProductDetails.name}</h4>
+                            <p className="text-[7px] font-mono text-slate-400 uppercase tracking-widest mt-0.5">Visor Interactivo 360°</p>
+                          </div>
+
+                          {/* Tab switcher options overlay */}
+                          <div className="flex bg-black/65 p-0.5 rounded-xl text-[8.5px] font-black uppercase tracking-wider gap-0.5 border border-white/10">
+                            <button 
+                              type="button"
+                              onClick={() => { setArMediaMode('photo'); }}
+                              className="py-1 px-2.5 rounded-lg text-slate-400 hover:text-white transition cursor-pointer"
+                            >
+                              📸 Foto
+                            </button>
+                            <button 
+                              type="button"
+                              className="py-1 px-2.5 rounded-lg bg-[#c5a85c] text-white shadow font-bold"
+                            >
+                              🔄 360°
+                            </button>
+                            <button 
+                              type="button"
+                              onClick={() => { setArMediaMode('ar_camera'); }}
+                              className="py-1 px-2.5 rounded-lg text-slate-400 hover:text-white transition cursor-pointer"
+                            >
+                              🕶️ AR Móvil
+                            </button>
+                          </div>
+
+                          {/* Direct Exit Close */}
+                          <button 
+                            type="button"
+                            onClick={() => { setArMediaMode('photo'); }}
+                            className="bg-black/60 hover:bg-black/95 text-white border border-white/20 p-2 rounded-xl cursor-pointer transition-all"
+                            title="Regresar a Foto"
+                          >
+                            <X size={13} />
+                          </button>
                         </div>
 
-                        {/* Interactive dynamic revolving product and its volumetric live light drop-shadow */}
-                        <div className="flex-1 flex items-center justify-center relative">
+                        {/* Middle HUD stats telemetry overlay */}
+                        <div className="absolute top-16 right-4 left-4 flex justify-between items-center text-[8px] font-mono text-slate-300 z-10 pointer-events-none">
+                          <span className="flex items-center gap-1.5 bg-black/80 backdrop-blur-md px-2.5 py-1.5 rounded-lg border border-white/10 shadow-lg">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            EJE: HORIZONTAL-GLIDE
+                          </span>
+                          <span className="bg-black/80 backdrop-blur-md px-2.5 py-1.5 rounded-lg border border-white/10 shadow-lg flex items-center gap-1">
+                            <span>Escala:</span>
+                            <span className="text-amber-500">
+                              {Math.round(arScale * 100)}%
+                            </span>
+                          </span>
+                        </div>
+
+                        {/* Interactive dynamic revolving product image in viewport */}
+                        <div className="flex-1 flex items-center justify-center relative w-full h-full">
                           <img 
                             src={selectedProductDetails.imageUrl} 
                             alt={selectedProductDetails.name} 
-                            className="w-44 h-44 sm:w-48 sm:h-48 object-contain pointer-events-none select-none transition-transform duration-100"
+                            className="w-48 h-48 sm:w-64 sm:h-64 object-contain pointer-events-none select-none transition-transform duration-100 z-25"
                             style={{
                               transform: `rotateY(${rotateAngle}deg) rotateX(${rotatePitch}deg) scale(${arScale})`,
+                              mixBlendMode: arBlendMultiply ? 'multiply' : 'normal',
                               filter: `brightness(${1.0 + Math.sin(rotateAngle * Math.PI / 180) * 0.15}) contrast(${1.0 + Math.abs(Math.sin(rotateAngle * Math.PI / 180)) * 0.05}) drop-shadow(${Math.sin(rotateAngle * Math.PI / 180) * 12}px 12px 14px rgba(0,0,0,0.6))`
                             }}
                             referrerPolicy="no-referrer"
                           />
 
                           {/* Futuristic Scan Line Laser Effect */}
-                          <div className="absolute inset-y-0 left-1/2 w-0.5 bg-gradient-to-r from-transparent via-[#c5a85c]/40 to-transparent animate-infinite-x-sweep pointer-events-none" />
+                          <div className="absolute inset-y-0 left-1/2 w-0.5 bg-gradient-to-r from-transparent via-[#c5a85c]/40 to-transparent animate-infinite-x-sweep pointer-events-none z-10" />
                         </div>
 
-                        {/* Interactive Slider and HUD parameters */}
-                        <div className="space-y-1.5 z-10 bg-slate-900/60 backdrop-blur-xs p-1.5 rounded-xl border border-white/5">
-                          <div className="flex justify-between items-center text-[8px] font-mono text-slate-400">
-                            <span className="bg-slate-800 px-1 py-0.5 rounded text-amber-500 font-extrabold">Y_ROT: {Math.round(rotateAngle)}°</span>
-                            <span className="text-slate-400 font-bold tracking-wider text-[7px]">ARRAS-DESLIZA PARA ROTAR</span>
-                            <span className="bg-slate-800 px-1 py-0.5 rounded text-[#c5a85c] font-black">X_PIT: {Math.round(rotatePitch)}°</span>
+                        {/* Immersive unified Bottom Panel (Safe-area responsive) containing 360 instructions */}
+                        <div className="relative mt-auto w-full z-30 bg-gradient-to-t from-slate-950 via-slate-950/98 to-slate-950/85 backdrop-blur-md border-t border-white/10 p-4 space-y-3 max-h-[48vh] overflow-y-auto pb-8">
+                          
+                          {/* ================= INSTRUCTIONS COMPONENT AT THE BOTTOM ================= */}
+                          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 text-left flex gap-2 items-start">
+                            <Sparkles size={13} className="text-amber-500 shrink-0 mt-0.5 animate-pulse" />
+                            <div className="space-y-0.5">
+                              <p className="font-serif font-black text-amber-400 text-[10px] uppercase tracking-wider">¿Cómo navegar el calzado en 360°?</p>
+                              <p className="text-[8.5px] text-slate-300 leading-normal font-sans">
+                                <b>Arrastra o desliza tu dedo</b> a la izquierda o derecha de la pantalla para rotar el producto. Prueba activar el <b>giro automático</b> para ver un modelado continuo en 3D.
+                              </p>
+                            </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          {/* Interactive Slider controls row */}
+                          <div className="space-y-1.5 bg-black/40 p-2 rounded-lg border border-white/5">
+                            <div className="flex justify-between items-center text-[8.5px] font-mono text-slate-300">
+                              <span className="font-bold text-amber-500 flex items-center gap-1">
+                                <span className="bg-slate-800 px-1 py-0.5 rounded text-amber-500">Giro Y: {Math.round(rotateAngle)}°</span>
+                                <span className="bg-slate-850 px-1 py-0.5 rounded text-[#c5a85c]">Inclinación X: {Math.round(rotatePitch)}°</span>
+                              </span>
+                              <span className="font-bold text-slate-400 uppercase text-[7px]">Control Deslizante</span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setIsAutoRotate(!isAutoRotate)}
+                                className={`p-1.5 px-2.5 rounded-xl text-center border cursor-pointer transition-all flex items-center justify-center gap-1 text-[9px] font-bold ${isAutoRotate ? 'bg-[#c5a85c] text-slate-950 border-[#c5a85c]' : 'bg-slate-900 text-slate-450 border-slate-700 hover:text-white'}`}
+                                title={isAutoRotate ? "Pausar Rotación" : "Giro Automático"}
+                              >
+                                {isAutoRotate ? <Pause size={10} /> : <Play size={10} />}
+                                <span>{isAutoRotate ? 'Pausar' : 'Auto Giro'}</span>
+                              </button>
+                              <input 
+                                type="range"
+                                min="0"
+                                max="360"
+                                value={rotateAngle}
+                                onChange={(e) => setRotateAngle(Number(e.target.value))}
+                                className="flex-1 accent-amber-500 bg-slate-800 h-1.5 rounded-lg cursor-pointer"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => { setRotateAngle(180); setRotatePitch(5); }}
+                                className="py-1 px-2.5 text-slate-300 hover:text-white bg-slate-900 rounded-xl border border-white/10 text-[9px] font-black uppercase cursor-pointer tracking-wider hover:brightness-105"
+                              >
+                                Reset
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Tweak Slider with Quick Scale */}
+                          <div className="space-y-1.5 bg-black/40 p-2 rounded-lg border border-white/5">
+                            <div className="flex justify-between items-center text-[8.5px] font-mono text-slate-300">
+                              <span className="font-bold text-amber-500">Escala de Imagen:</span>
+                              <span className="font-bold flex items-center gap-1">
+                                {Math.round(arScale * 100)}% de tamaño
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="range"
+                                min="0.5"
+                                max="1.5"
+                                step="0.05"
+                                value={arScale}
+                                onChange={(e) => setArScale(Number(e.target.value))}
+                                className="flex-1 accent-amber-500 bg-slate-800 h-1.5 rounded-lg cursor-pointer"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setArScale(1.0);
+                                  onAddLog(`360 Sandbox: Reajustado a Escala Real`, 'info');
+                                }}
+                                className={`py-1 px-2.5 text-[8.5px] font-sans rounded-xl cursor-pointer transition uppercase font-black tracking-wider ${arScale === 1.0 ? 'bg-emerald-500 text-slate-900 border border-emerald-500' : 'bg-slate-900 text-slate-400 border border-white/10 hover:text-white'}`}
+                              >
+                                100%
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Brand Transparencies Advice and digital cutout options toggle */}
+                          <div className="bg-black/40 p-2 rounded-lg border border-white/5 flex items-center justify-between gap-3 text-left">
+                            <div className="space-y-0.5 flex-1">
+                              <p className="text-[8.5px] font-black text-[#c5a85c] uppercase tracking-wide">¿Quitar Fondo Blanco de Foto?</p>
+                              <p className="text-[7.5px] text-slate-200 leading-relaxed font-sans">
+                                Si subes fotos con fondo blanco cuadriculado, activa "Quitar Fondo" para mezclarlo con el visor. <b>Para la máxima calidad, sube imágenes .PNG con fondo transparente.</b>
+                              </p>
+                            </div>
                             <button
                               type="button"
-                              onClick={() => setIsAutoRotate(!isAutoRotate)}
-                              className={`p-1 rounded-lg text-center border cursor-pointer transition flex items-center justify-center ${isAutoRotate ? 'bg-[#c5a85c] text-white border-[#c5a85c]' : 'bg-slate-800 text-slate-450 border-slate-700 hover:text-white'}`}
-                              title={isAutoRotate ? "Pausar Rotación" : "Giro Automático"}
+                              onClick={() => {
+                                setArBlendMultiply(!arBlendMultiply);
+                                onAddLog(`360 Sandbox: Modo de fondo blanco ${!arBlendMultiply ? 'activado' : 'desactivado'} indicando PNG`, 'info');
+                              }}
+                              className={`py-1.5 px-2.5 rounded-lg text-[8px] font-black uppercase tracking-wider border shrink-0 transition-all ${arBlendMultiply ? 'bg-amber-400 text-slate-950 border-amber-400 font-extrabold' : 'bg-slate-900 text-slate-400 border-white/10 hover:text-white'}`}
                             >
-                              {isAutoRotate ? <Pause size={10} /> : <Play size={10} />}
-                            </button>
-                            <input 
-                              type="range"
-                              min="0"
-                              max="360"
-                              value={rotateAngle}
-                              onChange={(e) => setRotateAngle(Number(e.target.value))}
-                              className="flex-1 accent-amber-500 bg-slate-800 h-1 rounded-lg cursor-pointer"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => { setRotateAngle(180); setRotatePitch(5); }}
-                              className="p-1 px-1.5 bg-slate-800 hover:bg-slate-700 text-slate-350 hover:text-white text-[8px] font-mono font-black uppercase rounded border border-slate-700 cursor-pointer"
-                            >
-                              Reset
+                              {arBlendMultiply ? '✂️ Quitar Fondo (ON)' : '📷 Foto Original'}
                             </button>
                           </div>
+
+                          {/* Quick Alignment Reset helper */}
+                          <div className="flex justify-center">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setRotateAngle(180);
+                                setRotatePitch(5);
+                                onAddLog(`360 Sandbox: Calibración y alineación completada`, 'info');
+                              }}
+                              className="text-[8.5px] font-mono text-slate-400 hover:text-white cursor-pointer underline tracking-wider"
+                            >
+                              🔧 Re-centrar Zapato en Pantalla
+                            </button>
+                          </div>
+
                         </div>
                       </div>
                     )}
