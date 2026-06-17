@@ -238,6 +238,12 @@ export default function App() {
   // Navigational & brand States with localStorage persistence and URL tracking
   const [activeSection, setActiveSection] = useState<'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria' | 'negocios'>(() => {
     try {
+      // Check for deep link QR parameters first to route instantly
+      const urlParams = new URL(window.location.href);
+      if (urlParams.searchParams.get('ar_product')) {
+        return 'ventas';
+      }
+
       // Prioritize localStorage so that refreshing the browser maintains the exact current view/session robustly
       const persisted = localStorage.getItem('homeli_active_section');
       if (persisted && ['home', 'admin', 'servicios', 'ventas', 'mensajeria', 'negocios'].includes(persisted)) {
@@ -245,7 +251,6 @@ export default function App() {
       }
 
       // Fall back to URL search parameters or Hash to enable initial direct deep-linking
-      const urlParams = new URL(window.location.href);
       const sectionParam = urlParams.searchParams.get('section') || urlParams.searchParams.get('rol');
       if (sectionParam && ['home', 'admin', 'servicios', 'ventas', 'mensajeria', 'negocios'].includes(sectionParam)) {
         return sectionParam as 'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria' | 'negocios';

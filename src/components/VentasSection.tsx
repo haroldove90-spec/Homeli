@@ -354,6 +354,26 @@ export default function VentasSection({
     }
   }, [selectedProductDetails]);
 
+  // Auto-detect deep-linked product from QR scan on mount
+  useEffect(() => {
+    try {
+      const urlParams = new URL(window.location.href);
+      const deepProdId = urlParams.searchParams.get('ar_product');
+      if (deepProdId) {
+        // Find in full dynamic products or fallback static store catalog
+        const found = products.find(p => p.id === deepProdId) || STATIC_STORE_PRODUCTS.find(p => p.id === deepProdId);
+        if (found) {
+          setSelectedProductDetails(found);
+          // Auto-start in 360 interactive rotation for immediate user engagement!
+          setArMediaMode('rotate360');
+          onAddLog(`AR E-Commerce: Producto ${found.name} cargado vía QR Móvil exitosamente`, 'info');
+        }
+      }
+    } catch (e) {
+      console.error("Deep link parse failed", e);
+    }
+  }, [products]);
+
   // Manager state variables
   const [productQuery, setProductQuery] = useState('');
   const [orderQuery, setOrderQuery] = useState('');
@@ -2253,8 +2273,8 @@ export default function VentasSection({
                           {/* Generative QR Code rendering */}
                           <div className="p-2.5 bg-white rounded-2xl inline-block shadow-2xl border-4 border-amber-500">
                             <img 
-                              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=0f172a&data=${encodeURIComponent(
-                                window.location.origin + `/shopping?ar_product=${selectedProductDetails.id}&device=mobile_vr`
+                              src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&color=0f172a&data=${encodeURIComponent(
+                                `${window.location.origin}${window.location.pathname}?ar_product=${selectedProductDetails.id}`
                               )}`} 
                               alt="QR Code interactivo"
                               className="w-32 h-32"
