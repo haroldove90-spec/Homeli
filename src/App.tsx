@@ -5,6 +5,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
+  isSupabaseConfigured,
+  fetchBusinessesFromSupabase,
+  fetchServicesFromSupabase,
+  fetchProductsFromSupabase,
+  fetchOrdersFromSupabase,
+  fetchAuditLogsFromSupabase,
+  saveBusinessToSupabase,
+  deleteBusinessFromSupabase,
+  saveServiceToSupabase,
+  saveProductToSupabase,
+  deleteProductFromSupabase,
+  saveOrderToSupabase,
+  saveAuditLogToSupabase
+} from './supabase';
+import { 
   initialServices, 
   initialProducts, 
   initialOrders, 
@@ -30,6 +45,7 @@ import ServiciosSection from './components/ServiciosSection';
 import VentasSection from './components/VentasSection';
 import MensajeriaSection from './components/MensajeriaSection';
 import { NegociosSection } from './components/NegociosSection';
+import AccessForm from './components/AccessForm';
 import { 
   ShieldAlert, 
   Wrench, 
@@ -347,14 +363,23 @@ export default function App() {
 
   const handleRegisterBusiness = (newBiz: BusinessRegistration) => {
     setBusinesses(prev => [newBiz, ...prev]);
+    if (isSupabaseConfigured) {
+      saveBusinessToSupabase(newBiz);
+    }
   };
 
   const handleUpdateBusiness = (updatedBiz: BusinessRegistration) => {
     setBusinesses(prev => prev.map(b => b.id === updatedBiz.id ? updatedBiz : b));
+    if (isSupabaseConfigured) {
+      saveBusinessToSupabase(updatedBiz);
+    }
   };
 
   const handleDeleteBusiness = (id: string) => {
     setBusinesses(prev => prev.filter(b => b.id !== id));
+    if (isSupabaseConfigured) {
+      deleteBusinessFromSupabase(id);
+    }
   };
 
   useEffect(() => {
@@ -391,6 +416,25 @@ export default function App() {
   const [isInstalled, setIsInstalled] = useState(false);
   const [showInstallInstructions, setShowInstallInstructions] = useState(false);
 
+  // User Authentication States with localStorage persistence
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
+    try {
+      const persisted = localStorage.getItem('homeli_current_user');
+      return persisted ? JSON.parse(persisted) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('homeli_current_user', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('homeli_current_user');
+    }
+  }, [currentUser]);
+
   // Listen back to window install prompt events
   useEffect(() => {
     const antesDeInstalar = (e: Event) => {
@@ -415,6 +459,35 @@ export default function App() {
     };
   }, []);
 
+  // Sync and load initial workspace data from Supabase if connected
+  useEffect(() => {
+    if (isSupabaseConfigured) {
+      const initLoad = async () => {
+        try {
+          const loadedBiz = await fetchBusinessesFromSupabase();
+          if (loadedBiz) setBusinesses(loadedBiz);
+
+          const loadedSrv = await fetchServicesFromSupabase();
+          if (loadedSrv) setServices(loadedSrv);
+
+          const loadedProd = await fetchProductsFromSupabase();
+          if (loadedProd) setProducts(loadedProd);
+
+          const loadedOrders = await fetchOrdersFromSupabase();
+          if (loadedOrders) setOrders(loadedOrders);
+
+          const loadedLogs = await fetchAuditLogsFromSupabase();
+          if (loadedLogs) setLogs(loadedLogs);
+
+          onAddLog('Sincronización Cloud exitosa: Datos cargados desde Supabase en vivo', 'info');
+        } catch (e) {
+          console.error("Supabase load failed:", e);
+        }
+      };
+      initLoad();
+    }
+  }, []);
+
   // Operation Log System Helper
   const onAddLog = (action: string, severity: 'info' | 'warning' | 'critical' = 'info') => {
     const newLog: SystemLog = {
@@ -426,11 +499,117 @@ export default function App() {
       severity
     };
     setLogs(prev => [newLog, ...prev]);
+    if (isSupabaseConfigured) {
+      saveAuditLogToSupabase(newLog);
+    }
   };
 
   // State Management Handlers
   const handleAddUser = (user: UserProfile) => {
     setProfiles(prev => [...prev, user]);
+  };
+
+  const handleLoginSuccess = (user: UserProfile) => {
+    setCurrentUser(user);
+    const newLog: SystemLog = {
+      id: `LOG-${Math.floor(100 + Math.random() * 900)}`,
+      timestamp: new Date().toISOString(),
+      actor: user.name,
+      role: user.role,
+      action: `Inicio de sesión exitoso como ${user.role}`,
+      severity: 'info'
+    };
+    setLogs(prev => [newLog, ...prev]);
+    if (isSupabaseConfigured) {
+      saveAuditLogToSupabase(newLog);
+    }
+    
+    // Set active section matching their role automatically
+    if (user.role === 'Administrador') {
+      setActiveSection('admin');
+    } else if (user.role === 'Servicios') {
+      setActiveSection('servicios');
+    } else if (user.role === 'Ventas') {
+      setActiveSection('ventas');
+    } else if (user.role === 'Mensajería') {
+      setActiveSection('mensajeria');
+    } else if (user.role === 'Negocio') {
+      setActiveSection('negocios');
+    }
+    
+    handleAddNotification(
+      '🔑 Acceso Concedido',
+      `¡Bienvenido de vuelta, ${user.name}! Iniciaste sesión como ${user.role}.`,
+      user.role,
+      'sistema'
+    );
+  };
+
+  const handleRegisterSuccess = (user: UserProfile) => {
+    handleAddUser(user);
+    setCurrentUser(user);
+    
+    const newLog: SystemLog = {
+      id: `LOG-${Math.floor(100 + Math.random() * 900)}`,
+      timestamp: new Date().toISOString(),
+      actor: user.name,
+      role: user.role,
+      action: `Nuevo usuario registrado e inicio de sesión automático: ${user.name} (${user.role})`,
+      severity: 'info'
+    };
+    setLogs(prev => [newLog, ...prev]);
+    if (isSupabaseConfigured) {
+      saveAuditLogToSupabase(newLog);
+    }
+
+    // Direct routing
+    if (user.role === 'Administrador') {
+      setActiveSection('admin');
+    } else if (user.role === 'Servicios') {
+      setActiveSection('servicios');
+    } else if (user.role === 'Ventas') {
+      setActiveSection('ventas');
+    } else if (user.role === 'Mensajería') {
+      setActiveSection('mensajeria');
+    } else if (user.role === 'Negocio') {
+      setActiveSection('negocios');
+    }
+
+    handleAddNotification(
+      '🌟 Nueva Cuenta Creada',
+      `¡Felicidades, ${user.name}! Tu cuenta de ${user.role} se ha registrado exitosamente.`,
+      user.role,
+      'registro'
+    );
+  };
+
+  const handleLogout = () => {
+    if (currentUser) {
+      const uName = currentUser.name;
+      const uRole = currentUser.role;
+      setCurrentUser(null);
+      
+      const newLog: SystemLog = {
+        id: `LOG-${Math.floor(100 + Math.random() * 900)}`,
+        timestamp: new Date().toISOString(),
+        actor: uName,
+        role: uRole,
+        action: `Cierre de sesión seguro realizado`,
+        severity: 'info'
+      };
+      setLogs(prev => [newLog, ...prev]);
+      if (isSupabaseConfigured) {
+        saveAuditLogToSupabase(newLog);
+      }
+      
+      setActiveSection('home');
+      handleAddNotification(
+        '🔒 Sesión Cerrada',
+        `Has cerrado sesión de manera segura. ¡Hasta pronto, ${uName}!`,
+        'Todos',
+        'sistema'
+      );
+    }
   };
 
   const handleClearLogs = () => {
@@ -440,6 +619,9 @@ export default function App() {
 
   const handleAddService = (service: ServiceRequest) => {
     setServices(prev => [service, ...prev]);
+    if (isSupabaseConfigured) {
+      saveServiceToSupabase(service);
+    }
     handleAddNotification(
       'Nuevo Servicio de Limpieza',
       `El cliente ${service.clientName} ha solicitado: ${service.serviceType}. Costo: $${service.price} MXN.`,
@@ -457,7 +639,14 @@ export default function App() {
   };
 
   const handleUpdateServiceStatus = (id: string, status: ServiceStatus) => {
-    setServices(prev => prev.map(s => s.id === id ? { ...s, status } : s));
+    setServices(prev => {
+      const updated = prev.map(s => s.id === id ? { ...s, status } : s);
+      const service = updated.find(s => s.id === id);
+      if (service && isSupabaseConfigured) {
+        saveServiceToSupabase(service);
+      }
+      return updated;
+    });
     onAddLog(`Estado del servicio ${id} modificado a: ${status.toUpperCase()}`, 'info');
 
     // Retrieve service metadata from current state for rich notification context
@@ -493,11 +682,17 @@ export default function App() {
 
   const handleAddProduct = (product: ProductItem) => {
     setProducts(prev => [product, ...prev]);
+    if (isSupabaseConfigured) {
+      saveProductToSupabase(product);
+    }
     onAddLog(`Producto agregado al inventario: ${product.name} en ${product.category}`, 'info');
   };
 
   const handleUpdateProduct = (updated: ProductItem) => {
     setProducts(prev => prev.map(p => p.id === updated.id ? updated : p));
+    if (isSupabaseConfigured) {
+      saveProductToSupabase(updated);
+    }
     onAddLog(`Producto actualizado en inventario: ${updated.name}`, 'info');
   };
 
@@ -505,11 +700,21 @@ export default function App() {
     const p = products.find(prod => prod.id === id);
     const pName = p ? p.name : id;
     setProducts(prev => prev.filter(prod => prod.id !== id));
+    if (isSupabaseConfigured) {
+      deleteProductFromSupabase(id);
+    }
     onAddLog(`Producto eliminado del inventario: ${pName}`, 'warning');
   };
 
   const handleUpdateOrderStatus = (id: string, status: OrderStatus) => {
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+    setOrders(prev => {
+      const updated = prev.map(o => o.id === id ? { ...o, status } : o);
+      const order = updated.find(o => o.id === id);
+      if (order && isSupabaseConfigured) {
+        saveOrderToSupabase(order);
+      }
+      return updated;
+    });
     onAddLog(`Estado de orden comercial ${id} modificado a: ${status.toUpperCase()}`, 'info');
   };
 
@@ -519,23 +724,29 @@ export default function App() {
 
   const handleUpdateOrderDelivery = (id: string, deliveryStatus: DeliveryStatus, courierId?: string) => {
     let affectedOrder: SalesOrder | undefined;
-    setOrders(prev => prev.map(o => {
-      if (o.id === id) {
-        const u = { ...o, deliveryStatus };
-        if (courierId !== undefined) {
-          u.deliveryCourierId = courierId;
+    setOrders(prev => {
+      const updated = prev.map(o => {
+        if (o.id === id) {
+          const u = { ...o, deliveryStatus };
+          if (courierId !== undefined) {
+            u.deliveryCourierId = courierId;
+          }
+          // Link with SalesOrder standard order status
+          if (deliveryStatus === 'delivered') {
+            u.status = 'entregado';
+          } else if (['accepted', 'collected', 'in_transit', 'with_customer'].includes(deliveryStatus)) {
+            u.status = 'enviado';
+          }
+          affectedOrder = u;
+          return u;
         }
-        // Link with SalesOrder standard order status
-        if (deliveryStatus === 'delivered') {
-          u.status = 'entregado';
-        } else if (['accepted', 'collected', 'in_transit', 'with_customer'].includes(deliveryStatus)) {
-          u.status = 'enviado';
-        }
-        affectedOrder = u;
-        return u;
+        return o;
+      });
+      if (affectedOrder && isSupabaseConfigured) {
+        saveOrderToSupabase(affectedOrder);
       }
-      return o;
-    }));
+      return updated;
+    });
 
     // Trigger Notifications & logs based on the transition!
     setTimeout(() => {
@@ -889,6 +1100,35 @@ export default function App() {
                 </>
               )}
 
+              {/* User Session Pill or Iniciar Sesión Button */}
+              {currentUser ? (
+                <div className="flex items-center gap-2 border border-slate-200 bg-slate-50/50 rounded-xl px-2.5 py-1.5" id="user_session_pill">
+                  <div className="w-6 h-6 bg-[#c5a85c] text-white rounded-lg flex items-center justify-center text-xs font-black select-none">
+                    {currentUser.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="hidden sm:block text-left">
+                    <p className="text-[10px] font-black text-slate-800 leading-none">{currentUser.name}</p>
+                    <p className="text-[8px] font-bold text-slate-500 leading-none mt-0.5">{currentUser.role}</p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition"
+                    title="Cerrar sesión"
+                    id="header_logout_btn"
+                  >
+                    <span className="text-xs">🚪</span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="px-3 py-1.5 bg-[#c5a85c] hover:bg-[#b59549] text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  id="header_login_btn"
+                >
+                  <span>Acceder</span>
+                </button>
+              )}
+
               {/* Universal Bell Notification Button inside Master Header */}
               <button
                 onClick={() => setIsNotificationPanelOpen(true)}
@@ -929,6 +1169,69 @@ export default function App() {
                     className="w-32 sm:w-72 h-auto object-contain block transition-all duration-300 hover:scale-105"
                     referrerPolicy="no-referrer"
                   />
+                </div>
+
+                {/* Welcome / Authentication Card */}
+                <div className="w-full max-w-xl mx-auto px-4" id="home_auth_cta_panel">
+                  {currentUser ? (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-center space-y-2.5 shadow-sm"
+                      id="home_welcome_box"
+                    >
+                      <div className="flex justify-center items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <h3 className="text-sm font-extrabold text-slate-800">
+                          Sesión activa: <span className="text-[#a38439]">{currentUser.name}</span>
+                        </h3>
+                      </div>
+                      <p className="text-xs text-slate-500">
+                        Tienes acceso de nivel <strong className="text-slate-800">{currentUser.role}</strong>. Puedes usar el selector inferior para moverte entre paneles o cerrar tu sesión.
+                      </p>
+                      <div className="flex justify-center gap-2 pt-1">
+                        <button
+                          onClick={() => {
+                            if (currentUser.role === 'Administrador') setActiveSection('admin');
+                            else if (currentUser.role === 'Servicios') setActiveSection('servicios');
+                            else if (currentUser.role === 'Ventas') setActiveSection('ventas');
+                            else if (currentUser.role === 'Mensajería') setActiveSection('mensajeria');
+                            else if (currentUser.role === 'Negocio') setActiveSection('negocios');
+                          }}
+                          className="px-4 py-1.5 bg-[#c5a85c] hover:bg-[#b59549] text-white text-[11px] font-bold rounded-xl transition shadow-xs cursor-pointer"
+                          id="btn_home_goto_dashboard"
+                        >
+                          Ir a mi Panel ({currentUser.role})
+                        </button>
+                        <button
+                          onClick={handleLogout}
+                          className="px-3 py-1.5 bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border border-red-200 text-[11px] font-bold rounded-xl transition cursor-pointer"
+                          id="btn_home_logout"
+                        >
+                          Cerrar Sesión
+                        </button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="bg-white border border-slate-150 rounded-2xl p-4 text-center space-y-2.5 shadow-sm"
+                      id="home_login_cta_box"
+                    >
+                      <p className="text-xs text-slate-600">
+                        Sincroniza tus pedidos, servicios y negocios registrados en vivo con Supabase creando tu perfil de acceso.
+                      </p>
+                      <button
+                        onClick={() => setShowAuthModal(true)}
+                        className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-extrabold rounded-xl transition shadow-sm uppercase tracking-wider inline-flex items-center gap-1.5 cursor-pointer"
+                        id="btn_home_trigger_login"
+                      >
+                        <span className="text-xs">🔑</span>
+                        <span>Iniciar Sesión / Registrarse</span>
+                      </button>
+                    </motion.div>
+                  )}
                 </div>
 
                 {/* The 5 requested entries: Icon in an elegant solid golden block, label exactly underneath */}
@@ -1179,6 +1482,9 @@ export default function App() {
                     onAddLog={onAddLog}
                     onAddOrder={(order) => {
                       setOrders(prev => [order, ...prev]);
+                      if (isSupabaseConfigured) {
+                        saveOrderToSupabase(order);
+                      }
                       handleAddNotification(
                         '🛒 Nuevo Pedido Recibido',
                         `¡Pedido ${order.id} registrado por $${order.total.toLocaleString()} MXN! Listo para ser gestionado y asignado en administración.`,
@@ -1551,6 +1857,28 @@ export default function App() {
                   Ver Todo
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Access / Registration Modal */}
+      <AnimatePresence>
+        {showAuthModal && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" id="auth_form_modal_overlay">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-3xl border border-slate-150 p-6 max-w-md w-full shadow-2xl relative"
+              id="auth_form_modal"
+            >
+              <AccessForm 
+                onClose={() => setShowAuthModal(false)}
+                onLoginSuccess={handleLoginSuccess}
+                onRegisterSuccess={handleRegisterSuccess}
+                existingProfiles={profiles}
+              />
             </motion.div>
           </div>
         )}
