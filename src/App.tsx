@@ -45,6 +45,7 @@ import ServiciosSection from './components/ServiciosSection';
 import VentasSection from './components/VentasSection';
 import MensajeriaSection from './components/MensajeriaSection';
 import { NegociosSection } from './components/NegociosSection';
+import LandingPageSection from './components/LandingPageSection';
 import AccessForm from './components/AccessForm';
 import { safeStorage } from './utils/storage';
 import { 
@@ -264,35 +265,45 @@ export default function App() {
   });
 
   // Navigational & brand States with localStorage persistence and URL tracking
-  const [activeSection, setActiveSection] = useState<'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria' | 'negocios'>(() => {
+  const [activeSection, setActiveSection] = useState<'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria' | 'negocios' | 'landing'>(() => {
     try {
-      // Direct deep-linking or restoring section is only allowed if a user is logged in
-      const persistedUser = safeStorage.getItem('homeli_current_user');
-      if (!persistedUser) {
-        return 'home';
+      const urlParams = new URL(window.location.href);
+      const sectionParam = urlParams.searchParams.get('section') || urlParams.searchParams.get('rol');
+      const hashParam = urlParams.hash.replace('#', '').toLowerCase();
+
+      // Check if deep link requests 'landing' first
+      if (sectionParam === 'landing' || hashParam === 'landing') {
+        return 'landing';
       }
 
       // Check for deep link QR parameters first to route instantly
-      const urlParams = new URL(window.location.href);
       if (urlParams.searchParams.get('ar_product')) {
         return 'ventas';
       }
 
-      // Prioritize localStorage so that refreshing the browser maintains the exact current view/session robustly
       const persisted = safeStorage.getItem('homeli_active_section');
-      if (persisted && ['home', 'admin', 'servicios', 'ventas', 'mensajeria', 'negocios'].includes(persisted)) {
-        return persisted as 'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria' | 'negocios';
+      if (persisted && ['home', 'admin', 'servicios', 'ventas', 'mensajeria', 'negocios', 'landing'].includes(persisted)) {
+        const persistedUser = safeStorage.getItem('homeli_current_user');
+        if (!persistedUser && persisted !== 'landing' && persisted !== 'home') {
+          return 'home';
+        }
+        return persisted as any;
       }
 
-      // Fall back to URL search parameters or Hash to enable initial direct deep-linking
-      const sectionParam = urlParams.searchParams.get('section') || urlParams.searchParams.get('rol');
-      if (sectionParam && ['home', 'admin', 'servicios', 'ventas', 'mensajeria', 'negocios'].includes(sectionParam)) {
-        return sectionParam as 'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria' | 'negocios';
+      if (sectionParam && ['home', 'admin', 'servicios', 'ventas', 'mensajeria', 'negocios', 'landing'].includes(sectionParam)) {
+        const persistedUser = safeStorage.getItem('homeli_current_user');
+        if (!persistedUser && sectionParam !== 'landing' && sectionParam !== 'home') {
+          return 'home';
+        }
+        return sectionParam as any;
       }
 
-      const hashParam = urlParams.hash.replace('#', '').toLowerCase();
-      if (hashParam && ['home', 'admin', 'servicios', 'ventas', 'mensajeria', 'negocios'].includes(hashParam)) {
-        return hashParam as 'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria' | 'negocios';
+      if (hashParam && ['home', 'admin', 'servicios', 'ventas', 'mensajeria', 'negocios', 'landing'].includes(hashParam)) {
+        const persistedUser = safeStorage.getItem('homeli_current_user');
+        if (!persistedUser && hashParam !== 'landing' && hashParam !== 'home') {
+          return 'home';
+        }
+        return hashParam as any;
       }
 
       return 'home';
@@ -442,9 +453,9 @@ export default function App() {
     }
   }, [currentUser]);
 
-  // Navigation guard to ensure only registered users can access panels
+  // Navigation guard to ensure only registered users can access panels (landing page is public)
   useEffect(() => {
-    if (activeSection !== 'home' && !currentUser) {
+    if (activeSection !== 'home' && activeSection !== 'landing' && !currentUser) {
       setActiveSection('home');
       setShowAuthModal(true);
       handleAddNotification(
@@ -1088,6 +1099,13 @@ export default function App() {
                    {/* Shortcuts directly in header */}
                   <div className="hidden sm:flex rounded-lg bg-natural-bg p-0.5 border border-natural-border" id="navbar_shortcuts">
                     <button 
+                      onClick={() => setActiveSection('landing')}
+                      className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'landing' ? 'bg-[#c5a85c] text-white animate-pulse' : 'text-natural-muted hover:text-[#a38439]'}`}
+                      style={{ animationDuration: '3s' }}
+                    >
+                      ⭐ Landing Page
+                    </button>
+                    <button 
                       onClick={() => setActiveSection('admin')}
                       className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'admin' ? 'bg-earth-copper text-white' : 'text-natural-muted hover:text-natural-dark'}`}
                     >
@@ -1255,8 +1273,8 @@ export default function App() {
                   )}
                 </div>
 
-                {/* The 5 requested entries: Icon in an elegant solid golden block, label exactly underneath */}
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-6 max-w-4xl w-full px-4 justify-items-center" id="three_roles_access_grid">
+                {/* The 6 entries: Icon in an elegant solid golden block, label exactly underneath */}
+                <div className="grid grid-cols-2 sm:grid-cols-6 gap-6 max-w-5xl w-full px-4 justify-items-center" id="three_roles_access_grid">
                   {/* Category 1: Admin */}
                   <motion.div
                     whileHover={{ scale: 1.05 }}
@@ -1391,6 +1409,24 @@ export default function App() {
                     </div>
                     <span className="text-xs sm:text-sm font-bold text-natural-dark select-none mt-1 group-hover:text-[#c5a85c] transition-colors">Negocios</span>
                   </motion.div>
+
+                  {/* Category 6: Landing Page */}
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      setActiveSection('landing');
+                      onAddLog('Acceso a Landing Page de captación pública', 'info');
+                    }}
+                    className="flex flex-col items-center gap-2 cursor-pointer group"
+                    id="access_entry_landing"
+                  >
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 bg-emerald-600 rounded-2xl flex items-center justify-center text-white shadow-md hover:bg-emerald-700 transition-all duration-200 relative overflow-hidden">
+                      <Sparkles size={32} className="animate-pulse" style={{ animationDuration: '4s' }} />
+                      <span className="absolute top-1 right-1 bg-white text-emerald-700 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase leading-none tracking-wider">PÚB</span>
+                    </div>
+                    <span className="text-xs sm:text-sm font-bold text-natural-dark select-none mt-1 group-hover:text-emerald-600 transition-colors">Landing Page</span>
+                  </motion.div>
                 </div>
 
                 {/* Minimalist action buttons: PWA Installation and Clear Cache */}
@@ -1452,7 +1488,7 @@ export default function App() {
                       </button>
                       <span>/</span>
                       <span className="text-slate-800 capitalize font-bold font-mono">
-                        {activeSection === 'admin' ? 'Administrador' : activeSection === 'servicios' ? 'Servicios' : activeSection === 'mensajeria' ? 'Mensajería' : activeSection === 'negocios' ? 'Socios Negocios' : 'Ventas Ecommerce'}
+                        {activeSection === 'admin' ? 'Administrador' : activeSection === 'servicios' ? 'Servicios' : activeSection === 'mensajeria' ? 'Mensajería' : activeSection === 'negocios' ? 'Socios Negocios' : activeSection === 'landing' ? 'Página Principal' : 'Ventas Ecommerce'}
                       </span>
                     </div>
 
@@ -1573,6 +1609,31 @@ export default function App() {
                     bannerOverlayOpacity={bannerOverlayOpacity}
                     notifications={notifications}
                     onOpenNotifications={() => setIsNotificationPanelOpen(true)}
+                  />
+                )}
+
+                {activeSection === 'landing' && (
+                  <LandingPageSection 
+                    products={products}
+                    services={services}
+                    businesses={businesses}
+                    currentUser={currentUser}
+                    onAddService={handleAddService}
+                    onAddLog={onAddLog}
+                    bannerBg={bannerBg}
+                    bannerTitle={bannerTitle}
+                    bannerTag={bannerTag}
+                    bannerDesc={bannerDesc}
+                    bannerOverlayCol={bannerOverlayCol}
+                    bannerOverlayOpacity={bannerOverlayOpacity}
+                    onUpdateBannerSettings={(bg: string, title: string, tag: string, desc: string, overlayCol: string, overlayOpacity: number) => {
+                      setBannerBg(bg);
+                      setBannerTitle(title);
+                      setBannerTag(tag);
+                      setBannerDesc(desc);
+                      setBannerOverlayCol(overlayCol);
+                      setBannerOverlayOpacity(overlayOpacity);
+                    }}
                   />
                 )}
               </motion.div>
