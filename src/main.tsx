@@ -9,8 +9,9 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 
-// Register service worker for PWA support
-if ('serviceWorker' in navigator) {
+// Register service worker for PWA support (skip in iframe environments to avoid cross-origin / script errors)
+const isIframe = window.self !== window.top;
+if ('serviceWorker' in navigator && !isIframe) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {

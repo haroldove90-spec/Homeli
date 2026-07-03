@@ -73,6 +73,17 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
+  // User Authentication States with localStorage persistence (Moved to the top for state initialization dependencies)
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
+    try {
+      const persisted = safeStorage.getItem('homeli_current_user');
+      return persisted ? JSON.parse(persisted) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
   // Shared States initialization with localStorage persistence
   const [notifications, setNotifications] = useState<AppNotification[]>(() => {
     try {
@@ -255,6 +266,12 @@ export default function App() {
   // Navigational & brand States with localStorage persistence and URL tracking
   const [activeSection, setActiveSection] = useState<'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria' | 'negocios'>(() => {
     try {
+      // Direct deep-linking or restoring section is only allowed if a user is logged in
+      const persistedUser = safeStorage.getItem('homeli_current_user');
+      if (!persistedUser) {
+        return 'home';
+      }
+
       // Check for deep link QR parameters first to route instantly
       const urlParams = new URL(window.location.href);
       if (urlParams.searchParams.get('ar_product')) {
@@ -417,17 +434,6 @@ export default function App() {
   const [isInstalled, setIsInstalled] = useState(false);
   const [showInstallInstructions, setShowInstallInstructions] = useState(false);
 
-  // User Authentication States with localStorage persistence
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
-    try {
-      const persisted = safeStorage.getItem('homeli_current_user');
-      return persisted ? JSON.parse(persisted) : null;
-    } catch {
-      return null;
-    }
-  });
-  const [showAuthModal, setShowAuthModal] = useState(false);
-
   useEffect(() => {
     if (currentUser) {
       safeStorage.setItem('homeli_current_user', JSON.stringify(currentUser));
@@ -435,6 +441,20 @@ export default function App() {
       safeStorage.removeItem('homeli_current_user');
     }
   }, [currentUser]);
+
+  // Navigation guard to ensure only registered users can access panels
+  useEffect(() => {
+    if (activeSection !== 'home' && !currentUser) {
+      setActiveSection('home');
+      setShowAuthModal(true);
+      handleAddNotification(
+        '🔒 Acceso Restringido',
+        'Debes iniciar sesión o registrar tu cuenta para poder ingresar a los paneles de gestión.',
+        'Todos',
+        'sistema'
+      );
+    }
+  }, [activeSection, currentUser]);
 
   // Listen back to window install prompt events
   useEffect(() => {
@@ -1242,6 +1262,16 @@ export default function App() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => {
+                      if (!currentUser) {
+                        setShowAuthModal(true);
+                        handleAddNotification(
+                          '🔒 Acceso Restringido',
+                          'Debes iniciar sesión para poder ingresar al Panel de Administración.',
+                          'Todos',
+                          'sistema'
+                        );
+                        return;
+                      }
                       setActiveSection('admin');
                       onAddLog('Acceso autorizado a Panel de Administración', 'info');
                     }}
@@ -1259,6 +1289,16 @@ export default function App() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => {
+                      if (!currentUser) {
+                        setShowAuthModal(true);
+                        handleAddNotification(
+                          '🔒 Acceso Restringido',
+                          'Debes iniciar sesión para poder ingresar al Panel de Servicios.',
+                          'Todos',
+                          'sistema'
+                        );
+                        return;
+                      }
                       setActiveSection('servicios');
                       onAddLog('Acceso autorizado a Panel de Operaciones de Servicios', 'info');
                     }}
@@ -1276,6 +1316,16 @@ export default function App() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => {
+                      if (!currentUser) {
+                        setShowAuthModal(true);
+                        handleAddNotification(
+                          '🔒 Acceso Restringido',
+                          'Debes iniciar sesión para poder ingresar al Panel de Ventas.',
+                          'Todos',
+                          'sistema'
+                        );
+                        return;
+                      }
                       setActiveSection('ventas');
                       onAddLog('Acceso autorizado a Consola de E-commerce y Ventas', 'info');
                     }}
@@ -1293,6 +1343,16 @@ export default function App() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => {
+                      if (!currentUser) {
+                        setShowAuthModal(true);
+                        handleAddNotification(
+                          '🔒 Acceso Restringido',
+                          'Debes iniciar sesión para poder ingresar al Panel de Mensajería.',
+                          'Todos',
+                          'sistema'
+                        );
+                        return;
+                      }
                       setActiveSection('mensajeria');
                       onAddLog('Acceso autorizado a Consola de Reparto y Mensajería', 'info');
                     }}
@@ -1310,6 +1370,16 @@ export default function App() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => {
+                      if (!currentUser) {
+                        setShowAuthModal(true);
+                        handleAddNotification(
+                          '🔒 Acceso Restringido',
+                          'Debes iniciar sesión para poder ingresar al Panel de Negocios.',
+                          'Todos',
+                          'sistema'
+                        );
+                        return;
+                      }
                       setActiveSection('negocios');
                       onAddLog('Acceso autorizado a Panel de Negocios y Patrocinadores', 'info');
                     }}
