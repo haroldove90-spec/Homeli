@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { safeStorage } from '../utils/storage';
 import { ProductItem, SalesOrder, OrderStatus, AppNotification } from '../types';
 import { 
   Package, 
@@ -220,7 +221,7 @@ export default function VentasSection({
   // Views inside e-commerce: 'shop', 'cart_orders', 'manager'
   const [activeViewMode, setActiveViewMode] = useState<'shop' | 'cart_orders' | 'manager'>(() => {
     try {
-      const persisted = localStorage.getItem('homeli_ventas_active_view_mode');
+      const persisted = safeStorage.getItem('homeli_ventas_active_view_mode');
       return (persisted as 'shop' | 'cart_orders' | 'manager') || 'shop';
     } catch {
       return 'shop';
@@ -228,7 +229,7 @@ export default function VentasSection({
   });
 
   useEffect(() => {
-    localStorage.setItem('homeli_ventas_active_view_mode', activeViewMode);
+    safeStorage.setItem('homeli_ventas_active_view_mode', activeViewMode);
   }, [activeViewMode]);
   
   // Catalog containing products

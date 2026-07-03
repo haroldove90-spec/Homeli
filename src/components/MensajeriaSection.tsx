@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { safeStorage } from '../utils/storage';
 import { 
   CourierProfile, 
   SalesOrder, 
@@ -61,7 +62,7 @@ export default function MensajeriaSection({
   // Session handling state
   const [currentCourier, setCurrentCourier] = useState<CourierProfile | null>(() => {
     try {
-      const persisted = localStorage.getItem('homeli_current_courier');
+      const persisted = safeStorage.getItem('homeli_current_courier');
       if (persisted) {
         const parsed = JSON.parse(persisted);
         // Sync with parent list to ensure up-to-date attributes
@@ -75,14 +76,14 @@ export default function MensajeriaSection({
   // Persist session
   useEffect(() => {
     if (currentCourier) {
-      localStorage.setItem('homeli_current_courier', JSON.stringify(currentCourier));
+      safeStorage.setItem('homeli_current_courier', JSON.stringify(currentCourier));
       // Also update in parent state list if any values changed locally
       const found = couriers.find(c => c.id === currentCourier.id);
       if (found && JSON.stringify(found) !== JSON.stringify(currentCourier)) {
         onUpdateCourier(currentCourier);
       }
     } else {
-      localStorage.removeItem('homeli_current_courier');
+      safeStorage.removeItem('homeli_current_courier');
     }
   }, [currentCourier, couriers]);
 

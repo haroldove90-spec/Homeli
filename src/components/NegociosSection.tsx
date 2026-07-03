@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { safeStorage } from '../utils/storage';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Building2, 
@@ -52,7 +53,7 @@ export const NegociosSection: React.FC<NegociosSectionProps> = ({
   // We can simulate having a "My Business ID" stored in local state or ref.
   // If not set, let them choose an existing business to "Log In" as, or Register a new one!
   const [myBusinessId, setMyBusinessId] = useState<string>(() => {
-    return localStorage.getItem('homeli_my_business_id') || '';
+    return safeStorage.getItem('homeli_my_business_id') || '';
   });
 
   const [activeTab, setActiveTab] = useState<'metrics' | 'services' | 'profile'>('metrics');
@@ -152,7 +153,7 @@ export const NegociosSection: React.FC<NegociosSectionProps> = ({
     };
 
     onRegisterBusiness(newBiz);
-    localStorage.setItem('homeli_my_business_id', newBizId);
+    safeStorage.setItem('homeli_my_business_id', newBizId);
     setMyBusinessId(newBizId);
     onAddLog(`Se registró nuevo negocio patrocinador: ${regName} (${newBizId})`, 'info');
     showToast('🎉 ¡Tu negocio ha sido registrado con éxito en Homeli!', 'success');
@@ -160,7 +161,7 @@ export const NegociosSection: React.FC<NegociosSectionProps> = ({
 
   // Switch Business Login simulation
   const handleSelectBusinessLogin = (id: string) => {
-    localStorage.setItem('homeli_my_business_id', id);
+    safeStorage.setItem('homeli_my_business_id', id);
     setMyBusinessId(id);
     const found = businesses.find(b => b.id === id);
     if (found) {
@@ -247,7 +248,7 @@ export const NegociosSection: React.FC<NegociosSectionProps> = ({
     if (!myBiz) return;
     if (confirm(`¿Estás completamente seguro de dar de baja tu negocio "${myBiz.name}"? Esta acción eliminará permanentemente todos tus servicios y métricas de Homeli.`)) {
       onDeleteBusiness(myBiz.id);
-      localStorage.removeItem('homeli_my_business_id');
+      safeStorage.removeItem('homeli_my_business_id');
       setMyBusinessId('');
       onAddLog(`Negocio dado de baja por el dueño: ${myBiz.name} (${myBiz.id})`, 'critical');
       showToast('Tu negocio ha sido eliminado de la plataforma.', 'danger');
@@ -289,7 +290,7 @@ export const NegociosSection: React.FC<NegociosSectionProps> = ({
             {myBusinessId && (
               <button
                 onClick={() => {
-                  localStorage.removeItem('homeli_my_business_id');
+                  safeStorage.removeItem('homeli_my_business_id');
                   setMyBusinessId('');
                   showToast('Sesión de negocio cerrada.', 'success');
                 }}
@@ -307,7 +308,7 @@ export const NegociosSection: React.FC<NegociosSectionProps> = ({
                   const val = e.target.value;
                   if (!val) {
                     setMyBusinessId('');
-                    localStorage.removeItem('homeli_my_business_id');
+                    safeStorage.removeItem('homeli_my_business_id');
                   } else {
                     handleSelectBusinessLogin(val);
                   }

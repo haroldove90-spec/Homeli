@@ -46,6 +46,7 @@ import VentasSection from './components/VentasSection';
 import MensajeriaSection from './components/MensajeriaSection';
 import { NegociosSection } from './components/NegociosSection';
 import AccessForm from './components/AccessForm';
+import { safeStorage } from './utils/storage';
 import { 
   ShieldAlert, 
   Wrench, 
@@ -75,7 +76,7 @@ export default function App() {
   // Shared States initialization with localStorage persistence
   const [notifications, setNotifications] = useState<AppNotification[]>(() => {
     try {
-      const persisted = localStorage.getItem('homeli_notifications');
+      const persisted = safeStorage.getItem('homeli_notifications');
       if (persisted) return JSON.parse(persisted);
     } catch {}
     return [
@@ -152,7 +153,7 @@ export default function App() {
 
   const [services, setServices] = useState<ServiceRequest[]>(() => {
     try {
-      const persisted = localStorage.getItem('homeli_services');
+      const persisted = safeStorage.getItem('homeli_services');
       return persisted ? JSON.parse(persisted) : initialServices;
     } catch {
       return initialServices;
@@ -161,7 +162,7 @@ export default function App() {
 
   const [products, setProducts] = useState<ProductItem[]>(() => {
     try {
-      const persisted = localStorage.getItem('homeli_products');
+      const persisted = safeStorage.getItem('homeli_products');
       const parsed = persisted ? JSON.parse(persisted) : initialProducts;
       return Array.isArray(parsed) 
         ? parsed.filter((p: ProductItem) => p.category === 'Productos de limpieza' || p.category === 'Zapatos' || p.category === 'Servicios')
@@ -173,7 +174,7 @@ export default function App() {
 
   const [orders, setOrders] = useState<SalesOrder[]>(() => {
     try {
-      const persisted = localStorage.getItem('homeli_orders');
+      const persisted = safeStorage.getItem('homeli_orders');
       return persisted ? JSON.parse(persisted) : initialOrders;
     } catch {
       return initialOrders;
@@ -182,7 +183,7 @@ export default function App() {
 
   const [logs, setLogs] = useState<SystemLog[]>(() => {
     try {
-      const persisted = localStorage.getItem('homeli_logs');
+      const persisted = safeStorage.getItem('homeli_logs');
       return persisted ? JSON.parse(persisted) : initialLogs;
     } catch {
       return initialLogs;
@@ -191,7 +192,7 @@ export default function App() {
 
   const [profiles, setProfiles] = useState<UserProfile[]>(() => {
     try {
-      const persisted = localStorage.getItem('homeli_profiles');
+      const persisted = safeStorage.getItem('homeli_profiles');
       return persisted ? JSON.parse(persisted) : initialProfiles;
     } catch {
       return initialProfiles;
@@ -200,7 +201,7 @@ export default function App() {
 
   const [couriers, setCouriers] = useState<CourierProfile[]>(() => {
     try {
-      const persisted = localStorage.getItem('homeli_couriers');
+      const persisted = safeStorage.getItem('homeli_couriers');
       return persisted ? JSON.parse(persisted) : initialCouriers;
     } catch {
       return initialCouriers;
@@ -209,7 +210,7 @@ export default function App() {
 
   const [businesses, setBusinesses] = useState<BusinessRegistration[]>(() => {
     try {
-      const persisted = localStorage.getItem('homeli_businesses');
+      const persisted = safeStorage.getItem('homeli_businesses');
       if (persisted) return JSON.parse(persisted);
     } catch {}
     return [
@@ -261,7 +262,7 @@ export default function App() {
       }
 
       // Prioritize localStorage so that refreshing the browser maintains the exact current view/session robustly
-      const persisted = localStorage.getItem('homeli_active_section');
+      const persisted = safeStorage.getItem('homeli_active_section');
       if (persisted && ['home', 'admin', 'servicios', 'ventas', 'mensajeria', 'negocios'].includes(persisted)) {
         return persisted as 'home' | 'admin' | 'servicios' | 'ventas' | 'mensajeria' | 'negocios';
       }
@@ -288,7 +289,7 @@ export default function App() {
   // States to control active admin module via header hamburger dropdown with localStorage persistence
   const [adminActiveTab, setAdminActiveTab] = useState<'metrics' | 'ecommerce' | 'entrega_agenda' | 'entrega_mensajeros' | 'servicios_control' | 'negocios_control'>(() => {
     try {
-      const persisted = localStorage.getItem('homeli_admin_active_tab');
+      const persisted = safeStorage.getItem('homeli_admin_active_tab');
       return (persisted as any) || 'metrics';
     } catch {
       return 'metrics';
@@ -298,56 +299,56 @@ export default function App() {
 
   // Custom Banner States for Homeli Boutique Hero with localStorage Persistence
   const [bannerBg, setBannerBg] = useState<string>(() => {
-    return localStorage.getItem('homeli_banner_bg') || '';
+    return safeStorage.getItem('homeli_banner_bg') || '';
   });
   const [bannerTitle, setBannerTitle] = useState<string>(() => {
-    return localStorage.getItem('homeli_banner_title') || 'Catálogo Exclusivo Homeli';
+    return safeStorage.getItem('homeli_banner_title') || 'Catálogo Exclusivo Homeli';
   });
   const [bannerTag, setBannerTag] = useState<string>(() => {
-    return localStorage.getItem('homeli_banner_tag') || 'BOUTIQUE';
+    return safeStorage.getItem('homeli_banner_tag') || 'BOUTIQUE';
   });
   const [bannerDesc, setBannerDesc] = useState<string>(() => {
-    return localStorage.getItem('homeli_banner_desc') || 'Descubre nuestras dos exclusivas divisiones diseñadas meticulosamente para brindar confort personal y sanidad impecable en tu hogar.';
+    return safeStorage.getItem('homeli_banner_desc') || 'Descubre nuestras dos exclusivas divisiones diseñadas meticulosamente para brindar confort personal y sanidad impecable en tu hogar.';
   });
   const [bannerOverlayCol, setBannerOverlayCol] = useState<string>(() => {
-    return localStorage.getItem('homeli_banner_overlay_col') || '#0f172a';
+    return safeStorage.getItem('homeli_banner_overlay_col') || '#0f172a';
   });
   const [bannerOverlayOpacity, setBannerOverlayOpacity] = useState<number>(() => {
-    const raw = localStorage.getItem('homeli_banner_overlay_opacity');
+    const raw = safeStorage.getItem('homeli_banner_overlay_opacity');
     return raw ? Number(raw) : 60;
   });
 
   // Sync state changes to localStorage
   useEffect(() => {
-    localStorage.setItem('homeli_services', JSON.stringify(services));
+    safeStorage.setItem('homeli_services', JSON.stringify(services));
   }, [services]);
 
   useEffect(() => {
-    localStorage.setItem('homeli_products', JSON.stringify(products));
+    safeStorage.setItem('homeli_products', JSON.stringify(products));
   }, [products]);
 
   useEffect(() => {
-    localStorage.setItem('homeli_orders', JSON.stringify(orders));
+    safeStorage.setItem('homeli_orders', JSON.stringify(orders));
   }, [orders]);
 
   useEffect(() => {
-    localStorage.setItem('homeli_logs', JSON.stringify(logs));
+    safeStorage.setItem('homeli_logs', JSON.stringify(logs));
   }, [logs]);
 
   useEffect(() => {
-    localStorage.setItem('homeli_profiles', JSON.stringify(profiles));
+    safeStorage.setItem('homeli_profiles', JSON.stringify(profiles));
   }, [profiles]);
 
   useEffect(() => {
-    localStorage.setItem('homeli_couriers', JSON.stringify(couriers));
+    safeStorage.setItem('homeli_couriers', JSON.stringify(couriers));
   }, [couriers]);
 
   useEffect(() => {
-    localStorage.setItem('homeli_notifications', JSON.stringify(notifications));
+    safeStorage.setItem('homeli_notifications', JSON.stringify(notifications));
   }, [notifications]);
 
   useEffect(() => {
-    localStorage.setItem('homeli_active_section', activeSection);
+    safeStorage.setItem('homeli_active_section', activeSection);
     try {
       const url = new URL(window.location.href);
       url.searchParams.set('section', activeSection);
@@ -358,7 +359,7 @@ export default function App() {
   }, [activeSection]);
 
   useEffect(() => {
-    localStorage.setItem('homeli_businesses', JSON.stringify(businesses));
+    safeStorage.setItem('homeli_businesses', JSON.stringify(businesses));
   }, [businesses]);
 
   const handleRegisterBusiness = (newBiz: BusinessRegistration) => {
@@ -383,31 +384,31 @@ export default function App() {
   };
 
   useEffect(() => {
-    localStorage.setItem('homeli_admin_active_tab', adminActiveTab);
+    safeStorage.setItem('homeli_admin_active_tab', adminActiveTab);
   }, [adminActiveTab]);
 
   useEffect(() => {
-    localStorage.setItem('homeli_banner_bg', bannerBg);
+    safeStorage.setItem('homeli_banner_bg', bannerBg);
   }, [bannerBg]);
 
   useEffect(() => {
-    localStorage.setItem('homeli_banner_title', bannerTitle);
+    safeStorage.setItem('homeli_banner_title', bannerTitle);
   }, [bannerTitle]);
 
   useEffect(() => {
-    localStorage.setItem('homeli_banner_tag', bannerTag);
+    safeStorage.setItem('homeli_banner_tag', bannerTag);
   }, [bannerTag]);
 
   useEffect(() => {
-    localStorage.setItem('homeli_banner_desc', bannerDesc);
+    safeStorage.setItem('homeli_banner_desc', bannerDesc);
   }, [bannerDesc]);
 
   useEffect(() => {
-    localStorage.setItem('homeli_banner_overlay_col', bannerOverlayCol);
+    safeStorage.setItem('homeli_banner_overlay_col', bannerOverlayCol);
   }, [bannerOverlayCol]);
 
   useEffect(() => {
-    localStorage.setItem('homeli_banner_overlay_opacity', String(bannerOverlayOpacity));
+    safeStorage.setItem('homeli_banner_overlay_opacity', String(bannerOverlayOpacity));
   }, [bannerOverlayOpacity]);
 
   // Progressive Web App Installation states
@@ -419,7 +420,7 @@ export default function App() {
   // User Authentication States with localStorage persistence
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
     try {
-      const persisted = localStorage.getItem('homeli_current_user');
+      const persisted = safeStorage.getItem('homeli_current_user');
       return persisted ? JSON.parse(persisted) : null;
     } catch {
       return null;
@@ -429,9 +430,9 @@ export default function App() {
 
   useEffect(() => {
     if (currentUser) {
-      localStorage.setItem('homeli_current_user', JSON.stringify(currentUser));
+      safeStorage.setItem('homeli_current_user', JSON.stringify(currentUser));
     } else {
-      localStorage.removeItem('homeli_current_user');
+      safeStorage.removeItem('homeli_current_user');
     }
   }, [currentUser]);
 
@@ -858,23 +859,23 @@ export default function App() {
 
   // Clear all persisted data/cache in localStorage and reload the application
   const handleClearCache = () => {
-    localStorage.removeItem('homeli_services');
-    localStorage.removeItem('homeli_products');
-    localStorage.removeItem('homeli_orders');
-    localStorage.removeItem('homeli_logs');
-    localStorage.removeItem('homeli_profiles');
-    localStorage.removeItem('homeli_couriers');
-    localStorage.removeItem('homeli_businesses');
-    localStorage.removeItem('homeli_my_business_id');
-    localStorage.removeItem('homeli_notifications');
-    localStorage.removeItem('homeli_admin_active_tab');
-    localStorage.removeItem('homeli_active_section');
-    localStorage.removeItem('homeli_banner_bg');
-    localStorage.removeItem('homeli_banner_title');
-    localStorage.removeItem('homeli_banner_tag');
-    localStorage.removeItem('homeli_banner_desc');
-    localStorage.removeItem('homeli_banner_overlay_col');
-    localStorage.removeItem('homeli_banner_overlay_opacity');
+    safeStorage.removeItem('homeli_services');
+    safeStorage.removeItem('homeli_products');
+    safeStorage.removeItem('homeli_orders');
+    safeStorage.removeItem('homeli_logs');
+    safeStorage.removeItem('homeli_profiles');
+    safeStorage.removeItem('homeli_couriers');
+    safeStorage.removeItem('homeli_businesses');
+    safeStorage.removeItem('homeli_my_business_id');
+    safeStorage.removeItem('homeli_notifications');
+    safeStorage.removeItem('homeli_admin_active_tab');
+    safeStorage.removeItem('homeli_active_section');
+    safeStorage.removeItem('homeli_banner_bg');
+    safeStorage.removeItem('homeli_banner_title');
+    safeStorage.removeItem('homeli_banner_tag');
+    safeStorage.removeItem('homeli_banner_desc');
+    safeStorage.removeItem('homeli_banner_overlay_col');
+    safeStorage.removeItem('homeli_banner_overlay_opacity');
     
     // Perform hard reload to ensure all static files and memory is completely cleansed
     window.location.reload();
