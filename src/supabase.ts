@@ -205,6 +205,62 @@ export async function fetchAuditLogsFromSupabase(): Promise<SystemLog[] | null> 
 }
 
 /**
+ * Fetches user profiles from Supabase.
+ */
+export async function fetchProfilesFromSupabase(): Promise<UserProfile[] | null> {
+  if (!supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    if (!data) return [];
+
+    return data.map(u => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      role: u.role as any,
+      status: u.status as any,
+      lastActive: u.last_active || 'Hace un momento'
+    }));
+  } catch (e) {
+    console.error('Supabase fetch error [users]:', e);
+    return null;
+  }
+}
+
+/**
+ * Saves or updates a user profile to Supabase.
+ */
+export async function saveProfileToSupabase(profile: UserProfile, password?: string): Promise<boolean> {
+  if (!supabase) return false;
+  try {
+    const payload: any = {
+      id: profile.id,
+      name: profile.name,
+      email: profile.email,
+      role: profile.role,
+      status: profile.status,
+      last_active: new Date().toISOString()
+    };
+
+    if (password) {
+      payload.password = password;
+    }
+
+    const { error } = await supabase.from('users').upsert(payload);
+    if (error) throw error;
+    return true;
+  } catch (e) {
+    console.error('Supabase save error [user]:', e);
+    return false;
+  }
+}
+
+/**
  * Saves and registers any business profile / sponsor with its subservices to Supabase.
  */
 export async function saveBusinessToSupabase(biz: BusinessRegistration): Promise<boolean> {

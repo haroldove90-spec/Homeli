@@ -24,8 +24,9 @@ CREATE TABLE users (
     id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    role VARCHAR(50) NOT NULL CHECK (role IN ('Administrador', 'Servicios', 'Ventas')),
+    role VARCHAR(50) NOT NULL CHECK (role IN ('Administrador', 'Servicios', 'Ventas', 'Mensajería', 'Negocio')),
     status VARCHAR(50) NOT NULL DEFAULT 'Activo' CHECK (status IN ('Activo', 'Inactivo')),
+    password VARCHAR(255) NOT NULL DEFAULT 'password123',
     last_active TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -96,7 +97,7 @@ CREATE TABLE audit_logs (
     id VARCHAR(50) PRIMARY KEY,
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     actor VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL CHECK (role IN ('Administrador', 'Servicios', 'Ventas', 'Negocio')),
+    role VARCHAR(50) NOT NULL CHECK (role IN ('Administrador', 'Servicios', 'Ventas', 'Mensajería', 'Negocio')),
     action TEXT NOT NULL,
     severity VARCHAR(30) NOT NULL DEFAULT 'info' CHECK (severity IN ('info', 'warning', 'critical'))
 );

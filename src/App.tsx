@@ -11,6 +11,8 @@ import {
   fetchProductsFromSupabase,
   fetchOrdersFromSupabase,
   fetchAuditLogsFromSupabase,
+  fetchProfilesFromSupabase,
+  saveProfileToSupabase,
   saveBusinessToSupabase,
   deleteBusinessFromSupabase,
   saveServiceToSupabase,
@@ -511,6 +513,9 @@ export default function App() {
           const loadedLogs = await fetchAuditLogsFromSupabase();
           if (loadedLogs) setLogs(loadedLogs);
 
+          const loadedProfiles = await fetchProfilesFromSupabase();
+          if (loadedProfiles && loadedProfiles.length > 0) setProfiles(loadedProfiles);
+
           onAddLog('Sincronización Cloud exitosa: Datos cargados desde Supabase en vivo', 'info');
         } catch (e) {
           console.error("Supabase load failed:", e);
@@ -539,6 +544,9 @@ export default function App() {
   // State Management Handlers
   const handleAddUser = (user: UserProfile) => {
     setProfiles(prev => [...prev, user]);
+    if (isSupabaseConfigured) {
+      saveProfileToSupabase(user);
+    }
   };
 
   const handleLoginSuccess = (user: UserProfile) => {
