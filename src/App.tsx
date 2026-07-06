@@ -178,9 +178,22 @@ export default function App() {
     try {
       const persisted = safeStorage.getItem('homeli_products');
       const parsed = persisted ? JSON.parse(persisted) : initialProducts;
-      return Array.isArray(parsed) 
+      const list = Array.isArray(parsed) 
         ? parsed.filter((p: ProductItem) => p.category === 'Productos de limpieza' || p.category === 'Zapatos' || p.category === 'Servicios')
         : initialProducts.filter((p: ProductItem) => p.category === 'Productos de limpieza' || p.category === 'Zapatos' || p.category === 'Servicios');
+      
+      // Merge with initialProducts to restore latest fields like glbUrl and usdzUrl for static catalog items
+      return list.map((p: ProductItem) => {
+        const match = initialProducts.find(init => init.id === p.id || (p.sku && init.sku === p.sku));
+        if (match) {
+          return {
+            ...p,
+            glbUrl: match.glbUrl || p.glbUrl,
+            usdzUrl: match.usdzUrl || p.usdzUrl,
+          };
+        }
+        return p;
+      });
     } catch {
       return initialProducts.filter((p: ProductItem) => p.category === 'Productos de limpieza' || p.category === 'Zapatos' || p.category === 'Servicios');
     }

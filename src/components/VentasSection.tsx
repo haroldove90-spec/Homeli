@@ -2794,6 +2794,32 @@ export default function VentasSection({
                         </span>
                       </div>
                     </div>
+
+                    {selectedProductDetails.glbUrl && (
+                      <div className="mt-4 bg-gradient-to-br from-slate-50 to-amber-50/50 border border-amber-200/60 rounded-2xl p-4 flex flex-col sm:flex-row gap-4 items-center shadow-xs">
+                        <div className="p-1.5 bg-white rounded-xl shadow-md border border-slate-100 shrink-0">
+                          <img 
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&color=0f172a&data=${encodeURIComponent(
+                              `${window.location.origin}${window.location.pathname}?ar_product=${selectedProductDetails.id}`
+                            )}`} 
+                            alt="Código QR AR"
+                            className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
+                            referrerPolicy="no-referrer"
+                          />
+                        </div>
+                        <div className="space-y-1 text-center sm:text-left">
+                          <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">
+                            <Sparkles size={8} className="animate-pulse" /> Realidad Aumentada 3D
+                          </span>
+                          <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                            ¡Pruébalo en tu casa!
+                          </h4>
+                          <p className="text-[11px] text-slate-650 leading-relaxed font-medium">
+                            Escanea este código QR con la cámara de tu celular para proyectar y probar estos <strong className="text-[#c19a45]">{selectedProductDetails.name}</strong> virtualmente en tu piso.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-4 pt-4 border-t border-slate-100">
