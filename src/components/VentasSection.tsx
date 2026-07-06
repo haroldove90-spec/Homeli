@@ -504,8 +504,13 @@ export default function VentasSection({
   useEffect(() => {
     if (selectedProductDetails) {
       // Check if this was loaded via QR deep link to preserve and trigger the 360/AR view immediately!
-      const urlParams = new URL(window.location.href);
-      const isQrDeep = urlParams.searchParams.get('ar_product') === selectedProductDetails.id;
+      let isQrDeep = false;
+      try {
+        const urlParams = new URL(window.location.href);
+        isQrDeep = urlParams.searchParams.get('ar_product') === selectedProductDetails.id;
+      } catch (e) {
+        console.warn("Failed to check QR deep link on product details transition", e);
+      }
 
       if (isQrDeep) {
         setArMediaMode('ar_camera'); // Spark joy immediately with floor AR camera simulation!
