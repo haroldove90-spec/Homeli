@@ -67,14 +67,14 @@ const STATIC_STORE_PRODUCTS: ProductItem[] = [
   // Zapatos Category (6 items)
   {
     id: 'SHO-001',
-    name: 'Tenis Deportivos Urbanos Pro',
+    name: 'Zapatos de Vestir Elegantes Pro',
     sku: 'HML-ZAP-01',
     category: 'Zapatos',
     price: 899,
     stock: 24,
     salesCount: 15,
-    description: 'Calzado ergonómico transpirable con suela de amortiguación reforzada, ideal para caminar o actividades deportivas cotidianas.',
-    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsPlV5u1UOTpXsbHztz8RAntDJ8LeRMTVFaQ&s',
+    description: 'Calzado formal de cuero genuino con costuras reforzadas, plantilla de confort activo y un diseño clásico de alta costura, ideal para eventos de gala y negocios.',
+    imageUrl: 'https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?w=600&auto=format&fit=crop&q=80',
     glbUrl: 'https://ejmuvdsqpbfnqzodxkgg.supabase.co/storage/v1/object/public/Modelos3d/zapatos.glb',
     usdzUrl: 'https://ejmuvdsqpbfnqzodxkgg.supabase.co/storage/v1/object/public/Modelos3d/zapatos.usdz'
   },
