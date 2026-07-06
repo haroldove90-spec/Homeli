@@ -455,9 +455,10 @@ export default function App() {
     }
   }, [currentUser]);
 
-  // Navigation guard to ensure only registered users can access panels (landing page is public)
+  // Navigation guard to ensure only registered users can access panels (landing page and AR QR deep links are public)
   useEffect(() => {
-    if (activeSection !== 'home' && activeSection !== 'landing' && !currentUser) {
+    const hasArProduct = new URL(window.location.href).searchParams.has('ar_product');
+    if (activeSection !== 'home' && activeSection !== 'landing' && !hasArProduct && !currentUser) {
       setActiveSection('home');
       setShowAuthModal(true);
       handleAddNotification(
