@@ -188,11 +188,11 @@ export default function App() {
         if (match) {
           return {
             ...p,
-            name: match.name || p.name,
-            description: match.description || p.description,
-            imageUrl: match.imageUrl || p.imageUrl,
-            glbUrl: match.glbUrl || p.glbUrl,
-            usdzUrl: match.usdzUrl || p.usdzUrl,
+            name: match.name,
+            description: match.description,
+            imageUrl: match.imageUrl,
+            glbUrl: match.glbUrl,
+            usdzUrl: match.usdzUrl,
             price: match.price !== undefined ? match.price : p.price,
           };
         }
