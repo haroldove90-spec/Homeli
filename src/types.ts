@@ -34,6 +34,8 @@ export interface ProductItem {
   description: string;
   imageUrl?: string;
   active?: boolean;
+  glbUrl?: string;
+  usdzUrl?: string;
 }
 
 export type DeliveryStatus = 'unassigned' | 'launched' | 'assigned' | 'accepted' | 'collected' | 'in_transit' | 'with_customer' | 'delivered';

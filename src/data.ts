@@ -130,7 +130,9 @@ export const initialProducts: ProductItem[] = [
     stock: 24,
     salesCount: 15,
     description: 'Calzado ergonómico transpirable con suela de amortiguación reforzada, ideal para caminar o actividades deportivas cotidianas.',
-    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsPlV5u1UOTpXsbHztz8RAntDJ8LeRMTVFaQ&s'
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsPlV5u1UOTpXsbHztz8RAntDJ8LeRMTVFaQ&s',
+    glbUrl: 'https://ejmuvdsqpbfnqzodxkgg.supabase.co/storage/v1/object/public/Modelos3d/zapatos.glb',
+    usdzUrl: 'https://ejmuvdsqpbfnqzodxkgg.supabase.co/storage/v1/object/public/Modelos3d/zapatos.usdz'
   },
   {
     id: 'SHO-002',

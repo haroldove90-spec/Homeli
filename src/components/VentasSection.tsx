@@ -74,7 +74,9 @@ const STATIC_STORE_PRODUCTS: ProductItem[] = [
     stock: 24,
     salesCount: 15,
     description: 'Calzado ergonómico transpirable con suela de amortiguación reforzada, ideal para caminar o actividades deportivas cotidianas.',
-    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsPlV5u1UOTpXsbHztz8RAntDJ8LeRMTVFaQ&s'
+    imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsPlV5u1UOTpXsbHztz8RAntDJ8LeRMTVFaQ&s',
+    glbUrl: 'https://ejmuvdsqpbfnqzodxkgg.supabase.co/storage/v1/object/public/Modelos3d/zapatos.glb',
+    usdzUrl: 'https://ejmuvdsqpbfnqzodxkgg.supabase.co/storage/v1/object/public/Modelos3d/zapatos.usdz'
   },
   {
     id: 'SHO-002',
@@ -1062,6 +1064,12 @@ export default function VentasSection({
                                 <span className="absolute top-1 left-1.5 z-10 text-[8px] font-bold bg-[#c5a85c] text-white px-1.5 py-0.5 rounded-md uppercase">
                                   Calzado
                                 </span>
+                                {product.glbUrl && (
+                                  <span className="absolute bottom-1.5 left-1.5 z-10 text-[8px] font-black bg-slate-950/90 border border-amber-400/50 text-amber-400 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg backdrop-blur-xs">
+                                    <Sparkles size={8} className="animate-pulse" />
+                                    <span>REALIDAD AUMENTADA</span>
+                                  </span>
+                                )}
                                 {product.stock <= 0 ? (
                                   <span className="absolute top-1 right-1.5 z-10 text-[8px] font-black bg-red-100 text-red-600 px-1.5 py-0.5 border border-red-200 rounded-md">
                                     Agotado
@@ -2311,18 +2319,36 @@ export default function VentasSection({
                         </div>
 
                         {/* Interactive dynamic revolving product image in viewport */}
-                        <div className="flex-1 flex items-center justify-center relative w-full h-full">
-                          <img 
-                            src={selectedProductDetails.imageUrl} 
-                            alt={selectedProductDetails.name} 
-                            className="w-48 h-48 sm:w-64 sm:h-64 object-contain pointer-events-none select-none transition-transform duration-100 z-25"
-                            style={{
-                              transform: `rotateY(${rotateAngle}deg) rotateX(${rotatePitch}deg) scale(${arScale})`,
-                              mixBlendMode: arBlendMultiply ? 'multiply' : 'normal',
-                              filter: `brightness(${1.0 + Math.sin(rotateAngle * Math.PI / 180) * 0.15}) contrast(${1.0 + Math.abs(Math.sin(rotateAngle * Math.PI / 180)) * 0.05}) drop-shadow(${Math.sin(rotateAngle * Math.PI / 180) * 12}px 12px 14px rgba(0,0,0,0.6))`
-                            }}
-                            referrerPolicy="no-referrer"
-                          />
+                        <div className="flex-1 flex items-center justify-center relative w-full h-full p-4">
+                          {selectedProductDetails.glbUrl ? (
+                            <model-viewer
+                              id="ar-viewer"
+                              src={selectedProductDetails.glbUrl}
+                              ios-src={selectedProductDetails.usdzUrl}
+                              alt={selectedProductDetails.name}
+                              ar
+                              ar-modes="webxr scene-viewer quick-look"
+                              camera-controls
+                              auto-rotate={isAutoRotate}
+                              shadow-intensity="1.5"
+                              environment-image="neutral"
+                              exposure="1.0"
+                              interaction-prompt="auto"
+                              style={{ width: '100%', height: '100%', minHeight: '380px', background: 'transparent' }}
+                            />
+                          ) : (
+                            <img 
+                              src={selectedProductDetails.imageUrl} 
+                              alt={selectedProductDetails.name} 
+                              className="w-48 h-48 sm:w-64 sm:h-64 object-contain pointer-events-none select-none transition-transform duration-100 z-25"
+                              style={{
+                                transform: `rotateY(${rotateAngle}deg) rotateX(${rotatePitch}deg) scale(${arScale})`,
+                                mixBlendMode: arBlendMultiply ? 'multiply' : 'normal',
+                                filter: `brightness(${1.0 + Math.sin(rotateAngle * Math.PI / 180) * 0.15}) contrast(${1.0 + Math.abs(Math.sin(rotateAngle * Math.PI / 180)) * 0.05}) drop-shadow(${Math.sin(rotateAngle * Math.PI / 180) * 12}px 12px 14px rgba(0,0,0,0.6))`
+                              }}
+                              referrerPolicy="no-referrer"
+                            />
+                          )}
 
                           {/* Futuristic Scan Line Laser Effect */}
                           <div className="absolute inset-y-0 left-1/2 w-0.5 bg-gradient-to-r from-transparent via-[#c5a85c]/40 to-transparent animate-infinite-x-sweep pointer-events-none z-10" />
@@ -2733,9 +2759,17 @@ export default function VentasSection({
                 {/* Product Meta & Interactive Quantity Counter Selector */}
                 <div className="flex flex-col justify-between space-y-4">
                   <div className="space-y-3">
-                    <h3 className="text-lg sm:text-2xl font-serif font-black text-slate-900 leading-tight">
-                      {selectedProductDetails.name}
-                    </h3>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-lg sm:text-2xl font-serif font-black text-slate-900 leading-tight">
+                        {selectedProductDetails.name}
+                      </h3>
+                      {selectedProductDetails.glbUrl && (
+                        <span className="inline-flex items-center gap-1 bg-amber-400/20 text-amber-800 text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border border-amber-300">
+                          <Sparkles size={10} className="animate-pulse text-amber-600" />
+                          <span>Modelo 3D y AR Listo</span>
+                        </span>
+                      )}
+                    </div>
                     
                     {/* Price Tag with larger readable fonts */}
                     <div className="flex items-baseline gap-2">
