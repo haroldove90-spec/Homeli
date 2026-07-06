@@ -182,14 +182,18 @@ export default function App() {
         ? parsed.filter((p: ProductItem) => p.category === 'Productos de limpieza' || p.category === 'Zapatos' || p.category === 'Servicios')
         : initialProducts.filter((p: ProductItem) => p.category === 'Productos de limpieza' || p.category === 'Zapatos' || p.category === 'Servicios');
       
-      // Merge with initialProducts to restore latest fields like glbUrl and usdzUrl for static catalog items
+      // Merge with initialProducts to restore latest fields like name, description, imageUrl, glbUrl, and usdzUrl for static catalog items
       return list.map((p: ProductItem) => {
         const match = initialProducts.find(init => init.id === p.id || (p.sku && init.sku === p.sku));
         if (match) {
           return {
             ...p,
+            name: match.name || p.name,
+            description: match.description || p.description,
+            imageUrl: match.imageUrl || p.imageUrl,
             glbUrl: match.glbUrl || p.glbUrl,
             usdzUrl: match.usdzUrl || p.usdzUrl,
+            price: match.price !== undefined ? match.price : p.price,
           };
         }
         return p;
