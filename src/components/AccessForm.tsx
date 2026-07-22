@@ -24,15 +24,17 @@ interface AccessFormProps {
   onLoginSuccess: (user: UserProfile) => void;
   onRegisterSuccess: (user: UserProfile) => void;
   existingProfiles: UserProfile[];
+  initialMode?: 'login' | 'register';
 }
 
 export default function AccessForm({ 
   onClose, 
   onLoginSuccess, 
   onRegisterSuccess, 
-  existingProfiles 
+  existingProfiles,
+  initialMode = 'login'
 }: AccessFormProps) {
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   
   // Form fields
   const [name, setName] = useState('');

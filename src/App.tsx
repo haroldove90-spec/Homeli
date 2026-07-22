@@ -86,6 +86,8 @@ export default function App() {
     }
   });
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
+  const [showGuestModules, setShowGuestModules] = useState(false);
 
   // Shared States initialization with localStorage persistence
   const [notifications, setNotifications] = useState<AppNotification[]>(() => {
@@ -1242,7 +1244,7 @@ export default function App() {
         )}
 
         {/* Dynamic Page Views Body */}
-        <main className={activeSection === 'mensajeria' ? 'flex-1 w-full bg-[#f8fafc]' : 'flex-1 p-4 sm:p-6 lg:p-8 max-w-[1650px] w-full mx-auto'} id="main_layout_body">
+        <main className={activeSection === 'mensajeria' ? 'flex-1 w-full bg-[#f8fafc]' : 'flex-1 p-3 sm:p-6 lg:p-8 max-w-[1650px] w-full mx-auto'} id="main_layout_body">
           <AnimatePresence mode="wait">
             {activeSection === 'home' ? (
               <motion.div
@@ -1250,68 +1252,34 @@ export default function App() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}
-                className="space-y-8 py-4 sm:py-8 flex flex-col items-center justify-center min-h-[75vh]"
+                className="flex flex-col items-center justify-between min-h-[82vh] py-6 px-4 space-y-8 bg-gradient-to-b from-[#eef0fc] via-[#f4f6fe] to-[#e7eafc] rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden"
                 id="home_content"
               >
-                {/* Hero Branding Header */}
-                <div className="flex flex-col items-center justify-center text-center space-y-3" id="minimalist_home_brand">
-                  <div className="p-3 bg-white border border-slate-200/80 rounded-3xl shadow-sm inline-block">
-                    <img 
-                      src="https://cossma.com.mx/homeli.jpg" 
-                      alt="Homeli Logo" 
-                      className="w-44 sm:w-64 h-auto object-contain block transition-transform duration-300 hover:scale-105"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                  <div className="space-y-1 max-w-lg">
-                    <span className="px-3 py-1 bg-[#c5a85c]/10 text-[#a38439] rounded-full text-[10px] font-black uppercase tracking-widest inline-block border border-[#c5a85c]/20">
-                      Plataforma Unificada de Gestión
-                    </span>
-                    <h1 className="text-xl sm:text-2xl font-serif font-extrabold text-slate-900 tracking-tight">
-                      Módulos Operativos y Logísticos
-                    </h1>
-                  </div>
-                </div>
+                {/* Subtle Ambient Background Light Glows */}
+                <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#c5a85c]/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
-                {/* System Stats Ticker Strip */}
-                <div className="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-4 gap-3 px-2">
-                  <div className="bg-white border border-slate-200/80 rounded-2xl p-3 text-center shadow-2xs">
-                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Servicios</span>
-                    <span className="text-lg font-black text-slate-800">{services.length} Solicitudes</span>
-                  </div>
-                  <div className="bg-white border border-slate-200/80 rounded-2xl p-3 text-center shadow-2xs">
-                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Catálogo</span>
-                    <span className="text-lg font-black text-slate-800">{products.length} Productos</span>
-                  </div>
-                  <div className="bg-white border border-slate-200/80 rounded-2xl p-3 text-center shadow-2xs">
-                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Repartidores</span>
-                    <span className="text-lg font-black text-slate-800">{couriers.length} Activos</span>
-                  </div>
-                  <div className="bg-white border border-slate-200/80 rounded-2xl p-3 text-center shadow-2xs">
-                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Socios</span>
-                    <span className="text-lg font-black text-slate-800">{businesses.length} Negocios</span>
-                  </div>
-                </div>
-
-                {/* Welcome / Authentication Card */}
-                <div className="w-full max-w-xl mx-auto px-2" id="home_auth_cta_panel">
+                {/* Top Spacer or User Welcome Tag */}
+                <div className="w-full max-w-sm flex justify-center z-10">
                   {currentUser ? (
                     <motion.div 
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="bg-white border border-slate-200 rounded-2xl p-4 text-center space-y-2.5 shadow-xs"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-white/90 backdrop-blur-md border border-slate-200/90 rounded-2xl p-3 px-4 w-full text-center shadow-xs flex items-center justify-between gap-2"
                       id="home_welcome_box"
                     >
-                      <div className="flex justify-center items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <h3 className="text-sm font-extrabold text-slate-800">
-                          Sesión activa: <span className="text-[#a38439]">{currentUser.name}</span>
-                        </h3>
+                      <div className="flex items-center gap-2 text-left min-w-0">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                        <div className="truncate">
+                          <p className="text-[11px] font-extrabold text-slate-800 truncate">
+                            {currentUser.name}
+                          </p>
+                          <span className="text-[9px] text-[#a38439] font-bold uppercase tracking-wider block">
+                            {currentUser.role}
+                          </span>
+                        </div>
                       </div>
-                      <p className="text-xs text-slate-500">
-                        Nivel de acceso: <strong className="text-slate-800">{currentUser.role}</strong>. Selecciona un panel o navega libremente.
-                      </p>
-                      <div className="flex justify-center gap-2 pt-1">
+                      <div className="flex gap-1.5 shrink-0">
                         <button
                           onClick={() => {
                             if (currentUser.role === 'Administrador') setActiveSection('admin');
@@ -1320,236 +1288,306 @@ export default function App() {
                             else if (currentUser.role === 'Mensajería') setActiveSection('mensajeria');
                             else if (currentUser.role === 'Negocio') setActiveSection('negocios');
                           }}
-                          className="px-4 py-2 bg-[#c5a85c] hover:bg-[#b59549] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer"
+                          className="px-3 py-1.5 bg-[#c5a85c] hover:bg-[#b59549] text-white text-[10px] font-extrabold rounded-xl transition shadow-xs cursor-pointer"
                           id="btn_home_goto_dashboard"
                         >
-                          Ir a Mi Panel ({currentUser.role})
+                          Ir a Panel
                         </button>
                         <button
                           onClick={handleLogout}
-                          className="px-3 py-2 bg-slate-50 hover:bg-red-50 text-red-600 hover:text-red-700 border border-slate-200 text-xs font-bold rounded-xl transition cursor-pointer"
+                          className="px-2.5 py-1.5 bg-slate-100 hover:bg-red-50 text-red-600 border border-slate-200 text-[10px] font-extrabold rounded-xl transition cursor-pointer"
                           id="btn_home_logout"
                         >
-                          Cerrar Sesión
+                          Salir
                         </button>
                       </div>
                     </motion.div>
                   ) : (
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="bg-white border border-slate-200/90 rounded-2xl p-4 text-center space-y-2.5 shadow-xs"
-                      id="home_login_cta_box"
-                    >
-                      <p className="text-xs text-slate-600">
-                        Inicia sesión para sincronizar tus solicitudes, inventario y repartos en tiempo real con Supabase.
-                      </p>
-                      <button
-                        onClick={() => setShowAuthModal(true)}
-                        className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-xl transition shadow-xs uppercase tracking-wider inline-flex items-center gap-2 cursor-pointer"
-                        id="btn_home_trigger_login"
-                      >
-                        <span>🔑</span>
-                        <span>Iniciar Sesión / Registrarse</span>
-                      </button>
-                    </motion.div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      Homeli • Servicios de Estilo de Vida
+                    </span>
                   )}
                 </div>
 
-                {/* Interactive 6 Modules Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-5xl w-full px-2" id="three_roles_access_grid">
-                  {/* Category 1: Admin */}
-                  <motion.div
-                    whileHover={{ y: -4, scale: 1.02 }}
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => {
-                      if (!currentUser) {
-                        setShowAuthModal(true);
-                        handleAddNotification(
-                          '🔒 Acceso Restringido',
-                          'Debes iniciar sesión para poder ingresar al Panel de Administración.',
-                          'Todos',
-                          'sistema'
-                        );
-                        return;
-                      }
-                      setActiveSection('admin');
-                      onAddLog('Acceso autorizado a Panel de Administración', 'info');
-                    }}
-                    className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-3 cursor-pointer shadow-xs hover:shadow-md hover:border-[#c5a85c]/60 transition-all duration-200 group relative overflow-hidden"
-                    id="access_entry_admin"
+                {/* Hero Centered Brand Logo - Identical to Image */}
+                <div className="flex flex-col items-center justify-center text-center space-y-2 z-10 my-auto py-6" id="minimalist_home_brand">
+                  <motion.div 
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.4 }}
+                    className="p-4 sm:p-6 bg-white/80 backdrop-blur-md border border-slate-200/90 rounded-3xl shadow-sm inline-block transform hover:scale-105 transition-transform"
                   >
-                    <div className="w-14 h-14 bg-[#c5a85c] rounded-2xl flex items-center justify-center text-white shadow-sm group-hover:bg-[#b59549] transition-all">
-                      <ShieldAlert size={26} />
-                    </div>
-                    <div>
-                      <span className="text-xs sm:text-sm font-extrabold text-slate-900 block group-hover:text-[#c5a85c] transition-colors">Admin</span>
-                      <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Control Master</span>
-                    </div>
-                  </motion.div>
-
-                  {/* Category 2: Servicios */}
-                  <motion.div
-                    whileHover={{ y: -4, scale: 1.02 }}
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => {
-                      if (!currentUser) {
-                        setShowAuthModal(true);
-                        handleAddNotification(
-                          '🔒 Acceso Restringido',
-                          'Debes iniciar sesión para poder ingresar al Panel de Servicios.',
-                          'Todos',
-                          'sistema'
-                        );
-                        return;
-                      }
-                      setActiveSection('servicios');
-                      onAddLog('Acceso autorizado a Panel de Operaciones de Servicios', 'info');
-                    }}
-                    className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-3 cursor-pointer shadow-xs hover:shadow-md hover:border-[#c5a85c]/60 transition-all duration-200 group relative overflow-hidden"
-                    id="access_entry_servicios"
-                  >
-                    <div className="w-14 h-14 bg-emerald-700 rounded-2xl flex items-center justify-center text-white shadow-sm group-hover:bg-emerald-800 transition-all">
-                      <Wrench size={26} />
-                    </div>
-                    <div>
-                      <span className="text-xs sm:text-sm font-extrabold text-slate-900 block group-hover:text-emerald-700 transition-colors">Servicios</span>
-                      <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Limpieza & Citas</span>
-                    </div>
-                  </motion.div>
-
-                  {/* Category 3: Ventas */}
-                  <motion.div
-                    whileHover={{ y: -4, scale: 1.02 }}
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => {
-                      if (!currentUser) {
-                        setShowAuthModal(true);
-                        handleAddNotification(
-                          '🔒 Acceso Restringido',
-                          'Debes iniciar sesión para poder ingresar al Panel de Ventas.',
-                          'Todos',
-                          'sistema'
-                        );
-                        return;
-                      }
-                      setActiveSection('ventas');
-                      onAddLog('Acceso autorizado a Consola de E-commerce y Ventas', 'info');
-                    }}
-                    className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-3 cursor-pointer shadow-xs hover:shadow-md hover:border-[#c5a85c]/60 transition-all duration-200 group relative overflow-hidden"
-                    id="access_entry_ventas"
-                  >
-                    <div className="w-14 h-14 bg-indigo-700 rounded-2xl flex items-center justify-center text-white shadow-sm group-hover:bg-indigo-800 transition-all">
-                      <ShoppingBag size={26} />
-                    </div>
-                    <div>
-                      <span className="text-xs sm:text-sm font-extrabold text-slate-900 block group-hover:text-indigo-700 transition-colors">Ventas</span>
-                      <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">E-Commerce & RA</span>
-                    </div>
-                  </motion.div>
-
-                  {/* Category 4: Mensajería */}
-                  <motion.div
-                    whileHover={{ y: -4, scale: 1.02 }}
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => {
-                      if (!currentUser) {
-                        setShowAuthModal(true);
-                        handleAddNotification(
-                          '🔒 Acceso Restringido',
-                          'Debes iniciar sesión para poder ingresar al Panel de Mensajería.',
-                          'Todos',
-                          'sistema'
-                        );
-                        return;
-                      }
-                      setActiveSection('mensajeria');
-                      onAddLog('Acceso autorizado a Consola de Reparto y Mensajería', 'info');
-                    }}
-                    className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-3 cursor-pointer shadow-xs hover:shadow-md hover:border-[#c5a85c]/60 transition-all duration-200 group relative overflow-hidden"
-                    id="access_entry_mensajeria"
-                  >
-                    <div className="w-14 h-14 bg-amber-600 rounded-2xl flex items-center justify-center text-white shadow-sm group-hover:bg-amber-700 transition-all">
-                      <Bike size={26} />
-                    </div>
-                    <div>
-                      <span className="text-xs sm:text-sm font-extrabold text-slate-900 block group-hover:text-amber-600 transition-colors">Mensajería</span>
-                      <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Repartos & Entregas</span>
-                    </div>
-                  </motion.div>
-
-                  {/* Category 5: Negocios */}
-                  <motion.div
-                    whileHover={{ y: -4, scale: 1.02 }}
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => {
-                      if (!currentUser) {
-                        setShowAuthModal(true);
-                        handleAddNotification(
-                          '🔒 Acceso Restringido',
-                          'Debes iniciar sesión para poder ingresar al Panel de Negocios.',
-                          'Todos',
-                          'sistema'
-                        );
-                        return;
-                      }
-                      setActiveSection('negocios');
-                      onAddLog('Acceso autorizado a Panel de Negocios y Patrocinadores', 'info');
-                    }}
-                    className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-3 cursor-pointer shadow-xs hover:shadow-md hover:border-[#c5a85c]/60 transition-all duration-200 group relative overflow-hidden"
-                    id="access_entry_negocios"
-                  >
-                    <div className="w-14 h-14 bg-slate-800 rounded-2xl flex items-center justify-center text-white shadow-sm group-hover:bg-slate-900 transition-all">
-                      <Building size={26} />
-                    </div>
-                    <div>
-                      <span className="text-xs sm:text-sm font-extrabold text-slate-900 block group-hover:text-slate-800 transition-colors">Negocios</span>
-                      <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Socios Comerciales</span>
-                    </div>
-                  </motion.div>
-
-                  {/* Category 6: Landing Page */}
-                  <motion.div
-                    whileHover={{ y: -4, scale: 1.02 }}
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => {
-                      setActiveSection('landing');
-                      onAddLog('Acceso a Landing Page de captación pública', 'info');
-                    }}
-                    className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-3 cursor-pointer shadow-xs hover:shadow-md hover:border-emerald-500/60 transition-all duration-200 group relative overflow-hidden"
-                    id="access_entry_landing"
-                  >
-                    <div className="w-14 h-14 bg-emerald-600 rounded-2xl flex items-center justify-center text-white shadow-sm group-hover:bg-emerald-700 transition-all relative">
-                      <Sparkles size={26} className="animate-pulse" />
-                      <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-900 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase">PÚB</span>
-                    </div>
-                    <div>
-                      <span className="text-xs sm:text-sm font-extrabold text-slate-900 block group-hover:text-emerald-600 transition-colors">Landing</span>
-                      <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Sitio Público</span>
-                    </div>
+                    <img 
+                      src="https://cossma.com.mx/homeli.jpg" 
+                      alt="Homeli - Servicios de Estilo de Vida" 
+                      className="w-56 sm:w-80 h-auto object-contain block max-h-[220px] sm:max-h-[280px]"
+                      referrerPolicy="no-referrer"
+                    />
                   </motion.div>
                 </div>
 
-                {/* Minimalist action buttons: PWA Installation and Clear Cache */}
-                <div className="pt-4 w-full flex flex-col sm:flex-row justify-center items-center gap-3" id="minimalist_pwa_installer_container">
+                {/* 3 Main Action Buttons - Matching Reference Image */}
+                <div className="w-full max-w-xs sm:max-w-sm flex flex-col items-center space-y-3 z-10 pt-2" id="home_auth_cta_panel">
+                  {/* Button 1: Iniciar sesión (Navy Blue Pill) */}
                   <button
-                    onClick={triggerPWAInstall}
-                    className="py-2.5 px-6 bg-[#c5a85c] hover:bg-[#b59549] text-white font-extrabold rounded-xl transition text-xs flex items-center justify-center gap-2 cursor-pointer shadow-xs uppercase tracking-wider w-full sm:w-auto"
-                    id="btn_home_llamativo_install"
+                    onClick={() => {
+                      setAuthModalMode('login');
+                      setShowAuthModal(true);
+                    }}
+                    className="w-full py-3.5 sm:py-4 px-6 bg-[#0c1838] hover:bg-[#152243] active:scale-[0.98] text-white font-black text-sm sm:text-base rounded-2xl shadow-md transition-all duration-200 cursor-pointer tracking-wide flex items-center justify-center gap-2 border border-slate-800"
+                    id="btn_home_iniciar_sesion"
                   >
-                    <Download size={15} />
-                    <span>Instalar Aplicación</span>
+                    <span>Iniciar sesión</span>
                   </button>
 
+                  {/* Button 2: Crear cuenta (White with Gold Border & Text) */}
                   <button
-                    onClick={handleClearCache}
-                    className="py-2.5 px-6 bg-white hover:bg-slate-50 text-slate-700 font-extrabold rounded-xl transition text-xs flex items-center justify-center gap-2 cursor-pointer border border-slate-200 shadow-2xs uppercase tracking-wider w-full sm:w-auto"
-                    id="btn_home_clear_cache"
+                    onClick={() => {
+                      setAuthModalMode('register');
+                      setShowAuthModal(true);
+                    }}
+                    className="w-full py-3.5 sm:py-4 px-6 bg-white hover:bg-amber-50/50 active:scale-[0.98] text-[#a38439] font-black text-sm sm:text-base rounded-2xl border-2 border-[#d0b06b]/70 hover:border-[#c5a85c] shadow-xs transition-all duration-200 cursor-pointer tracking-wide flex items-center justify-center gap-2"
+                    id="btn_home_crear_cuenta"
                   >
-                    <RefreshCw size={14} className="text-[#c5a85c]" />
-                    <span>Borrar Caché</span>
+                    <span>Crear cuenta</span>
+                  </button>
+
+                  {/* Button 3: Saltar por ahora (Text Link) */}
+                  <button
+                    onClick={() => {
+                      setShowGuestModules(prev => !prev);
+                      const el = document.getElementById('three_roles_access_grid');
+                      if (el) {
+                        el.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                    className="pt-2 text-xs sm:text-sm font-extrabold text-[#0c1838] hover:text-[#c5a85c] transition cursor-pointer hover:underline tracking-wide"
+                    id="btn_home_saltar_ahora"
+                  >
+                    {showGuestModules ? 'Ocultar accesos directos ↑' : 'Saltar por ahora'}
                   </button>
                 </div>
+
+                {/* Secondary Modules Grid (Shown on demand or below) */}
+                <AnimatePresence>
+                  {(showGuestModules || currentUser) && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="w-full pt-8 border-t border-slate-200/80 space-y-6 z-10"
+                    >
+                      <div className="text-center space-y-1">
+                        <span className="px-3 py-1 bg-[#c5a85c]/10 text-[#a38439] rounded-full text-[10px] font-black uppercase tracking-widest inline-block border border-[#c5a85c]/20">
+                          Panel de Módulos Unificados
+                        </span>
+                        <h2 className="text-sm font-bold text-slate-800">
+                          Selecciona un rol o módulo para ingresar directamente
+                        </h2>
+                      </div>
+
+                      {/* Interactive 6 Modules Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 max-w-5xl w-full mx-auto px-2" id="three_roles_access_grid">
+                        {/* Category 1: Admin */}
+                        <motion.div
+                          whileHover={{ y: -3, scale: 1.02 }}
+                          whileTap={{ scale: 0.96 }}
+                          onClick={() => {
+                            if (!currentUser) {
+                              setAuthModalMode('login');
+                              setShowAuthModal(true);
+                              handleAddNotification(
+                                '🔒 Acceso Restringido',
+                                'Debes iniciar sesión para poder ingresar al Panel de Administración.',
+                                'Todos',
+                                'sistema'
+                              );
+                              return;
+                            }
+                            setActiveSection('admin');
+                            onAddLog('Acceso autorizado a Panel de Administración', 'info');
+                          }}
+                          className="bg-white border border-slate-200 rounded-2xl p-3 flex flex-col items-center text-center gap-2 cursor-pointer shadow-2xs hover:shadow-md hover:border-[#c5a85c]/60 transition-all duration-200 group relative overflow-hidden"
+                          id="access_entry_admin"
+                        >
+                          <div className="w-12 h-12 bg-[#c5a85c] rounded-2xl flex items-center justify-center text-white shadow-xs group-hover:bg-[#b59549] transition-all">
+                            <ShieldAlert size={22} />
+                          </div>
+                          <div>
+                            <span className="text-xs font-extrabold text-slate-900 block group-hover:text-[#c5a85c] transition-colors">Admin</span>
+                            <span className="text-[9px] text-slate-400 font-semibold block mt-0.5">Control Master</span>
+                          </div>
+                        </motion.div>
+
+                        {/* Category 2: Servicios */}
+                        <motion.div
+                          whileHover={{ y: -3, scale: 1.02 }}
+                          whileTap={{ scale: 0.96 }}
+                          onClick={() => {
+                            if (!currentUser) {
+                              setAuthModalMode('login');
+                              setShowAuthModal(true);
+                              handleAddNotification(
+                                '🔒 Acceso Restringido',
+                                'Debes iniciar sesión para poder ingresar al Panel de Servicios.',
+                                'Todos',
+                                'sistema'
+                              );
+                              return;
+                            }
+                            setActiveSection('servicios');
+                            onAddLog('Acceso autorizado a Panel de Operaciones de Servicios', 'info');
+                          }}
+                          className="bg-white border border-slate-200 rounded-2xl p-3 flex flex-col items-center text-center gap-2 cursor-pointer shadow-2xs hover:shadow-md hover:border-emerald-600/60 transition-all duration-200 group relative overflow-hidden"
+                          id="access_entry_servicios"
+                        >
+                          <div className="w-12 h-12 bg-emerald-700 rounded-2xl flex items-center justify-center text-white shadow-xs group-hover:bg-emerald-800 transition-all">
+                            <Wrench size={22} />
+                          </div>
+                          <div>
+                            <span className="text-xs font-extrabold text-slate-900 block group-hover:text-emerald-700 transition-colors">Servicios</span>
+                            <span className="text-[9px] text-slate-400 font-semibold block mt-0.5">Limpieza & Citas</span>
+                          </div>
+                        </motion.div>
+
+                        {/* Category 3: Ventas */}
+                        <motion.div
+                          whileHover={{ y: -3, scale: 1.02 }}
+                          whileTap={{ scale: 0.96 }}
+                          onClick={() => {
+                            if (!currentUser) {
+                              setAuthModalMode('login');
+                              setShowAuthModal(true);
+                              handleAddNotification(
+                                '🔒 Acceso Restringido',
+                                'Debes iniciar sesión para poder ingresar al Panel de Ventas.',
+                                'Todos',
+                                'sistema'
+                              );
+                              return;
+                            }
+                            setActiveSection('ventas');
+                            onAddLog('Acceso autorizado a Consola de E-commerce y Ventas', 'info');
+                          }}
+                          className="bg-white border border-slate-200 rounded-2xl p-3 flex flex-col items-center text-center gap-2 cursor-pointer shadow-2xs hover:shadow-md hover:border-indigo-600/60 transition-all duration-200 group relative overflow-hidden"
+                          id="access_entry_ventas"
+                        >
+                          <div className="w-12 h-12 bg-indigo-700 rounded-2xl flex items-center justify-center text-white shadow-xs group-hover:bg-indigo-800 transition-all">
+                            <ShoppingBag size={22} />
+                          </div>
+                          <div>
+                            <span className="text-xs font-extrabold text-slate-900 block group-hover:text-indigo-700 transition-colors">Ventas</span>
+                            <span className="text-[9px] text-slate-400 font-semibold block mt-0.5">E-Commerce & RA</span>
+                          </div>
+                        </motion.div>
+
+                        {/* Category 4: Mensajería */}
+                        <motion.div
+                          whileHover={{ y: -3, scale: 1.02 }}
+                          whileTap={{ scale: 0.96 }}
+                          onClick={() => {
+                            if (!currentUser) {
+                              setAuthModalMode('login');
+                              setShowAuthModal(true);
+                              handleAddNotification(
+                                '🔒 Acceso Restringido',
+                                'Debes iniciar sesión para poder ingresar al Panel de Mensajería.',
+                                'Todos',
+                                'sistema'
+                              );
+                              return;
+                            }
+                            setActiveSection('mensajeria');
+                            onAddLog('Acceso autorizado a Consola de Reparto y Mensajería', 'info');
+                          }}
+                          className="bg-white border border-slate-200 rounded-2xl p-3 flex flex-col items-center text-center gap-2 cursor-pointer shadow-2xs hover:shadow-md hover:border-amber-600/60 transition-all duration-200 group relative overflow-hidden"
+                          id="access_entry_mensajeria"
+                        >
+                          <div className="w-12 h-12 bg-amber-600 rounded-2xl flex items-center justify-center text-white shadow-xs group-hover:bg-amber-700 transition-all">
+                            <Bike size={22} />
+                          </div>
+                          <div>
+                            <span className="text-xs font-extrabold text-slate-900 block group-hover:text-amber-600 transition-colors">Mensajería</span>
+                            <span className="text-[9px] text-slate-400 font-semibold block mt-0.5">Repartos & Entregas</span>
+                          </div>
+                        </motion.div>
+
+                        {/* Category 5: Negocios */}
+                        <motion.div
+                          whileHover={{ y: -3, scale: 1.02 }}
+                          whileTap={{ scale: 0.96 }}
+                          onClick={() => {
+                            if (!currentUser) {
+                              setAuthModalMode('login');
+                              setShowAuthModal(true);
+                              handleAddNotification(
+                                '🔒 Acceso Restringido',
+                                'Debes iniciar sesión para poder ingresar al Panel de Negocios.',
+                                'Todos',
+                                'sistema'
+                              );
+                              return;
+                            }
+                            setActiveSection('negocios');
+                            onAddLog('Acceso autorizado a Panel de Negocios y Patrocinadores', 'info');
+                          }}
+                          className="bg-white border border-slate-200 rounded-2xl p-3 flex flex-col items-center text-center gap-2 cursor-pointer shadow-2xs hover:shadow-md hover:border-slate-700/60 transition-all duration-200 group relative overflow-hidden"
+                          id="access_entry_negocios"
+                        >
+                          <div className="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center text-white shadow-xs group-hover:bg-slate-900 transition-all">
+                            <Building size={22} />
+                          </div>
+                          <div>
+                            <span className="text-xs font-extrabold text-slate-900 block group-hover:text-slate-800 transition-colors">Negocios</span>
+                            <span className="text-[9px] text-slate-400 font-semibold block mt-0.5">Socios Comerciales</span>
+                          </div>
+                        </motion.div>
+
+                        {/* Category 6: Landing Page */}
+                        <motion.div
+                          whileHover={{ y: -3, scale: 1.02 }}
+                          whileTap={{ scale: 0.96 }}
+                          onClick={() => {
+                            setActiveSection('landing');
+                            onAddLog('Acceso a Landing Page de captación pública', 'info');
+                          }}
+                          className="bg-white border border-slate-200 rounded-2xl p-3 flex flex-col items-center text-center gap-2 cursor-pointer shadow-2xs hover:shadow-md hover:border-emerald-500/60 transition-all duration-200 group relative overflow-hidden"
+                          id="access_entry_landing"
+                        >
+                          <div className="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center text-white shadow-xs group-hover:bg-emerald-700 transition-all relative">
+                            <Sparkles size={22} className="animate-pulse" />
+                            <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-900 text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase">PÚB</span>
+                          </div>
+                          <div>
+                            <span className="text-xs font-extrabold text-slate-900 block group-hover:text-emerald-600 transition-colors">Landing</span>
+                            <span className="text-[9px] text-slate-400 font-semibold block mt-0.5">Sitio Público</span>
+                          </div>
+                        </motion.div>
+                      </div>
+
+                      {/* Utility Action Buttons: PWA Installation and Clear Cache */}
+                      <div className="pt-2 w-full flex flex-col sm:flex-row justify-center items-center gap-2.5" id="minimalist_pwa_installer_container">
+                        <button
+                          onClick={triggerPWAInstall}
+                          className="py-2 px-5 bg-[#c5a85c] hover:bg-[#b59549] text-white font-extrabold rounded-xl transition text-[11px] flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs uppercase tracking-wider w-full sm:w-auto"
+                          id="btn_home_llamativo_install"
+                        >
+                          <Download size={14} />
+                          <span>Instalar Aplicación</span>
+                        </button>
+
+                        <button
+                          onClick={handleClearCache}
+                          className="py-2 px-5 bg-white hover:bg-slate-50 text-slate-700 font-extrabold rounded-xl transition text-[11px] flex items-center justify-center gap-1.5 cursor-pointer border border-slate-200 shadow-2xs uppercase tracking-wider w-full sm:w-auto"
+                          id="btn_home_clear_cache"
+                        >
+                          <RefreshCw size={13} className="text-[#c5a85c]" />
+                          <span>Borrar Caché</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             ) : (
               <motion.div
@@ -2095,6 +2133,7 @@ export default function App() {
                 onLoginSuccess={handleLoginSuccess}
                 onRegisterSuccess={handleRegisterSuccess}
                 existingProfiles={profiles}
+                initialMode={authModalMode}
               />
             </motion.div>
           </div>
