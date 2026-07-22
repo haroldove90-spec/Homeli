@@ -1,7 +1,15 @@
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
+import '@google/model-viewer';
 import App from './App.tsx';
 import './index.css';
+
+// Handle unhandled errors gracefully to avoid uncaught cross-origin script errors
+window.addEventListener('error', (event) => {
+  if (event.message === 'Script error.') {
+    event.preventDefault();
+  }
+});
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -22,3 +30,4 @@ if ('serviceWorker' in navigator && !isIframe) {
       });
   });
 }
+

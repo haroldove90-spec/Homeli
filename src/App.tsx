@@ -528,7 +528,30 @@ export default function App() {
           if (loadedSrv) setServices(loadedSrv);
 
           const loadedProd = await fetchProductsFromSupabase();
-          if (loadedProd) setProducts(loadedProd);
+          if (loadedProd) {
+            const mergedProd = loadedProd.map((p: ProductItem) => {
+              const match = initialProducts.find(init => init.id === p.id || (p.sku && init.sku === p.sku));
+              if (match) {
+                return {
+                  ...p,
+                  name: match.name,
+                  description: match.description,
+                  imageUrl: match.imageUrl,
+                  glbUrl: p.glbUrl || match.glbUrl,
+                  usdzUrl: p.usdzUrl || match.usdzUrl,
+                  price: match.price !== undefined ? match.price : p.price,
+                };
+              }
+              return p;
+            });
+
+            // Preserve initial products (e.g. SHO-001) if they do not exist in the Supabase database yet
+            const missingInitial = initialProducts.filter(
+              init => !loadedProd.some((p: ProductItem) => p.id === init.id || (p.sku && p.sku === init.sku))
+            );
+
+            setProducts([...mergedProd, ...missingInitial]);
+          }
 
           const loadedOrders = await fetchOrdersFromSupabase();
           if (loadedOrders) setOrders(loadedOrders);
@@ -949,19 +972,19 @@ export default function App() {
       {/* Main Core Layout */}
       <div className="flex flex-col flex-1" id="core_layout">
 
-        {/* Master Top Header Navigation Bar - Shown only inside internal roles views except Ventas */}
+        {/* Master Top Header Navigation Bar */}
         {activeSection !== 'home' && activeSection !== 'ventas' && (
-          <header className="bg-white border-b border-natural-border py-2 px-5 flex justify-between items-center shadow-sm sticky top-0 z-40" id="header_navbar">
-            <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setActiveSection('home')}>
-              {/* Unencapsulated Real Logo */}
+          <header className="glass-nav border-b border-slate-200/80 py-2.5 px-4 sm:px-6 flex justify-between items-center shadow-xs sticky top-0 z-40" id="header_navbar">
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveSection('home')}>
               <img 
                 src="https://cossma.com.mx/homeli.jpg" 
                 alt="Homeli Logo Banner" 
-                className="h-14 w-auto object-contain block transition-all"
+                className="h-10 sm:h-12 w-auto object-contain block transition-all hover:scale-105"
                 referrerPolicy="no-referrer"
               />
-              <div>
-                <h2 className="text-base font-bold font-serif tracking-tight text-natural-dark leading-none">Homeli</h2>
+              <div className="hidden xs:block">
+                <h2 className="text-base font-bold font-serif tracking-tight text-slate-900 leading-none">Homeli</h2>
+                <span className="text-[10px] text-[#c5a85c] font-black uppercase tracking-wider">SuperApp</span>
               </div>
             </div>
 
@@ -971,11 +994,11 @@ export default function App() {
                 <div className="relative" id="admin_hamburger_menu_wrapper">
                   <button
                     onClick={() => setShowAdminHamburgerDropdown(prev => !prev)}
-                    className="p-2 sm:px-3.5 sm:py-2.5 text-slate-850 text-slate-800 hover:bg-slate-50 border border-slate-205 bg-white rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer font-black text-xs"
+                    className="p-2 sm:px-3.5 sm:py-2 text-slate-800 hover:bg-slate-50 border border-slate-200 bg-white rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer font-black text-xs"
                     id="admin_hamburger_btn"
                   >
                     <Menu size={18} className="text-[#c5a85c]" />
-                    <span className="hidden sm:inline font-sans text-xs font-black uppercase text-slate-500 tracking-wider">Menú del Sistema</span>
+                    <span className="hidden sm:inline font-sans text-xs font-black uppercase text-slate-600 tracking-wider">Menú del Sistema</span>
                   </button>
 
                   <AnimatePresence>
@@ -997,10 +1020,10 @@ export default function App() {
                             setAdminActiveTab('metrics');
                             setShowAdminHamburgerDropdown(false);
                           }}
-                          className={`w-full text-left px-3 py-3 rounded-xl text-sm font-black transition flex items-center justify-between cursor-pointer ${
+                          className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
                             adminActiveTab === 'metrics'
                               ? 'bg-[#c5a85c]/10 text-[#a38439]'
-                              : 'text-slate-705 hover:bg-slate-50 hover:text-slate-900'
+                              : 'text-slate-700 hover:bg-slate-50'
                           }`}
                         >
                           <span className="flex items-center gap-2">
@@ -1015,10 +1038,10 @@ export default function App() {
                             setAdminActiveTab('ecommerce');
                             setShowAdminHamburgerDropdown(false);
                           }}
-                          className={`w-full text-left px-3 py-3 rounded-xl text-sm font-black transition flex items-center justify-between cursor-pointer ${
+                          className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
                             adminActiveTab === 'ecommerce'
                               ? 'bg-[#c5a85c]/10 text-[#a38439]'
-                              : 'text-slate-705 hover:bg-slate-50 hover:text-slate-900'
+                              : 'text-slate-700 hover:bg-slate-50'
                           }`}
                         >
                           <span className="flex items-center gap-2">
@@ -1033,10 +1056,10 @@ export default function App() {
                             setAdminActiveTab('entrega_agenda');
                             setShowAdminHamburgerDropdown(false);
                           }}
-                          className={`w-full text-left px-3 py-3 rounded-xl text-sm font-black transition flex items-center justify-between cursor-pointer ${
+                          className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
                             adminActiveTab === 'entrega_agenda'
                               ? 'bg-[#c5a85c]/10 text-[#a38439]'
-                              : 'text-slate-705 hover:bg-slate-50 hover:text-slate-900'
+                              : 'text-slate-700 hover:bg-slate-50'
                           }`}
                         >
                           <span className="flex items-center gap-2">
@@ -1051,10 +1074,10 @@ export default function App() {
                             setAdminActiveTab('entrega_mensajeros');
                             setShowAdminHamburgerDropdown(false);
                           }}
-                          className={`w-full text-left px-3 py-3 rounded-xl text-sm font-black transition flex items-center justify-between cursor-pointer ${
+                          className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
                             adminActiveTab === 'entrega_mensajeros'
                               ? 'bg-[#c5a85c]/10 text-[#a38439]'
-                              : 'text-slate-705 hover:bg-slate-50 hover:text-slate-900'
+                              : 'text-slate-700 hover:bg-slate-50'
                           }`}
                         >
                           <span className="flex items-center gap-2">
@@ -1069,10 +1092,10 @@ export default function App() {
                             setAdminActiveTab('servicios_control');
                             setShowAdminHamburgerDropdown(false);
                           }}
-                          className={`w-full text-left px-3 py-3 rounded-xl text-sm font-black transition flex items-center justify-between cursor-pointer ${
+                          className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
                             adminActiveTab === 'servicios_control'
                               ? 'bg-[#c5a85c]/10 text-[#a38439]'
-                              : 'text-slate-705 hover:bg-slate-50 hover:text-slate-900'
+                              : 'text-slate-700 hover:bg-slate-50'
                           }`}
                         >
                           <span className="flex items-center gap-2">
@@ -1087,10 +1110,10 @@ export default function App() {
                             setAdminActiveTab('negocios_control');
                             setShowAdminHamburgerDropdown(false);
                           }}
-                          className={`w-full text-left px-3 py-3 rounded-xl text-sm font-black transition flex items-center justify-between cursor-pointer ${
+                          className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
                             adminActiveTab === 'negocios_control'
                               ? 'bg-[#c5a85c]/10 text-[#a38439]'
-                              : 'text-slate-705 hover:bg-slate-50 hover:text-slate-900'
+                              : 'text-slate-700 hover:bg-slate-50'
                           }`}
                         >
                           <span className="flex items-center gap-2">
@@ -1106,7 +1129,7 @@ export default function App() {
                               setActiveSection('home');
                               setShowAdminHamburgerDropdown(false);
                             }}
-                            className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-805 transition flex items-center gap-2 cursor-pointer"
+                            className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 transition flex items-center gap-2 cursor-pointer"
                           >
                             <Home size={15} />
                             <span>Selector de Roles (Inicio)</span>
@@ -1120,49 +1143,48 @@ export default function App() {
                 <>
                   <button
                     onClick={() => setActiveSection('home')}
-                    className="px-3 py-1.5 text-xs text-natural-text hover:text-natural-dark hover:bg-natural-bg border border-natural-border rounded-xl transition font-bold flex items-center gap-1.5 cursor-pointer"
+                    className="px-3 py-1.5 text-xs text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs"
                     id="btn_nav_back_home"
                   >
-                    <Home size={13} />
-                    <span>Selector Roles</span>
+                    <Home size={14} className="text-[#c5a85c]" />
+                    <span className="hidden sm:inline">Selector Roles</span>
                   </button>
                   
-                   {/* Shortcuts directly in header */}
-                  <div className="hidden sm:flex rounded-lg bg-natural-bg p-0.5 border border-natural-border" id="navbar_shortcuts">
+                  {/* Desktop Shortcuts in Header */}
+                  <div className="hidden lg:flex rounded-xl bg-slate-100/80 p-1 border border-slate-200/80 gap-1" id="navbar_shortcuts">
                     <button 
                       onClick={() => setActiveSection('landing')}
-                      className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'landing' ? 'bg-[#c5a85c] text-white animate-pulse' : 'text-natural-muted hover:text-[#a38439]'}`}
-                      style={{ animationDuration: '3s' }}
+                      className={`px-3 py-1 text-[11px] font-bold rounded-lg transition cursor-pointer ${activeSection === 'landing' ? 'bg-[#c5a85c] text-white' : 'text-slate-600 hover:text-slate-900'}`}
                     >
-                      ⭐ Landing Page
+                      ⭐ Landing
                     </button>
                     <button 
                       onClick={() => setActiveSection('admin')}
-                      className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'admin' ? 'bg-earth-copper text-white' : 'text-natural-muted hover:text-natural-dark'}`}
+                      className={`px-3 py-1 text-[11px] font-bold rounded-lg transition cursor-pointer ${activeSection === 'admin' ? 'bg-slate-800 text-white' : 'text-slate-600 hover:text-slate-900'}`}
                     >
                       Admin
                     </button>
                     <button 
                       onClick={() => setActiveSection('servicios')}
-                      className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'servicios' ? 'bg-earth-green text-white' : 'text-natural-muted hover:text-natural-dark'}`}
+                      className={`px-3 py-1 text-[11px] font-bold rounded-lg transition cursor-pointer ${activeSection === 'servicios' ? 'bg-emerald-700 text-white' : 'text-slate-600 hover:text-slate-900'}`}
                     >
                       Servicios
                     </button>
                     <button 
                       onClick={() => setActiveSection('ventas')}
-                      className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'ventas' ? 'bg-earth-slate text-white' : 'text-natural-muted hover:text-natural-dark'}`}
+                      className={`px-3 py-1 text-[11px] font-bold rounded-lg transition cursor-pointer ${activeSection === 'ventas' ? 'bg-indigo-700 text-white' : 'text-slate-600 hover:text-slate-900'}`}
                     >
                       Ventas
                     </button>
                     <button 
                       onClick={() => setActiveSection('mensajeria')}
-                      className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'mensajeria' ? 'bg-amber-600 text-white' : 'text-natural-muted hover:text-natural-dark'}`}
+                      className={`px-3 py-1 text-[11px] font-bold rounded-lg transition cursor-pointer ${activeSection === 'mensajeria' ? 'bg-amber-600 text-white' : 'text-slate-600 hover:text-slate-900'}`}
                     >
                       Mensajería
                     </button>
                     <button 
                       onClick={() => setActiveSection('negocios')}
-                      className={`px-3 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${activeSection === 'negocios' ? 'bg-[#c5a85c] text-white' : 'text-natural-muted hover:text-natural-dark'}`}
+                      className={`px-3 py-1 text-[11px] font-bold rounded-lg transition cursor-pointer ${activeSection === 'negocios' ? 'bg-[#c5a85c] text-white' : 'text-slate-600 hover:text-slate-900'}`}
                     >
                       Negocios
                     </button>
@@ -1172,8 +1194,8 @@ export default function App() {
 
               {/* User Session Pill or Iniciar Sesión Button */}
               {currentUser ? (
-                <div className="flex items-center gap-2 border border-slate-200 bg-slate-50/50 rounded-xl px-2.5 py-1.5" id="user_session_pill">
-                  <div className="w-6 h-6 bg-[#c5a85c] text-white rounded-lg flex items-center justify-center text-xs font-black select-none">
+                <div className="flex items-center gap-2 border border-slate-200/90 bg-white rounded-xl px-2.5 py-1.5 shadow-2xs" id="user_session_pill">
+                  <div className="w-6 h-6 bg-[#c5a85c] text-white rounded-lg flex items-center justify-center text-xs font-black select-none shadow-2xs">
                     {currentUser.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="hidden sm:block text-left">
@@ -1192,7 +1214,7 @@ export default function App() {
               ) : (
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="px-3 py-1.5 bg-[#c5a85c] hover:bg-[#b59549] text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  className="px-3.5 py-1.5 bg-[#c5a85c] hover:bg-[#b59549] text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-xs"
                   id="header_login_btn"
                 >
                   <span>Acceder</span>
@@ -1202,14 +1224,14 @@ export default function App() {
               {/* Universal Bell Notification Button inside Master Header */}
               <button
                 onClick={() => setIsNotificationPanelOpen(true)}
-                className="relative p-2.5 hover:bg-slate-50 border border-slate-205 bg-white rounded-xl shadow-xs transition cursor-pointer text-slate-750 hover:text-[#c5a85c] focus:outline-none"
+                className="relative p-2.5 hover:bg-slate-50 border border-slate-200 bg-white rounded-xl shadow-2xs transition cursor-pointer text-slate-700 hover:text-[#c5a85c] focus:outline-none"
                 id="master_header_bell_btn"
                 title={`${notifications.filter(n => !n.read).length} Notificaciones sin leer`}
               >
                 <Bell size={18} className={notifications.filter(n => !n.read).length > 0 ? "text-[#c5a85c]" : "text-slate-600"} />
                 
                 {notifications.filter(n => !n.read).length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5.5 h-5.5 bg-red-500 text-white font-extrabold text-[9px] rounded-full flex items-center justify-center animate-pulse border border-white">
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white font-extrabold text-[9px] rounded-full flex items-center justify-center animate-pulse border-2 border-white">
                     {notifications.filter(n => !n.read).length}
                   </span>
                 )}
@@ -1228,36 +1250,66 @@ export default function App() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}
-                className="space-y-10 py-8 flex flex-col items-center justify-center min-h-[70vh]"
+                className="space-y-8 py-4 sm:py-8 flex flex-col items-center justify-center min-h-[75vh]"
                 id="home_content"
               >
-                {/* Minimalist Centered Logo - Real logo fully unencapsulated for absolute visibility */}
-                <div className="flex flex-col items-center justify-center mb-6" id="minimalist_home_brand">
-                  <img 
-                    src="https://cossma.com.mx/homeli.jpg" 
-                    alt="Homeli Logo" 
-                    className="w-32 sm:w-72 h-auto object-contain block transition-all duration-300 hover:scale-105"
-                    referrerPolicy="no-referrer"
-                  />
+                {/* Hero Branding Header */}
+                <div className="flex flex-col items-center justify-center text-center space-y-3" id="minimalist_home_brand">
+                  <div className="p-3 bg-white border border-slate-200/80 rounded-3xl shadow-sm inline-block">
+                    <img 
+                      src="https://cossma.com.mx/homeli.jpg" 
+                      alt="Homeli Logo" 
+                      className="w-44 sm:w-64 h-auto object-contain block transition-transform duration-300 hover:scale-105"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <div className="space-y-1 max-w-lg">
+                    <span className="px-3 py-1 bg-[#c5a85c]/10 text-[#a38439] rounded-full text-[10px] font-black uppercase tracking-widest inline-block border border-[#c5a85c]/20">
+                      Plataforma Unificada de Gestión
+                    </span>
+                    <h1 className="text-xl sm:text-2xl font-serif font-extrabold text-slate-900 tracking-tight">
+                      Módulos Operativos y Logísticos
+                    </h1>
+                  </div>
+                </div>
+
+                {/* System Stats Ticker Strip */}
+                <div className="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-4 gap-3 px-2">
+                  <div className="bg-white border border-slate-200/80 rounded-2xl p-3 text-center shadow-2xs">
+                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Servicios</span>
+                    <span className="text-lg font-black text-slate-800">{services.length} Solicitudes</span>
+                  </div>
+                  <div className="bg-white border border-slate-200/80 rounded-2xl p-3 text-center shadow-2xs">
+                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Catálogo</span>
+                    <span className="text-lg font-black text-slate-800">{products.length} Productos</span>
+                  </div>
+                  <div className="bg-white border border-slate-200/80 rounded-2xl p-3 text-center shadow-2xs">
+                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Repartidores</span>
+                    <span className="text-lg font-black text-slate-800">{couriers.length} Activos</span>
+                  </div>
+                  <div className="bg-white border border-slate-200/80 rounded-2xl p-3 text-center shadow-2xs">
+                    <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Socios</span>
+                    <span className="text-lg font-black text-slate-800">{businesses.length} Negocios</span>
+                  </div>
                 </div>
 
                 {/* Welcome / Authentication Card */}
-                <div className="w-full max-w-xl mx-auto px-4" id="home_auth_cta_panel">
+                <div className="w-full max-w-xl mx-auto px-2" id="home_auth_cta_panel">
                   {currentUser ? (
                     <motion.div 
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-center space-y-2.5 shadow-sm"
+                      className="bg-white border border-slate-200 rounded-2xl p-4 text-center space-y-2.5 shadow-xs"
                       id="home_welcome_box"
                     >
                       <div className="flex justify-center items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                         <h3 className="text-sm font-extrabold text-slate-800">
                           Sesión activa: <span className="text-[#a38439]">{currentUser.name}</span>
                         </h3>
                       </div>
                       <p className="text-xs text-slate-500">
-                        Tienes acceso de nivel <strong className="text-slate-800">{currentUser.role}</strong>. Puedes usar el selector inferior para moverte entre paneles o cerrar tu sesión.
+                        Nivel de acceso: <strong className="text-slate-800">{currentUser.role}</strong>. Selecciona un panel o navega libremente.
                       </p>
                       <div className="flex justify-center gap-2 pt-1">
                         <button
@@ -1268,14 +1320,14 @@ export default function App() {
                             else if (currentUser.role === 'Mensajería') setActiveSection('mensajeria');
                             else if (currentUser.role === 'Negocio') setActiveSection('negocios');
                           }}
-                          className="px-4 py-1.5 bg-[#c5a85c] hover:bg-[#b59549] text-white text-[11px] font-bold rounded-xl transition shadow-xs cursor-pointer"
+                          className="px-4 py-2 bg-[#c5a85c] hover:bg-[#b59549] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer"
                           id="btn_home_goto_dashboard"
                         >
-                          Ir a mi Panel ({currentUser.role})
+                          Ir a Mi Panel ({currentUser.role})
                         </button>
                         <button
                           onClick={handleLogout}
-                          className="px-3 py-1.5 bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border border-red-200 text-[11px] font-bold rounded-xl transition cursor-pointer"
+                          className="px-3 py-2 bg-slate-50 hover:bg-red-50 text-red-600 hover:text-red-700 border border-slate-200 text-xs font-bold rounded-xl transition cursor-pointer"
                           id="btn_home_logout"
                         >
                           Cerrar Sesión
@@ -1286,30 +1338,30 @@ export default function App() {
                     <motion.div 
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="bg-white border border-slate-150 rounded-2xl p-4 text-center space-y-2.5 shadow-sm"
+                      className="bg-white border border-slate-200/90 rounded-2xl p-4 text-center space-y-2.5 shadow-xs"
                       id="home_login_cta_box"
                     >
                       <p className="text-xs text-slate-600">
-                        Sincroniza tus pedidos, servicios y negocios registrados en vivo con Supabase creando tu perfil de acceso.
+                        Inicia sesión para sincronizar tus solicitudes, inventario y repartos en tiempo real con Supabase.
                       </p>
                       <button
                         onClick={() => setShowAuthModal(true)}
-                        className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-extrabold rounded-xl transition shadow-sm uppercase tracking-wider inline-flex items-center gap-1.5 cursor-pointer"
+                        className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-xl transition shadow-xs uppercase tracking-wider inline-flex items-center gap-2 cursor-pointer"
                         id="btn_home_trigger_login"
                       >
-                        <span className="text-xs">🔑</span>
+                        <span>🔑</span>
                         <span>Iniciar Sesión / Registrarse</span>
                       </button>
                     </motion.div>
                   )}
                 </div>
 
-                {/* The 6 entries: Icon in an elegant solid golden block, label exactly underneath */}
-                <div className="grid grid-cols-2 sm:grid-cols-6 gap-6 max-w-5xl w-full px-4 justify-items-center" id="three_roles_access_grid">
+                {/* Interactive 6 Modules Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-5xl w-full px-2" id="three_roles_access_grid">
                   {/* Category 1: Admin */}
                   <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ y: -4, scale: 1.02 }}
+                    whileTap={{ scale: 0.96 }}
                     onClick={() => {
                       if (!currentUser) {
                         setShowAuthModal(true);
@@ -1324,19 +1376,22 @@ export default function App() {
                       setActiveSection('admin');
                       onAddLog('Acceso autorizado a Panel de Administración', 'info');
                     }}
-                    className="flex flex-col items-center gap-2 cursor-pointer group"
+                    className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-3 cursor-pointer shadow-xs hover:shadow-md hover:border-[#c5a85c]/60 transition-all duration-200 group relative overflow-hidden"
                     id="access_entry_admin"
                   >
-                    <div className="w-24 h-24 sm:w-28 sm:h-28 bg-[#c5a85c] rounded-2xl flex items-center justify-center text-white shadow-md group-hover:bg-[#b59549] transition-all duration-200">
-                      <ShieldAlert size={32} />
+                    <div className="w-14 h-14 bg-[#c5a85c] rounded-2xl flex items-center justify-center text-white shadow-sm group-hover:bg-[#b59549] transition-all">
+                      <ShieldAlert size={26} />
                     </div>
-                    <span className="text-xs sm:text-sm font-bold text-natural-dark select-none mt-1 group-hover:text-[#c5a85c] transition-colors">Admin</span>
+                    <div>
+                      <span className="text-xs sm:text-sm font-extrabold text-slate-900 block group-hover:text-[#c5a85c] transition-colors">Admin</span>
+                      <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Control Master</span>
+                    </div>
                   </motion.div>
 
                   {/* Category 2: Servicios */}
                   <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ y: -4, scale: 1.02 }}
+                    whileTap={{ scale: 0.96 }}
                     onClick={() => {
                       if (!currentUser) {
                         setShowAuthModal(true);
@@ -1351,19 +1406,22 @@ export default function App() {
                       setActiveSection('servicios');
                       onAddLog('Acceso autorizado a Panel de Operaciones de Servicios', 'info');
                     }}
-                    className="flex flex-col items-center gap-2 cursor-pointer group"
+                    className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-3 cursor-pointer shadow-xs hover:shadow-md hover:border-[#c5a85c]/60 transition-all duration-200 group relative overflow-hidden"
                     id="access_entry_servicios"
                   >
-                    <div className="w-24 h-24 sm:w-28 sm:h-28 bg-[#c5a85c] rounded-2xl flex items-center justify-center text-white shadow-md group-hover:bg-[#b59549] transition-all duration-200">
-                      <Wrench size={32} />
+                    <div className="w-14 h-14 bg-emerald-700 rounded-2xl flex items-center justify-center text-white shadow-sm group-hover:bg-emerald-800 transition-all">
+                      <Wrench size={26} />
                     </div>
-                    <span className="text-xs sm:text-sm font-bold text-natural-dark select-none mt-1 group-hover:text-[#c5a85c] transition-colors">Servicios</span>
+                    <div>
+                      <span className="text-xs sm:text-sm font-extrabold text-slate-900 block group-hover:text-emerald-700 transition-colors">Servicios</span>
+                      <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Limpieza & Citas</span>
+                    </div>
                   </motion.div>
 
                   {/* Category 3: Ventas */}
                   <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ y: -4, scale: 1.02 }}
+                    whileTap={{ scale: 0.96 }}
                     onClick={() => {
                       if (!currentUser) {
                         setShowAuthModal(true);
@@ -1378,19 +1436,22 @@ export default function App() {
                       setActiveSection('ventas');
                       onAddLog('Acceso autorizado a Consola de E-commerce y Ventas', 'info');
                     }}
-                    className="flex flex-col items-center gap-2 cursor-pointer group"
+                    className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-3 cursor-pointer shadow-xs hover:shadow-md hover:border-[#c5a85c]/60 transition-all duration-200 group relative overflow-hidden"
                     id="access_entry_ventas"
                   >
-                    <div className="w-24 h-24 sm:w-28 sm:h-28 bg-[#c5a85c] rounded-2xl flex items-center justify-center text-white shadow-md group-hover:bg-[#b59549] transition-all duration-200">
-                      <ShoppingBag size={32} />
+                    <div className="w-14 h-14 bg-indigo-700 rounded-2xl flex items-center justify-center text-white shadow-sm group-hover:bg-indigo-800 transition-all">
+                      <ShoppingBag size={26} />
                     </div>
-                    <span className="text-xs sm:text-sm font-bold text-natural-dark select-none mt-1 group-hover:text-[#c5a85c] transition-colors">Ventas</span>
+                    <div>
+                      <span className="text-xs sm:text-sm font-extrabold text-slate-900 block group-hover:text-indigo-700 transition-colors">Ventas</span>
+                      <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">E-Commerce & RA</span>
+                    </div>
                   </motion.div>
 
                   {/* Category 4: Mensajería */}
                   <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ y: -4, scale: 1.02 }}
+                    whileTap={{ scale: 0.96 }}
                     onClick={() => {
                       if (!currentUser) {
                         setShowAuthModal(true);
@@ -1405,19 +1466,22 @@ export default function App() {
                       setActiveSection('mensajeria');
                       onAddLog('Acceso autorizado a Consola de Reparto y Mensajería', 'info');
                     }}
-                    className="flex flex-col items-center gap-2 cursor-pointer group"
+                    className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-3 cursor-pointer shadow-xs hover:shadow-md hover:border-[#c5a85c]/60 transition-all duration-200 group relative overflow-hidden"
                     id="access_entry_mensajeria"
                   >
-                    <div className="w-24 h-24 sm:w-28 sm:h-28 bg-[#c5a85c] rounded-2xl flex items-center justify-center text-white shadow-md group-hover:bg-[#b59549] transition-all duration-200">
-                      <Bike size={32} />
+                    <div className="w-14 h-14 bg-amber-600 rounded-2xl flex items-center justify-center text-white shadow-sm group-hover:bg-amber-700 transition-all">
+                      <Bike size={26} />
                     </div>
-                    <span className="text-xs sm:text-sm font-bold text-natural-dark select-none mt-1 group-hover:text-[#c5a85c] transition-colors">Mensajería</span>
+                    <div>
+                      <span className="text-xs sm:text-sm font-extrabold text-slate-900 block group-hover:text-amber-600 transition-colors">Mensajería</span>
+                      <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Repartos & Entregas</span>
+                    </div>
                   </motion.div>
 
                   {/* Category 5: Negocios */}
                   <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ y: -4, scale: 1.02 }}
+                    whileTap={{ scale: 0.96 }}
                     onClick={() => {
                       if (!currentUser) {
                         setShowAuthModal(true);
@@ -1432,69 +1496,59 @@ export default function App() {
                       setActiveSection('negocios');
                       onAddLog('Acceso autorizado a Panel de Negocios y Patrocinadores', 'info');
                     }}
-                    className="flex flex-col items-center gap-2 cursor-pointer group"
+                    className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-3 cursor-pointer shadow-xs hover:shadow-md hover:border-[#c5a85c]/60 transition-all duration-200 group relative overflow-hidden"
                     id="access_entry_negocios"
                   >
-                    <div className="w-24 h-24 sm:w-28 sm:h-28 bg-[#c5a85c] rounded-2xl flex items-center justify-center text-white shadow-md group-hover:bg-[#b59549] transition-all duration-200">
-                      <Building size={32} />
+                    <div className="w-14 h-14 bg-slate-800 rounded-2xl flex items-center justify-center text-white shadow-sm group-hover:bg-slate-900 transition-all">
+                      <Building size={26} />
                     </div>
-                    <span className="text-xs sm:text-sm font-bold text-natural-dark select-none mt-1 group-hover:text-[#c5a85c] transition-colors">Negocios</span>
+                    <div>
+                      <span className="text-xs sm:text-sm font-extrabold text-slate-900 block group-hover:text-slate-800 transition-colors">Negocios</span>
+                      <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Socios Comerciales</span>
+                    </div>
                   </motion.div>
 
                   {/* Category 6: Landing Page */}
                   <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ y: -4, scale: 1.02 }}
+                    whileTap={{ scale: 0.96 }}
                     onClick={() => {
                       setActiveSection('landing');
                       onAddLog('Acceso a Landing Page de captación pública', 'info');
                     }}
-                    className="flex flex-col items-center gap-2 cursor-pointer group"
+                    className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center text-center gap-3 cursor-pointer shadow-xs hover:shadow-md hover:border-emerald-500/60 transition-all duration-200 group relative overflow-hidden"
                     id="access_entry_landing"
                   >
-                    <div className="w-24 h-24 sm:w-28 sm:h-28 bg-emerald-600 rounded-2xl flex items-center justify-center text-white shadow-md hover:bg-emerald-700 transition-all duration-200 relative overflow-hidden">
-                      <Sparkles size={32} className="animate-pulse" style={{ animationDuration: '4s' }} />
-                      <span className="absolute top-1 right-1 bg-white text-emerald-700 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase leading-none tracking-wider">PÚB</span>
+                    <div className="w-14 h-14 bg-emerald-600 rounded-2xl flex items-center justify-center text-white shadow-sm group-hover:bg-emerald-700 transition-all relative">
+                      <Sparkles size={26} className="animate-pulse" />
+                      <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-900 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase">PÚB</span>
                     </div>
-                    <span className="text-xs sm:text-sm font-bold text-natural-dark select-none mt-1 group-hover:text-emerald-600 transition-colors">Landing Page</span>
+                    <div>
+                      <span className="text-xs sm:text-sm font-extrabold text-slate-900 block group-hover:text-emerald-600 transition-colors">Landing</span>
+                      <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Sitio Público</span>
+                    </div>
                   </motion.div>
                 </div>
 
                 {/* Minimalist action buttons: PWA Installation and Clear Cache */}
-                <div className="pt-8 w-full flex flex-col sm:flex-row justify-center items-center gap-4" id="minimalist_pwa_installer_container">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    animate={{
-                      boxShadow: [
-                        "0 4px 6px -1px rgba(197, 168, 92, 0.2), 0 2px 4px -1px rgba(197, 168, 92, 0.1)",
-                        "0 10px 20px -3px rgba(197, 168, 92, 0.45), 0 4px 8px -2px rgba(197, 168, 92, 0.25)",
-                        "0 4px 6px -1px rgba(197, 168, 92, 0.2), 0 2px 4px -1px rgba(197, 168, 92, 0.1)"
-                      ]
-                    }}
-                    transition={{
-                      repeat: Infinity,
-                      duration: 2.0,
-                      ease: "easeInOut"
-                    }}
+                <div className="pt-4 w-full flex flex-col sm:flex-row justify-center items-center gap-3" id="minimalist_pwa_installer_container">
+                  <button
                     onClick={triggerPWAInstall}
-                    className="py-3 px-8 bg-[#c5a85c] hover:bg-[#b59549] text-white font-extrabold rounded-xl transition-all duration-300 text-xs flex items-center justify-center gap-2 cursor-pointer border border-[#c19a45]/20 shadow-md transform active:scale-95 uppercase tracking-wider w-full sm:w-auto"
+                    className="py-2.5 px-6 bg-[#c5a85c] hover:bg-[#b59549] text-white font-extrabold rounded-xl transition text-xs flex items-center justify-center gap-2 cursor-pointer shadow-xs uppercase tracking-wider w-full sm:w-auto"
                     id="btn_home_llamativo_install"
                   >
                     <Download size={15} />
-                    <span>Instalar App</span>
-                  </motion.button>
+                    <span>Instalar Aplicación</span>
+                  </button>
 
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                  <button
                     onClick={handleClearCache}
-                    className="py-3 px-8 bg-white hover:bg-slate-50 text-slate-700 font-extrabold rounded-xl transition-all duration-300 text-xs flex items-center justify-center gap-2 cursor-pointer border border-slate-200 shadow-sm transform active:scale-95 uppercase tracking-wider w-full sm:w-auto"
+                    className="py-2.5 px-6 bg-white hover:bg-slate-50 text-slate-700 font-extrabold rounded-xl transition text-xs flex items-center justify-center gap-2 cursor-pointer border border-slate-200 shadow-2xs uppercase tracking-wider w-full sm:w-auto"
                     id="btn_home_clear_cache"
                   >
                     <RefreshCw size={14} className="text-[#c5a85c]" />
                     <span>Borrar Caché</span>
-                  </motion.button>
+                  </button>
                 </div>
               </motion.div>
             ) : (

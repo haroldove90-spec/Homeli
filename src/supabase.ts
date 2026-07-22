@@ -131,6 +131,8 @@ export async function fetchProductsFromSupabase(): Promise<ProductItem[] | null>
         salesCount: Number(p.sales_count || 0),
         description: p.description || '',
         imageUrl: p.image_url || '',
+        glbUrl: p.ar_model_glb || '',
+        usdzUrl: p.ar_model_usdz || '',
         active: true
       };
     });
@@ -370,6 +372,8 @@ export async function saveProductToSupabase(prod: ProductItem): Promise<boolean>
       sales_count: prod.salesCount || 0,
       description: prod.description || '',
       image_url: prod.imageUrl || '',
+      ar_model_glb: prod.glbUrl || '',
+      ar_model_usdz: prod.usdzUrl || '',
       updated_at: new Date().toISOString()
     });
 
